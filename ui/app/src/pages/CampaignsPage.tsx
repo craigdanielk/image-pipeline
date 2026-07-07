@@ -28,7 +28,7 @@ export default function CampaignsPage() {
         </Link>
       </div>
 
-      <div className="page-grid">
+      <div className="page-grid page-grid--cards">
         {campaigns.map((c) => (
           <GlassCard key={c.id} className="stub-note">
             <strong>{c.label}</strong>

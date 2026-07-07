@@ -47,7 +47,7 @@ export default function RunsPage() {
     <div>
       <h1 className="page-title">Runs</h1>
       <p className="page-subtitle">Execution queue — status, outputs, lineage.</p>
-      <div className="page-grid">
+      <div className="page-grid page-grid--cards">
         {runs.map((r) => (
           <GlassCard key={r.id} className="stub-note">
             <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>

@@ -1,41 +1,58 @@
-/* FractalOS ARAGON — Creative IDE design tokens */
+/* Design tokens — operator precision: bordered surfaces, one accent, no default AI-slop indigo/blur */
 :root {
   color-scheme: dark;
 
-  --color-bg-base: #0a0a0a;
-  --color-bg-elevated: #111111;
-  --color-bg-card: #161616;
-  --color-canvas: #0a0a0a;
+  /* Surfaces — near-black, warmed slightly, tiered by real elevation not opacity */
+  --color-bg-base: #0b0b0c;
+  --color-bg-elevated: #121214;
+  --color-bg-card: #17171a;
+  --color-bg-card-active: #1c1a15;
+  --color-canvas: #0b0b0c;
 
-  --color-glass-neutral: rgba(255, 255, 255, 0.04);
-  --color-glass-active: rgba(99, 102, 241, 0.12);
-  --color-glass-border: rgba(255, 255, 255, 0.08);
-  --color-glass-border-active: rgba(99, 102, 241, 0.35);
+  /* "Glass" tokens kept for backward compat with existing component class names —
+     resolved to solid bordered surfaces, not translucency/blur, per design direction. */
+  --color-glass-neutral: var(--color-bg-card);
+  --color-glass-active: var(--color-bg-card-active);
+  --color-glass-border: var(--color-border-subtle);
+  --color-glass-border-active: var(--color-accent);
 
-  --color-accent: #6366f1;
-  --color-accent-bright: #818cf8;
-  --color-accent-dim: rgba(99, 102, 241, 0.2);
+  /* One deliberate accent — warm brass/gold, not the default purple/indigo */
+  --color-accent: #d99a3d;
+  --color-accent-bright: #f0b355;
+  --color-accent-dim: rgba(217, 154, 61, 0.14);
+  --color-text-on-accent: #17120a;
 
-  --color-text-primary: #fafafa;
-  --color-text-secondary: rgba(255, 255, 255, 0.5);
-  --color-text-tertiary: rgba(255, 255, 255, 0.28);
+  --color-text-primary: #f4f2ee;
+  --color-text-secondary: rgba(244, 242, 238, 0.6);
+  --color-text-tertiary: rgba(244, 242, 238, 0.36);
 
-  --color-connector: #6366f1;
-  --color-status-ok: #22c55e;
-  --color-status-warn: #f59e0b;
-  --color-status-error: #ef4444;
+  --color-border-subtle: rgba(244, 242, 238, 0.08);
+  --color-border: rgba(244, 242, 238, 0.13);
+  --color-border-strong: rgba(244, 242, 238, 0.2);
 
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --color-connector: var(--color-accent);
+  --color-status-ok: #5cc283;
+  --color-status-warn: #e0a63e;
+  --color-status-error: #e5555b;
+
+  /* Display font for headers (Fraunces — variable optical-size serif, characterful);
+     Manrope for dense UI text; JetBrains Mono for ids/paths/technical labels. */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --radius-card: 20px;
-  --radius-panel: 16px;
+  --radius-card: 10px;
+  --radius-panel: 12px;
   --radius-pill: 100px;
-  --radius-sm: 12px;
-  --radius: 12px;
+  --radius-sm: 6px;
+  --radius: 8px;
 
-  --color-text-on-card: #1a1a1a;
-  --color-bg-card-dark: #2a2a2a;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.02) inset;
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  --color-text-on-card: #17171a;
+  --color-bg-card-dark: #232228;
 
   --sidebar-width: 220px;
   --inspector-width: 300px;
@@ -44,36 +61,35 @@
   --shell-inset: 24px;
   --nav-rail-width: 72px;
   --nav-rail-expanded: 220px;
-  --glass-blur: 24px;
-  --glass-blur-modal: 40px;
+  --glass-blur: 0px;
+  --glass-blur-modal: 20px;
   --color-media-backdrop: #000000;
-  --color-overlay-heavy: rgba(10, 10, 10, 0.92);
+  --color-overlay-heavy: rgba(11, 11, 12, 0.92);
   --color-overlay-panel: rgba(0, 0, 0, 0.35);
-  --color-overlay-scrim: rgba(0, 0, 0, 0.65);
-  --color-surface-inset: rgba(0, 0, 0, 0.25);
-  --color-text-on-accent: #0a0a0a;
+  --color-overlay-scrim: rgba(0, 0, 0, 0.7);
+  --color-surface-inset: rgba(0, 0, 0, 0.28);
 
-  /* Canvas / mesh backgrounds */
-  --color-dot-grid: rgba(255, 255, 255, 0.06);
-  --color-accent-mesh-strong: rgba(99, 102, 241, 0.08);
-  --color-accent-mesh-soft: rgba(99, 102, 241, 0.05);
+  /* Canvas / mesh backgrounds — subdued, no purple mesh glow */
+  --color-dot-grid: rgba(244, 242, 238, 0.05);
+  --color-accent-mesh-strong: rgba(217, 154, 61, 0.05);
+  --color-accent-mesh-soft: rgba(217, 154, 61, 0.03);
 
   /* Light cards on dark canvas (React Flow nodes) */
   --color-node-border: rgba(0, 0, 0, 0.08);
   --color-shadow-node: rgba(0, 0, 0, 0.25);
   --color-shadow-node-ring: rgba(255, 255, 255, 0.04);
   --color-text-on-card-muted: rgba(0, 0, 0, 0.45);
-  --color-status-ok-glow: rgba(34, 197, 94, 0.25);
+  --color-status-ok-glow: rgba(92, 194, 131, 0.22);
 
   /* Workbench surfaces */
-  --color-badge-bg: rgba(255, 255, 255, 0.06);
-  --color-btn-surface: rgba(255, 255, 255, 0.05);
-  --color-input-bg: rgba(0, 0, 0, 0.3);
-  --color-shadow-modal: rgba(0, 0, 0, 0.5);
+  --color-badge-bg: rgba(244, 242, 238, 0.06);
+  --color-btn-surface: rgba(244, 242, 238, 0.05);
+  --color-input-bg: rgba(0, 0, 0, 0.32);
+  --color-shadow-modal: rgba(0, 0, 0, 0.55);
 
   /* Pills / minimap */
-  --color-pill-bg: rgba(255, 255, 255, 0.08);
-  --color-pill-border: rgba(255, 255, 255, 0.1);
-  --color-minimap-bg: #1a1a1a;
-  --color-minimap-node: #e8e8e8;
+  --color-pill-bg: rgba(244, 242, 238, 0.07);
+  --color-pill-border: var(--color-border-subtle);
+  --color-minimap-bg: #17171a;
+  --color-minimap-node: #e8e6e1;
 }

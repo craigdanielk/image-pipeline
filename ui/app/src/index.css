@@ -123,8 +123,10 @@ body {
 
 .glass-shell__product {
   display: block;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
 }
 
 .glass-shell__tagline {
@@ -463,8 +465,8 @@ body {
 }
 
 .artifact-source--sheet_import {
-  border-color: rgba(34, 197, 94, 0.35);
-  color: #86efac;
+  border-color: rgba(92, 194, 131, 0.35);
+  color: var(--color-status-ok);
 }
 
 .artifact-card__pills {
@@ -485,13 +487,13 @@ body {
 }
 
 .artifact-status--approved {
-  border-color: rgba(34, 197, 94, 0.4);
-  color: #86efac;
+  border-color: rgba(92, 194, 131, 0.4);
+  color: var(--color-status-ok);
 }
 
 .artifact-status--rejected {
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
+  border-color: rgba(229, 85, 91, 0.35);
+  color: var(--color-status-error);
 }
 
 .artifact-group {
@@ -519,13 +521,13 @@ body {
 }
 
 .btn--danger {
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  border-color: rgba(229, 85, 91, 0.4);
+  color: var(--color-status-error);
 }
 
 .btn--approve {
-  border-color: rgba(34, 197, 94, 0.4);
-  color: #86efac;
+  border-color: rgba(92, 194, 131, 0.4);
+  color: var(--color-status-ok);
 }
 
 .artifact-modal {

@@ -2,32 +2,67 @@
 
 .glass-card {
   background: var(--color-glass-neutral);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .glass-card--active {
   background: var(--color-glass-active);
   border-color: var(--color-glass-border-active);
-  box-shadow: 0 0 32px var(--color-accent-dim);
+  box-shadow: var(--shadow-card-hover), 0 0 0 1px var(--color-accent-dim);
+}
+
+.asset-card:hover,
+.artifact-card:hover {
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card-hover);
+}
+
+@keyframes card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.assets-grid > .glass-card {
+  animation: card-reveal 0.32s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.assets-grid > .glass-card:nth-child(1) { animation-delay: 0.02s; }
+.assets-grid > .glass-card:nth-child(2) { animation-delay: 0.05s; }
+.assets-grid > .glass-card:nth-child(3) { animation-delay: 0.08s; }
+.assets-grid > .glass-card:nth-child(4) { animation-delay: 0.11s; }
+.assets-grid > .glass-card:nth-child(5) { animation-delay: 0.14s; }
+.assets-grid > .glass-card:nth-child(6) { animation-delay: 0.17s; }
+.assets-grid > .glass-card:nth-child(n + 7) { animation-delay: 0.2s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .assets-grid > .glass-card {
+    animation: none;
+  }
 }
 
 .glass-panel {
   background: var(--color-glass-neutral);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--color-glass-border);
   border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card);
 }
 
 .glass-modal {
   background: var(--color-overlay-heavy);
   backdrop-filter: blur(var(--glass-blur-modal));
   -webkit-backdrop-filter: blur(var(--glass-blur-modal));
-  border: 1px solid var(--color-glass-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
+  box-shadow: var(--shadow-modal);
 }
 
 .accent-pill {
@@ -51,10 +86,12 @@
 }
 
 .page-title {
-  margin: 0 0 0.25rem;
-  font-size: 1.35rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-text-primary);
 }
 
 .page-subtitle {
@@ -70,6 +107,11 @@
 
 .page-grid--stats {
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.page-grid--cards {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
 }
 
 .product-detail-grid {

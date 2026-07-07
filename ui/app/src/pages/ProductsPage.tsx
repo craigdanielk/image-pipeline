@@ -26,7 +26,7 @@ export default function ProductsPage() {
         </Link>
       </div>
 
-      <div className="page-grid">
+      <div className="page-grid page-grid--cards">
         {products.map((p) => (
           <GlassCard key={p.slug} className="stub-note">
             <Link to={`/products/${p.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
