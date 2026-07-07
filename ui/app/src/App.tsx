@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { CreatorModeProvider } from "./CreatorModeContext";
+import { TenantProvider } from "./TenantContext";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import GlassShell from "./design/GlassShell";
 import AssetsPage from "./pages/AssetsPage";
@@ -18,6 +19,7 @@ import StubPage from "./pages/StubPage";
 export default function App() {
   return (
     <CreatorModeProvider>
+      <TenantProvider>
       <WorkspaceProvider>
         <BrowserRouter>
         <Routes>
@@ -68,6 +70,7 @@ export default function App() {
         </Routes>
         </BrowserRouter>
       </WorkspaceProvider>
+      </TenantProvider>
     </CreatorModeProvider>
   );
 }

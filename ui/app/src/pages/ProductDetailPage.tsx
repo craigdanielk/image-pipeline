@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import ArtifactGallery from "../components/ArtifactGallery";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
+import { useTenant, withTenant } from "../TenantContext";
 
 type ProductSpec = {
   id: string;
@@ -20,17 +21,19 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<ProductSpec | null>(null);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
+  const { tenant } = useTenant();
 
   const load = () => {
     if (!slug) return;
-    api<{ product: ProductSpec }>(`/api/knowledge/products/${slug}`)
+    const params = withTenant(new URLSearchParams(), tenant);
+    api<{ product: ProductSpec }>(`/api/knowledge/products/${slug}?${params}`)
       .then((d) => setProduct(d.product))
       .catch((e) => setStatus(String(e)));
   };
 
   useEffect(() => {
     load();
-  }, [slug]);
+  }, [slug, tenant]);
 
   const onUpload = async (file: File) => {
     if (!slug) return;
@@ -39,10 +42,14 @@ export default function ProductDetailPage() {
     const form = new FormData();
     form.append("file", file);
     try {
-      const res = await fetch(
-        `/api/knowledge/products/${slug}/refs?ref_id=ref-${Date.now()}&role=product_ref`,
-        { method: "POST", body: form }
+      const params = withTenant(
+        new URLSearchParams({ ref_id: `ref-${Date.now()}`, role: "product_ref" }),
+        tenant
       );
+      const res = await fetch(`/api/knowledge/products/${slug}/refs?${params}`, {
+        method: "POST",
+        body: form,
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || res.statusText);
       setStatus(`Uploaded ${data.path}`);
@@ -69,7 +76,7 @@ export default function ProductDetailPage() {
       <h1 className="page-title">{product.name}</h1>
       <p className="page-subtitle">ProductSpec · {product.id}</p>
 
-      <div className="page-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <div className="page-grid product-detail-grid" style={{ gap: "1rem" }}>
         <GlassCard className="form-panel">
           <h2 className="dashboard-panel__title">Geometry</h2>
           <p style={{ margin: 0, fontSize: "0.88rem", lineHeight: 1.5 }}>

@@ -2,14 +2,17 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
+import { useTenant, withTenant } from "../TenantContext";
 import type { Product } from "../types";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const { tenant } = useTenant();
 
   useEffect(() => {
-    api<{ products: Product[] }>("/api/products").then((d) => setProducts(d.products || []));
-  }, []);
+    const params = withTenant(new URLSearchParams(), tenant);
+    api<{ products: Product[] }>(`/api/products?${params}`).then((d) => setProducts(d.products || []));
+  }, [tenant]);
 
   return (
     <div>

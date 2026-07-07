@@ -13,7 +13,13 @@ import workspace_runs
 
 _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _REGISTRY_VERSION = 1
-_DEFAULT_LIMIT = 10
+_DEFAULT_LIMIT = 24
+
+_STATUS_APPROVED = "approved"
+_STATUS_REJECTED = "rejected"
+_STATUS_PENDING = "pending"
+
+_VERSION_SUFFIX_RE = re.compile(r"-v\d+$")
 
 # drive-upload folder → product slug (JOGA starz-kid-images)
 _DRIVE_FOLDER_SLUGS: dict[str, str] = {
@@ -114,6 +120,7 @@ def _scan_image(
         "comment": "",
         "deleted_at": None,
         "delete_reason": None,
+        "approved_at": None,
     }
 
 
@@ -134,34 +141,35 @@ def discover_images(jobs_root: Path, product_slug: str | None = None) -> list[di
         seen_paths.add(p)
         found.append(row)
 
-    # Per-product out/ trees
-    for child in sorted(jobs_root.iterdir()):
-        if not child.is_dir() or child.name.startswith("."):
+    # out/ trees at any depth — product is nested directly under jobs_root for a
+    # flat consumer (jobs/<product>/out/) or under an intermediate campaign folder
+    # (jobs/<campaign>/<product>/out/). Filename convention (starz-<product>-N.ext)
+    # takes priority over the containing folder name since curated webp exports can
+    # land in a shared campaign-level out/ that isn't itself a product folder.
+    _noise = {"labeled", "shared", "craig photos", "compile", "refs"}
+    for out_dir in sorted(jobs_root.rglob("out")):
+        if not out_dir.is_dir():
             continue
-        if child.name in ("labeled", "shared", "Craig Photos", "drive-upload-2026-07-06"):
+        rel_parts = out_dir.relative_to(jobs_root).parts[:-1]
+        if any(part.lower() in _noise or part.lower().startswith("drive-upload") for part in rel_parts):
             continue
-        if child.name == "out":
-            continue
-        slug = child.name
+        # A campaign-level catch-all (jobs/<campaign>/out/) sits one level above where
+        # per-product folders live — trust the filename there. A real per-product
+        # folder (jobs/<campaign>/<product>/out/, or jobs/<product>/out/ when flat)
+        # is ground truth — trust its own name over a filename-parsing guess.
+        campaign_level = out_dir.parent.parent == jobs_root
         for pattern in ("*.webp", "*.png", "*.jpg", "*.jpeg"):
-            for folder in [child / "out", child / "out" / "webp"]:
+            for folder in (out_dir, out_dir / "webp"):
                 if not folder.is_dir():
                     continue
                 for img in folder.glob(pattern):
                     if img.suffix.lower() not in _IMAGE_EXTS:
                         continue
+                    if campaign_level:
+                        slug = _slug_from_filename(img.name) or out_dir.parent.name
+                    else:
+                        slug = out_dir.parent.name or _slug_from_filename(img.name)
                     add(_scan_image(img, product_slug=slug, jobs_root=jobs_root))
-
-    # Root-level out/ (e.g. ankle-weights at jobs root)
-    root_out = jobs_root / "out"
-    if root_out.is_dir():
-        for img in root_out.rglob("*"):
-            if not img.is_file() or img.suffix.lower() not in _IMAGE_EXTS:
-                continue
-            slug = _slug_from_filename(img.name)
-            if not slug:
-                continue
-            add(_scan_image(img, product_slug=slug, jobs_root=jobs_root))
 
     # Google Sheet / Drive upload webps
     for drive_dir in sorted(jobs_root.glob("drive-upload-*")):
@@ -217,6 +225,7 @@ def _merge_run_outputs(
                     "comment": "",
                     "deleted_at": None,
                     "delete_reason": None,
+                    "approved_at": None,
                 }
             )
     return discovered + extra
@@ -259,19 +268,37 @@ def sync_registry(
     return {"added": added, "updated": updated, "total": len(artifacts)}
 
 
-def list_artifacts(
+def _status_of(row: dict[str, Any]) -> str:
+    if row.get("deleted_at"):
+        return _STATUS_REJECTED
+    if row.get("approved_at"):
+        return _STATUS_APPROVED
+    return _STATUS_PENDING
+
+
+def _group_key(name: str) -> str:
+    """Collapse version iterations of the same shot: shot-4-logo-fix-v3.png -> shot-4-logo-fix."""
+    stem = name.rsplit(".", 1)[0]
+    job_id = stem.split("__", 1)[0]
+    return _VERSION_SUFFIX_RE.sub("", job_id)
+
+
+def _filtered_rows(
     root: Path,
     *,
     workspace_id: str | None = None,
     product_slug: str | None = None,
     campaign_slug: str | None = None,
-    limit: int = _DEFAULT_LIMIT,
     include_deleted: bool = False,
+    status: str | None = None,
 ) -> list[dict[str, Any]]:
     data = load_registry(root, workspace_id)
     rows: list[dict[str, Any]] = []
     for row in data["artifacts"].values():
-        if not include_deleted and row.get("deleted_at"):
+        if status:
+            if _status_of(row) != status:
+                continue
+        elif not include_deleted and row.get("deleted_at"):
             continue
         if product_slug and row.get("product_slug") != product_slug:
             continue
@@ -282,7 +309,50 @@ def list_artifacts(
             continue
         rows.append(_enrich_row(row))
     rows.sort(key=lambda r: r.get("created_at", 0), reverse=True)
-    return rows[:limit]
+    return rows
+
+
+def list_artifacts(
+    root: Path,
+    *,
+    workspace_id: str | None = None,
+    product_slug: str | None = None,
+    campaign_slug: str | None = None,
+    limit: int = _DEFAULT_LIMIT,
+    offset: int = 0,
+    include_deleted: bool = False,
+    status: str | None = None,
+) -> list[dict[str, Any]]:
+    rows = _filtered_rows(
+        root,
+        workspace_id=workspace_id,
+        product_slug=product_slug,
+        campaign_slug=campaign_slug,
+        include_deleted=include_deleted,
+        status=status,
+    )
+    return rows[offset : offset + limit]
+
+
+def count_artifacts(
+    root: Path,
+    *,
+    workspace_id: str | None = None,
+    product_slug: str | None = None,
+    campaign_slug: str | None = None,
+    include_deleted: bool = False,
+    status: str | None = None,
+) -> int:
+    return len(
+        _filtered_rows(
+            root,
+            workspace_id=workspace_id,
+            product_slug=product_slug,
+            campaign_slug=campaign_slug,
+            include_deleted=include_deleted,
+            status=status,
+        )
+    )
 
 
 def get_artifact(root: Path, artifact_id: str, workspace_id: str | None = None) -> dict[str, Any]:
@@ -321,8 +391,43 @@ def soft_delete(
     if not row:
         raise KeyError(artifact_id)
     row["deleted_at"] = time.time()
+    row["approved_at"] = None
     if reason:
         row["delete_reason"] = reason.strip()
+    save_registry(root, data, workspace_id)
+    return _enrich_row(row)
+
+
+def approve_artifact(
+    root: Path,
+    artifact_id: str,
+    *,
+    workspace_id: str | None = None,
+) -> dict[str, Any]:
+    data = load_registry(root, workspace_id)
+    row = data["artifacts"].get(artifact_id)
+    if not row:
+        raise KeyError(artifact_id)
+    row["approved_at"] = time.time()
+    row["deleted_at"] = None
+    row["delete_reason"] = None
+    save_registry(root, data, workspace_id)
+    return _enrich_row(row)
+
+
+def restore_artifact(
+    root: Path,
+    artifact_id: str,
+    *,
+    workspace_id: str | None = None,
+) -> dict[str, Any]:
+    """Undo a rejection — back to pending, file untouched (it was never deleted)."""
+    data = load_registry(root, workspace_id)
+    row = data["artifacts"].get(artifact_id)
+    if not row:
+        raise KeyError(artifact_id)
+    row["deleted_at"] = None
+    row["delete_reason"] = None
     save_registry(root, data, workspace_id)
     return _enrich_row(row)
 
@@ -332,4 +437,6 @@ def _enrich_row(row: dict[str, Any]) -> dict[str, Any]:
     path = row.get("path") or ""
     if path:
         out["url"] = f"/media?path={path}"
+    out["status"] = _status_of(row)
+    out["group_key"] = _group_key(row.get("name") or "")
     return out

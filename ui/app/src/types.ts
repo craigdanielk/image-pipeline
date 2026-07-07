@@ -30,6 +30,8 @@ export type Output = {
   mtime?: number;
 };
 
+export type ArtifactStatus = "pending" | "approved" | "rejected";
+
 export type Artifact = {
   id: string;
   path: string;
@@ -42,6 +44,9 @@ export type Artifact = {
   comment?: string;
   deleted_at?: number | null;
   delete_reason?: string | null;
+  approved_at?: number | null;
+  status: ArtifactStatus;
+  group_key: string;
 };
 
 export type CompileFile = {

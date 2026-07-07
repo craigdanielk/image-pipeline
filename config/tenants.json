@@ -1,0 +1,9 @@
+{
+  "tenants": [
+    {
+      "slug": "joga",
+      "label": "joga",
+      "jobs_root": "/Users/craigkunte/Developer/GitHub/tenants/joga/tools/image-pipeline/jobs"
+    }
+  ]
+}

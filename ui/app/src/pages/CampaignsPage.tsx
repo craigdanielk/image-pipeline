@@ -3,15 +3,18 @@ import { Link } from "react-router-dom";
 import ArtifactGallery from "../components/ArtifactGallery";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
+import { useTenant, withTenant } from "../TenantContext";
 import type { Campaign } from "../types";
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { tenant } = useTenant();
 
   useEffect(() => {
-    api<{ campaigns: Campaign[] }>("/api/campaigns").then((d) => setCampaigns(d.campaigns || []));
-  }, []);
+    const params = withTenant(new URLSearchParams(), tenant);
+    api<{ campaigns: Campaign[] }>(`/api/campaigns?${params}`).then((d) => setCampaigns(d.campaigns || []));
+  }, [tenant]);
 
   return (
     <div>

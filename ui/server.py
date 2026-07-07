@@ -45,6 +45,7 @@ import artifact_registry  # noqa: E402
 import graph_to_reactflow  # noqa: E402
 import knowledge_store  # noqa: E402
 import spec_validator_v2  # noqa: E402
+import tenants  # noqa: E402
 import workspace_runs  # noqa: E402
 
 app = FastAPI(title="Creative Compiler UI", version="0.3.0")
@@ -97,18 +98,15 @@ def _humanize_id(job_id: str) -> str:
 
 
 def _product_from_job_path(path_field: str, jobs_dir_name: str = "jobs") -> str:
-    """Extract product slug from job path: jobs/primikey-usba/foo.job.json → primikey-usba."""
-    parts = Path(path_field).parts
-    try:
-        idx = parts.index(jobs_dir_name)
-        if idx + 1 < len(parts) - 1:
-            return parts[idx + 1]
-    except ValueError:
-        pass
-    return "_general"
+    """Extract product slug from job path: the job file's own containing folder
+    (…/jobs/primikey-usba/foo.job.json → primikey-usba, however deep the job sits)."""
+    parent_name = Path(path_field).parent.name
+    if not parent_name or parent_name == jobs_dir_name:
+        return "_general"
+    return parent_name
 
 
-def _primary_jobs_dir() -> Path:
+def _env_jobs_root() -> Path:
     extra = os.environ.get("IMAGE_PIPELINE_JOBS_ROOT", "").strip()
     if extra:
         p = Path(extra).expanduser().resolve()
@@ -117,14 +115,21 @@ def _primary_jobs_dir() -> Path:
     return (ROOT / "jobs").resolve()
 
 
-def _glob_jobs() -> list[dict[str, str]]:
+def _primary_jobs_dir(tenant: str | None = None) -> Path:
+    return tenants.resolve_jobs_root(ROOT, tenant, _env_jobs_root())
+
+
+def _glob_jobs(tenant: str | None = None) -> list[dict[str, str]]:
     seen: set[str] = set()
     out: list[dict[str, str]] = []
 
     scan_dirs: list[tuple[str, Path]] = [("repo", ROOT / "jobs")]
-    jobs_root = os.environ.get("IMAGE_PIPELINE_JOBS_ROOT", "").strip()
-    if jobs_root:
-        scan_dirs.append(("external", Path(jobs_root).expanduser().resolve()))
+    if tenant:
+        scan_dirs = [("external", _primary_jobs_dir(tenant))]
+    else:
+        jobs_root = os.environ.get("IMAGE_PIPELINE_JOBS_ROOT", "").strip()
+        if jobs_root:
+            scan_dirs.append(("external", Path(jobs_root).expanduser().resolve()))
 
     for source, jobs_dir in scan_dirs:
         if not jobs_dir.is_dir():
@@ -285,17 +290,20 @@ _OUTPUT_TEMPLATE_MAP = {
 }
 
 
-def _knowledge() -> knowledge_store.KnowledgeStore:
-    return knowledge_store.KnowledgeStore(ROOT)
+def _knowledge(tenant: str | None = None) -> knowledge_store.KnowledgeStore:
+    base = workspace_runs.workspace_dir(ROOT, tenant) if tenant else ROOT
+    return knowledge_store.KnowledgeStore(base)
 
 
-def _workspace_id() -> str:
+def _workspace_id(tenant: str | None = None) -> str:
+    if tenant:
+        return tenant
     return os.environ.get("IMAGE_PIPELINE_WORKSPACE_ID", "default").strip() or "default"
 
 
-def _shots_for_product(slug: str) -> list[dict[str, Any]]:
+def _shots_for_product(slug: str, tenant: str | None = None) -> list[dict[str, Any]]:
     shots: list[dict[str, Any]] = []
-    for job in _glob_jobs():
+    for job in _glob_jobs(tenant):
         if job["product"] == slug:
             shots.append(
                 {
@@ -341,15 +349,26 @@ def config() -> dict[str, Any]:
     }
 
 
+@app.get("/api/tenants")
+def list_tenants_api() -> dict[str, Any]:
+    return {"tenants": tenants.load_tenants(ROOT)}
+
+
+@app.post("/api/tenants")
+def add_tenant_api(slug: str, jobs_root: str, label: Optional[str] = None) -> dict[str, Any]:
+    entry = tenants.add_tenant(ROOT, slug, jobs_root, label)
+    return {"ok": True, "tenant": entry}
+
+
 @app.get("/api/jobs")
-def list_jobs() -> dict[str, Any]:
-    return {"jobs": _glob_jobs()}
+def list_jobs(tenant: Optional[str] = None) -> dict[str, Any]:
+    return {"jobs": _glob_jobs(tenant)}
 
 
 @app.get("/api/products")
-def list_products() -> dict[str, Any]:
+def list_products(tenant: Optional[str] = None) -> dict[str, Any]:
     """Knowledge-first products with optional job shot counts."""
-    store = _knowledge()
+    store = _knowledge(tenant)
     products: list[dict[str, Any]] = []
     for row in store.list_products():
         slug = row["slug"]
@@ -359,20 +378,21 @@ def list_products() -> dict[str, Any]:
                 "name": row["name"],
                 "geometry_description": row.get("geometry_description"),
                 "reference_count": row.get("reference_count", 0),
-                "shots": _shots_for_product(slug),
+                "shots": _shots_for_product(slug, tenant),
                 "source": "knowledge",
             }
         )
     known = {p["slug"] for p in products}
-    for job in _glob_jobs():
+    for job in _glob_jobs(tenant):
         slug = job["product"]
         if slug in known or slug == "_general":
             continue
+        known.add(slug)
         products.append(
             {
                 "slug": slug,
                 "name": slug.replace("-", " ").title(),
-                "shots": _shots_for_product(slug),
+                "shots": _shots_for_product(slug, tenant),
                 "source": "jobs_only",
             }
         )
@@ -381,11 +401,11 @@ def list_products() -> dict[str, Any]:
 
 
 @app.get("/api/workspace")
-def get_workspace() -> dict[str, Any]:
-    wid = _workspace_id()
+def get_workspace(tenant: Optional[str] = None) -> dict[str, Any]:
+    wid = _workspace_id(tenant)
     meta = workspace_runs.workspace_meta(ROOT, wid)
-    products = len(_knowledge().list_products())
-    campaigns = len(_knowledge().list_campaigns())
+    products = len(_knowledge(tenant).list_products())
+    campaigns = len(_knowledge(tenant).list_campaigns())
     runs = workspace_runs.list_runs(ROOT, wid, limit=100)
     return {
         "workspace": meta,
@@ -399,34 +419,34 @@ def get_workspace() -> dict[str, Any]:
 
 
 @app.get("/api/knowledge/products")
-def knowledge_list_products() -> dict[str, Any]:
-    return {"products": _knowledge().list_products()}
+def knowledge_list_products(tenant: Optional[str] = None) -> dict[str, Any]:
+    return {"products": _knowledge(tenant).list_products()}
 
 
 @app.get("/api/knowledge/products/{slug}")
-def knowledge_get_product(slug: str) -> dict[str, Any]:
+def knowledge_get_product(slug: str, tenant: Optional[str] = None) -> dict[str, Any]:
     try:
-        return {"product": _knowledge().get_product(slug)}
+        return {"product": _knowledge(tenant).get_product(slug)}
     except knowledge_store.KnowledgeError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.post("/api/knowledge/products")
-def knowledge_create_product(req: CreateProductRequest) -> dict[str, Any]:
+def knowledge_create_product(req: CreateProductRequest, tenant: Optional[str] = None) -> dict[str, Any]:
     try:
-        row = _knowledge().create_product(req.model_dump())
+        row = _knowledge(tenant).create_product(req.model_dump())
         return {"ok": True, "product": row}
     except knowledge_store.KnowledgeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.put("/api/knowledge/products/{slug}")
-def knowledge_update_product(slug: str, body: dict[str, Any]) -> dict[str, Any]:
+def knowledge_update_product(slug: str, body: dict[str, Any], tenant: Optional[str] = None) -> dict[str, Any]:
     try:
         if body.get("id") and body["id"] != slug:
             raise HTTPException(status_code=400, detail="id mismatch")
         body["id"] = slug
-        row = _knowledge().save_product(body)
+        row = _knowledge(tenant).save_product(body)
         return {"ok": True, "product": row}
     except knowledge_store.KnowledgeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -439,11 +459,12 @@ async def knowledge_upload_product_ref(
     slug: str,
     role: str = Query("product_ref"),
     ref_id: str = Query("ref"),
+    tenant: Optional[str] = None,
     file: UploadFile = File(...),
 ) -> dict[str, Any]:
     if not file.filename:
         raise HTTPException(status_code=400, detail="missing filename")
-    store = _knowledge()
+    store = _knowledge(tenant)
     try:
         store.get_product(slug)
     except knowledge_store.KnowledgeError as exc:
@@ -453,15 +474,15 @@ async def knowledge_upload_product_ref(
     dest = refs_dir / safe_name
     content = await file.read()
     dest.write_bytes(content)
-    asset_path = f"knowledge/products/{slug}/refs/{safe_name}"
-    try:
-        store.add_product_reference(slug, ref_id=ref_id, role=role, asset_path=asset_path)
-    except knowledge_store.KnowledgeError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
     try:
         rel = dest.relative_to(ROOT).as_posix()
     except ValueError:
         rel = dest.as_posix()
+    asset_path = rel
+    try:
+        store.add_product_reference(slug, ref_id=ref_id, role=role, asset_path=asset_path)
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {
         "ok": True,
         "path": rel,
@@ -472,22 +493,22 @@ async def knowledge_upload_product_ref(
 
 
 @app.get("/api/knowledge/campaigns")
-def knowledge_list_campaigns(product_spec_id: Optional[str] = None) -> dict[str, Any]:
-    return {"campaigns": _knowledge().list_campaigns(product_spec_id)}
+def knowledge_list_campaigns(product_spec_id: Optional[str] = None, tenant: Optional[str] = None) -> dict[str, Any]:
+    return {"campaigns": _knowledge(tenant).list_campaigns(product_spec_id)}
 
 
 @app.get("/api/knowledge/campaigns/{campaign_id}")
-def knowledge_get_campaign(campaign_id: str) -> dict[str, Any]:
+def knowledge_get_campaign(campaign_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
     try:
-        return {"campaign": _knowledge().get_campaign(campaign_id)}
+        return {"campaign": _knowledge(tenant).get_campaign(campaign_id)}
     except knowledge_store.KnowledgeError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.post("/api/knowledge/campaigns")
-def knowledge_create_campaign(req: CreateCampaignRequest) -> dict[str, Any]:
+def knowledge_create_campaign(req: CreateCampaignRequest, tenant: Optional[str] = None) -> dict[str, Any]:
     try:
-        row = _knowledge().create_campaign(req.model_dump())
+        row = _knowledge(tenant).create_campaign(req.model_dump())
         return {"ok": True, "campaign": row}
     except knowledge_store.KnowledgeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -522,36 +543,43 @@ def get_asset_approvals() -> dict[str, Any]:
 def list_artifacts_api(
     product_slug: Optional[str] = None,
     campaign_slug: Optional[str] = None,
-    limit: int = 10,
+    tenant: Optional[str] = None,
+    limit: int = 24,
+    offset: int = 0,
     include_deleted: bool = False,
+    status: Optional[str] = None,
     sync: bool = False,
 ) -> dict[str, Any]:
-    wid = _workspace_id()
+    wid = _workspace_id(tenant)
     if sync:
-        artifact_registry.sync_registry(ROOT, _primary_jobs_dir(), wid, product_slug=product_slug)
-    rows = artifact_registry.list_artifacts(
-        ROOT,
+        artifact_registry.sync_registry(ROOT, _primary_jobs_dir(tenant), wid, product_slug=product_slug)
+    capped_limit = min(limit, 60)
+    filter_kwargs = dict(
         workspace_id=wid,
         product_slug=product_slug,
         campaign_slug=campaign_slug,
-        limit=min(limit, 50),
         include_deleted=include_deleted,
+        status=status,
     )
-    return {"artifacts": rows}
+    rows = artifact_registry.list_artifacts(ROOT, limit=capped_limit, offset=offset, **filter_kwargs)
+    total = artifact_registry.count_artifacts(ROOT, **filter_kwargs)
+    return {"artifacts": rows, "total": total, "offset": offset, "limit": capped_limit}
 
 
 @app.post("/api/artifacts/sync")
-def sync_artifacts_api(product_slug: Optional[str] = None) -> dict[str, Any]:
+def sync_artifacts_api(product_slug: Optional[str] = None, tenant: Optional[str] = None) -> dict[str, Any]:
     stats = artifact_registry.sync_registry(
-        ROOT, _primary_jobs_dir(), _workspace_id(), product_slug=product_slug
+        ROOT, _primary_jobs_dir(tenant), _workspace_id(tenant), product_slug=product_slug
     )
     return {"ok": True, **stats}
 
 
 @app.patch("/api/artifacts/{artifact_id}")
-def patch_artifact_comment(artifact_id: str, req: ArtifactCommentRequest) -> dict[str, Any]:
+def patch_artifact_comment(
+    artifact_id: str, req: ArtifactCommentRequest, tenant: Optional[str] = None
+) -> dict[str, Any]:
     try:
-        row = artifact_registry.update_comment(ROOT, artifact_id, req.comment, _workspace_id())
+        row = artifact_registry.update_comment(ROOT, artifact_id, req.comment, _workspace_id(tenant))
         return {"ok": True, "artifact": row}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -561,11 +589,30 @@ def patch_artifact_comment(artifact_id: str, req: ArtifactCommentRequest) -> dic
 def delete_artifact(
     artifact_id: str,
     reason: Optional[str] = Query(None),
+    tenant: Optional[str] = None,
 ) -> dict[str, Any]:
     try:
         row = artifact_registry.soft_delete(
-            ROOT, artifact_id, reason=reason, workspace_id=_workspace_id()
+            ROOT, artifact_id, reason=reason, workspace_id=_workspace_id(tenant)
         )
+        return {"ok": True, "artifact": row}
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/artifacts/{artifact_id}/approve")
+def approve_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
+    try:
+        row = artifact_registry.approve_artifact(ROOT, artifact_id, workspace_id=_workspace_id(tenant))
+        return {"ok": True, "artifact": row}
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/artifacts/{artifact_id}/restore")
+def restore_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
+    try:
+        row = artifact_registry.restore_artifact(ROOT, artifact_id, workspace_id=_workspace_id(tenant))
         return {"ok": True, "artifact": row}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -806,9 +853,9 @@ def get_artifact(path: str) -> dict[str, Any]:
 
 
 @app.get("/api/campaigns")
-def list_campaigns() -> dict[str, Any]:
+def list_campaigns(tenant: Optional[str] = None) -> dict[str, Any]:
     campaigns: list[dict[str, Any]] = []
-    camp_dir = KNOWLEDGE / "campaigns"
+    camp_dir = _knowledge(tenant).campaigns_dir
     if camp_dir.is_dir():
         for path in sorted(camp_dir.glob("*.json")):
             data = json.loads(path.read_text(encoding="utf-8"))

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ContextCanvas from "./ContextCanvas";
 import GlassNavRail from "./GlassNavRail";
 import { useCreatorMode } from "../CreatorModeContext";
+import { useTenant } from "../TenantContext";
 import { useWorkspace } from "../WorkspaceContext";
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 export default function GlassShell({ children }: Props) {
   const { creatorMode, toggleMode } = useCreatorMode();
   const { workspace } = useWorkspace();
+  const { tenants, tenant, setTenant } = useTenant();
 
   return (
     <div className="glass-shell">
@@ -30,6 +32,20 @@ export default function GlassShell({ children }: Props) {
               <span className="glass-shell__tagline">Structured knowledge → deterministic compilation</span>
             </div>
             <div className="glass-shell__actions">
+              {tenants.length > 0 && (
+                <select
+                  className="field-select glass-shell__tenant"
+                  aria-label="Tenant"
+                  value={tenant ?? ""}
+                  onChange={(e) => setTenant(e.target.value || null)}
+                >
+                  {tenants.map((t) => (
+                    <option key={t.slug} value={t.slug}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              )}
               <Link to="/generate" className="btn btn--primary-solid">
                 Generate
               </Link>
