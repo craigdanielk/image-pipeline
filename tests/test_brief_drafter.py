@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Tests for brief_drafter — missing-key error path and system-context wiring.
+"""Tests for brief_drafter — missing-package error path and system-context wiring.
 
-No real network calls: the anthropic-package test injects a fake module via
-sys.modules so it works whether or not the real package is installed.
+No real subprocess/CLI calls: the claude_agent_sdk test injects a fake module
+via sys.modules so it works whether or not the real package is installed.
 """
 from __future__ import annotations
 
+import asyncio
 import os
 import sys
 import types
@@ -18,40 +19,41 @@ import brief_drafter
 
 
 class BriefDrafterTests(unittest.TestCase):
-    def test_missing_api_key_raises_clear_error(self) -> None:
-        prior = os.environ.pop("ANTHROPIC_API_KEY", None)
-        try:
+    def test_missing_sdk_raises_clear_error(self) -> None:
+        with mock.patch.dict(sys.modules, {"claude_agent_sdk": None}):
             with self.assertRaises(brief_drafter.BriefDraftError) as ctx:
-                brief_drafter.draft_prompt_template(cad_text="geometry", brief_text="kid hero shot")
-            self.assertIn("ANTHROPIC_API_KEY", str(ctx.exception))
-        finally:
-            if prior is not None:
-                os.environ["ANTHROPIC_API_KEY"] = prior
+                asyncio.run(
+                    brief_drafter.draft_prompt_template(cad_text="geometry", brief_text="kid hero shot")
+                )
+        self.assertIn("claude-agent-sdk", str(ctx.exception))
 
-    def test_system_context_reaches_the_api_call(self) -> None:
+    def test_system_context_reaches_the_sdk_call(self) -> None:
         captured = {}
 
-        def fake_create(*, model, max_tokens, system, messages):
-            captured["system"] = system
-            block = types.SimpleNamespace(type="text", text="drafted prompt")
-            return types.SimpleNamespace(content=[block])
+        async def fake_query(*, prompt, options):
+            captured["system_prompt"] = options.system_prompt
+            captured["prompt"] = prompt
+            block = types.SimpleNamespace(text="drafted prompt")
+            message = types.SimpleNamespace(content=[block])
+            yield message
 
-        fake_anthropic = types.ModuleType("anthropic")
-        fake_anthropic.Anthropic = lambda api_key: types.SimpleNamespace(
-            messages=types.SimpleNamespace(create=fake_create)
-        )
+        fake_sdk = types.ModuleType("claude_agent_sdk")
+        fake_sdk.query = fake_query
+        fake_sdk.ClaudeAgentOptions = lambda **kwargs: types.SimpleNamespace(**kwargs)
 
-        with mock.patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"}):
-            with mock.patch.dict(sys.modules, {"anthropic": fake_anthropic}):
-                result = brief_drafter.draft_prompt_template(
+        with mock.patch.dict(sys.modules, {"claude_agent_sdk": fake_sdk}):
+            result = asyncio.run(
+                brief_drafter.draft_prompt_template(
                     cad_text="geometry",
                     brief_text="kid hero shot",
                     system_context="ENGINE CONSTRAINTS: nano_banana_2 rejects batch_size.",
                 )
+            )
 
         self.assertEqual(result, "drafted prompt")
-        self.assertIn("nano_banana_2 rejects batch_size", captured["system"])
-        self.assertIn("preserve the literal placeholder tokens".lower(), captured["system"].lower())
+        self.assertIn("nano_banana_2 rejects batch_size", captured["system_prompt"])
+        self.assertIn("preserve the literal placeholder tokens".lower(), captured["system_prompt"].lower())
+        self.assertIn("kid hero shot", captured["prompt"])
 
 
 if __name__ == "__main__":

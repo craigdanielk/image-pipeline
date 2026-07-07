@@ -5,13 +5,13 @@ Turns a short, structured brief (what the shot should show, mood, optional
 feedback on a rejected prior attempt) into a prompt_template string that
 follows the house style already established by that product's real job
 files — same {cad}/{view} placeholder convention, same tone.
+
+Uses claude_agent_sdk.query(), the same mechanism services/sdk-executor uses —
+it drives the locally-authenticated `claude` CLI (subscription plan), not a
+billed API key. No ANTHROPIC_API_KEY required; just `claude` on PATH and
+already logged in (same auth this session is running under).
 """
 from __future__ import annotations
-
-import os
-
-_MODEL = "claude-sonnet-5"
-_MAX_TOKENS = 1024
 
 _TASK_RULES = """You draft the `prompt_template` field of a job-v1 JobSpec for a deterministic \
 image-generation compiler. House style, learned from the real example prompts you're given:
@@ -29,7 +29,7 @@ class BriefDraftError(RuntimeError):
     pass
 
 
-def draft_prompt_template(
+async def draft_prompt_template(
     *,
     cad_text: str,
     brief_text: str,
@@ -38,16 +38,11 @@ def draft_prompt_template(
     feedback: str | None = None,
     system_context: str | None = None,
 ) -> str:
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-    if not api_key:
-        raise BriefDraftError(
-            "ANTHROPIC_API_KEY is not set — add it to ui/.env to enable AI prompt drafting."
-        )
     try:
-        import anthropic
+        from claude_agent_sdk import ClaudeAgentOptions, query
     except ImportError as exc:
         raise BriefDraftError(
-            "anthropic package not installed — pip install -r ui/requirements.txt"
+            "claude-agent-sdk not installed — pip install -r ui/requirements.txt"
         ) from exc
 
     examples = example_prompts or []
@@ -73,18 +68,25 @@ def draft_prompt_template(
             f"\n\n---\n\n{_TASK_RULES}"
         )
 
-    client = anthropic.Anthropic(api_key=api_key)
-    try:
-        resp = client.messages.create(
-            model=_MODEL,
-            max_tokens=_MAX_TOKENS,
-            system=system,
-            messages=[{"role": "user", "content": user_msg}],
-        )
-    except Exception as exc:  # anthropic raises its own exception hierarchy
-        raise BriefDraftError(f"LLM call failed: {exc}") from exc
+    # tools=[] — this is a one-shot text draft, not an agent run; no file/bash access needed.
+    options = ClaudeAgentOptions(
+        system_prompt=system,
+        tools=[],
+        max_turns=1,
+        permission_mode="bypassPermissions",
+    )
 
-    text = "".join(block.text for block in resp.content if getattr(block, "type", None) == "text").strip()
+    text_parts: list[str] = []
+    try:
+        async for message in query(prompt=user_msg, options=options):
+            for block in getattr(message, "content", []) or []:
+                text = getattr(block, "text", None)
+                if text:
+                    text_parts.append(text)
+    except Exception as exc:  # claude_agent_sdk raises its own exception hierarchy
+        raise BriefDraftError(f"Claude Agent SDK call failed: {exc}") from exc
+
+    text = "".join(text_parts).strip()
     if not text:
         raise BriefDraftError("Model returned an empty draft.")
     return text

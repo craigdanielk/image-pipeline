@@ -678,7 +678,7 @@ def list_templates() -> dict[str, Any]:
 
 
 @app.post("/api/briefs/draft")
-def draft_brief(req: BriefDraftRequest) -> dict[str, Any]:
+async def draft_brief(req: BriefDraftRequest) -> dict[str, Any]:
     shots = _shots_for_product(req.product_slug, req.tenant)
     if not shots:
         raise HTTPException(status_code=404, detail=f"no jobs found for product: {req.product_slug}")
@@ -708,7 +708,7 @@ def draft_brief(req: BriefDraftRequest) -> dict[str, Any]:
     skill_doc = _SKILL_DOC_PATH.read_text(encoding="utf-8") if _SKILL_DOC_PATH.is_file() else ""
 
     try:
-        draft = brief_drafter.draft_prompt_template(
+        draft = await brief_drafter.draft_prompt_template(
             cad_text=cad_text,
             brief_text=req.brief_text,
             mood=req.mood,
