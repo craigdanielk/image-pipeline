@@ -41,6 +41,7 @@ if str(CORE) not in sys.path:
 if str(UI_DIR) not in sys.path:
     sys.path.insert(0, str(UI_DIR))
 
+import artifact_registry  # noqa: E402
 import graph_to_reactflow  # noqa: E402
 import knowledge_store  # noqa: E402
 import spec_validator_v2  # noqa: E402
@@ -161,17 +162,20 @@ def _glob_jobs() -> list[dict[str, str]]:
 def _glob_outputs(job_dir: str) -> list[dict[str, Any]]:
     base = _resolve_path(job_dir)
     images: list[dict[str, Any]] = []
-    for folder in [base / "out", base]:
+    scan_dirs = [base / "out", base / "out" / "webp", base]
+    for folder in scan_dirs:
         if not folder.is_dir():
             continue
-        for png in sorted(folder.glob("*.png")):
-            rel = png.as_posix()
+        for img in sorted(folder.iterdir()):
+            if not img.is_file() or img.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp"}:
+                continue
+            rel = img.as_posix()
             images.append(
                 {
-                    "name": png.name,
+                    "name": img.name,
                     "path": rel,
                     "url": f"/media?path={rel}",
-                    "mtime": png.stat().st_mtime,
+                    "mtime": img.stat().st_mtime,
                 }
             )
     seen: set[str] = set()
@@ -267,6 +271,10 @@ class CreateCampaignRequest(BaseModel):
 
 class ApprovalRequest(BaseModel):
     status: str = Field(..., pattern=r"^(pending|approved|rejected)$")
+
+
+class ArtifactCommentRequest(BaseModel):
+    comment: str = ""
 
 
 _OUTPUT_TEMPLATE_MAP = {
@@ -508,6 +516,59 @@ def patch_asset_approval(req: ApprovalRequest, path: str = Query(...)) -> dict[s
 @app.get("/api/assets/approvals")
 def get_asset_approvals() -> dict[str, Any]:
     return {"approvals": workspace_runs.load_approvals(ROOT, _workspace_id())}
+
+
+@app.get("/api/artifacts")
+def list_artifacts_api(
+    product_slug: Optional[str] = None,
+    campaign_slug: Optional[str] = None,
+    limit: int = 10,
+    include_deleted: bool = False,
+    sync: bool = False,
+) -> dict[str, Any]:
+    wid = _workspace_id()
+    if sync:
+        artifact_registry.sync_registry(ROOT, _primary_jobs_dir(), wid, product_slug=product_slug)
+    rows = artifact_registry.list_artifacts(
+        ROOT,
+        workspace_id=wid,
+        product_slug=product_slug,
+        campaign_slug=campaign_slug,
+        limit=min(limit, 50),
+        include_deleted=include_deleted,
+    )
+    return {"artifacts": rows}
+
+
+@app.post("/api/artifacts/sync")
+def sync_artifacts_api(product_slug: Optional[str] = None) -> dict[str, Any]:
+    stats = artifact_registry.sync_registry(
+        ROOT, _primary_jobs_dir(), _workspace_id(), product_slug=product_slug
+    )
+    return {"ok": True, **stats}
+
+
+@app.patch("/api/artifacts/{artifact_id}")
+def patch_artifact_comment(artifact_id: str, req: ArtifactCommentRequest) -> dict[str, Any]:
+    try:
+        row = artifact_registry.update_comment(ROOT, artifact_id, req.comment, _workspace_id())
+        return {"ok": True, "artifact": row}
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.delete("/api/artifacts/{artifact_id}")
+def delete_artifact(
+    artifact_id: str,
+    reason: Optional[str] = Query(None),
+) -> dict[str, Any]:
+    try:
+        row = artifact_registry.soft_delete(
+            ROOT, artifact_id, reason=reason, workspace_id=_workspace_id()
+        )
+        return {"ok": True, "artifact": row}
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @app.get("/api/templates")

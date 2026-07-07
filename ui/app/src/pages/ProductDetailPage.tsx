@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import ArtifactGallery from "../components/ArtifactGallery";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
 
@@ -130,6 +131,8 @@ export default function ProductDetailPage() {
           Generate
         </Link>
       </div>
+
+      <ArtifactGallery productSlug={product.id} title="Recent shots" />
     </div>
   );
 }

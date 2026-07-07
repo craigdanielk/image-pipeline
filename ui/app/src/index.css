@@ -419,6 +419,98 @@ body {
   color: var(--color-text-tertiary);
 }
 
+.artifact-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem;
+}
+
+.artifact-card__thumb {
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.artifact-card__thumb img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 4/3;
+  object-fit: contain;
+  background: var(--color-media-backdrop);
+}
+
+.artifact-card__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 8rem;
+}
+
+.artifact-source {
+  font-size: 0.55rem;
+  text-transform: capitalize;
+}
+
+.artifact-source--sheet_import {
+  border-color: rgba(34, 197, 94, 0.35);
+  color: #86efac;
+}
+
+.artifact-comment {
+  font-size: 0.75rem;
+  resize: vertical;
+  min-height: 2.5rem;
+}
+
+.btn--danger {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.artifact-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.artifact-modal__inner {
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--color-glass-neutral);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(24px);
+}
+
+.artifact-modal__inner img {
+  width: 100%;
+  display: block;
+  border-radius: 8px;
+}
+
+.artifact-modal__meta {
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+}
+
+.artifact-modal__meta span {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  margin-top: 0.25rem;
+}
+
 .pipeline-chain {
   padding: 1.25rem;
   max-width: 320px;

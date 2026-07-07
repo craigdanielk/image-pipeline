@@ -27,6 +27,21 @@ export type Output = {
   name: string;
   path: string;
   url: string;
+  mtime?: number;
+};
+
+export type Artifact = {
+  id: string;
+  path: string;
+  name: string;
+  url: string;
+  product_slug: string;
+  campaign_slug?: string | null;
+  created_at: number;
+  source: "job_run" | "sheet_import" | "manual";
+  comment?: string;
+  deleted_at?: number | null;
+  delete_reason?: string | null;
 };
 
 export type CompileFile = {

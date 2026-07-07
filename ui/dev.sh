@@ -11,10 +11,11 @@ pick_python() {
 
 free_port() {
   local port=$1
+  local label="${2:-process}"
   local pids
   pids=$(lsof -ti ":${port}" 2>/dev/null || true)
   if [[ -n "$pids" ]]; then
-    echo "Stopping existing process on :${port} (stale API server)…"
+    echo "Stopping existing ${label} on :${port}…"
     kill $pids 2>/dev/null || true
     sleep 0.5
   fi
@@ -34,10 +35,12 @@ if [[ ! -d "$APP/node_modules" ]]; then
   (cd "$APP" && npm install)
 fi
 
-free_port "$PORT"
+free_port "$PORT" "API server"
+VITE_PORT="${IMAGE_PIPELINE_VITE_PORT:-5173}"
+free_port "$VITE_PORT" "Vite dev server"
 
 echo "API server  → http://127.0.0.1:${PORT}"
-echo "Vite dev UI → http://127.0.0.1:5173  (proxies API to :${PORT})"
+echo "Vite dev UI → http://127.0.0.1:${VITE_PORT}  (proxies API to :${PORT})"
 echo "Press Ctrl+C to stop both."
 
 export IMAGE_PIPELINE_UI_PORT="$PORT"

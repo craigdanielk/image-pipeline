@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ArtifactGallery from "../components/ArtifactGallery";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
 import type { Campaign } from "../types";
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     api<{ campaigns: Campaign[] }>("/api/campaigns").then((d) => setCampaigns(d.campaigns || []));
@@ -35,9 +37,24 @@ export default function CampaignsPage() {
                 Lighting: {c.scene.lighting}
               </p>
             )}
-            <Link to={`/generate?campaign=${c.id}`} className="btn btn--sm" style={{ marginTop: "0.75rem" }}>
-              Generate with this campaign
-            </Link>
+            <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <Link to={`/generate?campaign=${c.id}`} className="btn btn--sm">
+                Generate with this campaign
+              </Link>
+              <button
+                type="button"
+                className="btn btn--sm"
+                onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+              >
+                {expandedId === c.id ? "Hide shots" : "Recent shots"}
+              </button>
+            </div>
+            {expandedId === c.id && c.product_spec_id && (
+              <ArtifactGallery
+                productSlug={c.product_spec_id}
+                title={`Outputs · ${c.label}`}
+              />
+            )}
           </GlassCard>
         ))}
         {!campaigns.length && (
