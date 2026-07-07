@@ -570,6 +570,107 @@ body {
   margin-top: 0.25rem;
 }
 
+.brief-modal__inner {
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-modal);
+  padding: 1.25rem;
+}
+
+.brief-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+.brief-modal__context {
+  margin: 0 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.brief-modal__section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.brief-modal__section:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0.75rem;
+}
+
+.brief-modal__output-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.brief-modal__error {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-status-error);
+}
+
+.brief-modal__refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.brief-modal__ref {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--color-text-tertiary);
+}
+
+.brief-modal__ref img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.brief-modal__ref--selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.brief-modal__ref--upload {
+  cursor: pointer;
+}
+
+.brief-modal__result {
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-surface-inset);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+}
+
 .pipeline-chain {
   padding: 1.25rem;
   max-width: 320px;

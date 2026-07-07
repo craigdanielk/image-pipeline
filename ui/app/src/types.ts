@@ -85,3 +85,23 @@ export type Operation = {
   id: string;
   label: string;
 };
+
+export type ReferenceImage = {
+  path: string;
+  name: string;
+  url: string;
+};
+
+export type BriefDraftResponse = {
+  prompt_template: string;
+  cad: string | null;
+  examples_used: number;
+  suggested_engine: Record<string, unknown> | null;
+  suggested_output: Record<string, unknown> | null;
+};
+
+export type ExecuteResult = {
+  raw_stdout: string;
+  result?: Record<string, unknown>;
+  outputs?: Output[];
+};

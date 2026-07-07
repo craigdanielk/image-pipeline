@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import BriefModal from "./BriefModal";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
 import { useTenant, withTenant } from "../TenantContext";
@@ -49,6 +50,7 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
   const [loadingMore, setLoadingMore] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<Artifact | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [regenTarget, setRegenTarget] = useState<Artifact | null>(null);
   const { tenant } = useTenant();
 
   const buildParams = useCallback(
@@ -285,6 +287,9 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
                           </button>
                         </>
                       )}
+                      <button type="button" className="btn btn--sm" onClick={() => setRegenTarget(a)}>
+                        Regenerate…
+                      </button>
                     </div>
                   </GlassCard>
                 ))}
@@ -357,6 +362,16 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
             </div>
           </div>
         </div>
+      )}
+
+      {regenTarget && (
+        <BriefModal
+          productSlug={regenTarget.product_slug}
+          basedOnLabel={`Regenerating from: ${regenTarget.name} (${regenTarget.status})`}
+          initialFeedback={regenTarget.delete_reason || regenTarget.comment || undefined}
+          onClose={() => setRegenTarget(null)}
+          onGenerated={load}
+        />
       )}
 
       {status && (

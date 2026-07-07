@@ -41,7 +41,24 @@ if str(CORE) not in sys.path:
 if str(UI_DIR) not in sys.path:
     sys.path.insert(0, str(UI_DIR))
 
+
+def _load_env_file(path: Path) -> None:
+    """Minimal .env loader — no python-dotenv dependency (mirrors core/tracking.py)."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        os.environ.setdefault(k.strip(), v.strip())
+
+
+_load_env_file(ROOT / ".env")
+_load_env_file(UI_DIR / ".env")
+
 import artifact_registry  # noqa: E402
+import brief_drafter  # noqa: E402
 import graph_to_reactflow  # noqa: E402
 import knowledge_store  # noqa: E402
 import spec_validator_v2  # noqa: E402
@@ -280,6 +297,14 @@ class ApprovalRequest(BaseModel):
 
 class ArtifactCommentRequest(BaseModel):
     comment: str = ""
+
+
+class BriefDraftRequest(BaseModel):
+    product_slug: str = Field(..., pattern=r"^[a-z0-9][a-z0-9-]*$")
+    tenant: Optional[str] = None
+    brief_text: str = Field(..., min_length=1)
+    mood: Optional[str] = None
+    feedback: Optional[str] = None
 
 
 _OUTPUT_TEMPLATE_MAP = {
@@ -651,11 +676,89 @@ def list_templates() -> dict[str, Any]:
     return {"templates": templates}
 
 
+@app.post("/api/briefs/draft")
+def draft_brief(req: BriefDraftRequest) -> dict[str, Any]:
+    shots = _shots_for_product(req.product_slug, req.tenant)
+    if not shots:
+        raise HTTPException(status_code=404, detail=f"no jobs found for product: {req.product_slug}")
+    product_dir = Path(shots[0]["dir"])
+
+    cad_path = product_dir / "cad.md"
+    cad_text = cad_path.read_text(encoding="utf-8") if cad_path.is_file() else ""
+
+    examples: list[str] = []
+    suggested_engine: dict[str, Any] | None = None
+    suggested_output: dict[str, Any] | None = None
+    for shot in shots[:3]:
+        try:
+            job = json.loads(Path(shot["path"]).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        tpl = (job.get("spec") or {}).get("prompt_template")
+        if tpl:
+            examples.append(tpl)
+        if suggested_engine is None and job.get("engine"):
+            suggested_engine = job["engine"]
+        if suggested_output is None and job.get("output"):
+            suggested_output = {
+                k: v for k, v in job["output"].items() if k in ("imgtype", "aspect_ratio", "resolution", "count")
+            }
+
+    try:
+        draft = brief_drafter.draft_prompt_template(
+            cad_text=cad_text,
+            brief_text=req.brief_text,
+            mood=req.mood,
+            example_prompts=examples,
+            feedback=req.feedback,
+        )
+    except brief_drafter.BriefDraftError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return {
+        "prompt_template": draft,
+        "cad": "cad.md" if cad_path.is_file() else None,
+        "examples_used": len(examples),
+        "suggested_engine": suggested_engine,
+        "suggested_output": suggested_output,
+    }
+
+
+@app.get("/api/products/{slug}/references")
+def list_product_references(slug: str, tenant: Optional[str] = None) -> dict[str, Any]:
+    product_dir = _resolve_product_dir(slug, tenant)
+    refs: list[dict[str, str]] = []
+    seen: set[str] = set()
+    # Two conventions coexist across tenants: this repo's own jobs use "reference/",
+    # joga's real production jobs use "refs/". Scan both.
+    for dirname in ("reference", "refs"):
+        ref_dir = product_dir / dirname
+        if not ref_dir.is_dir():
+            continue
+        for img in sorted(ref_dir.rglob("*")):
+            if not img.is_file() or img.suffix.lower() not in {".png", ".jpg", ".jpeg", ".webp"}:
+                continue
+            path_str = img.as_posix()
+            if path_str in seen:
+                continue
+            seen.add(path_str)
+            refs.append({"path": path_str, "name": img.name, "url": f"/media?path={path_str}"})
+    return {"references": refs}
+
+
+def _resolve_product_dir(product_slug: str, tenant: str | None) -> Path:
+    """Existing products may sit under a campaign folder (jobs/<campaign>/<product>/) —
+    reuse an existing shot's directory rather than assuming a flat jobs/<product>/ layout."""
+    existing = _shots_for_product(product_slug, tenant)
+    if existing:
+        return Path(existing[0]["dir"])
+    return _primary_jobs_dir(tenant) / product_slug
+
+
 @app.post("/api/jobs/create")
-def create_job(req: CreateJobRequest) -> dict[str, Any]:
+def create_job(req: CreateJobRequest, tenant: Optional[str] = None) -> dict[str, Any]:
     """Write a new .job.json and create supporting directories."""
-    jobs_dir = _primary_jobs_dir()
-    product_dir = jobs_dir / req.product_slug
+    product_dir = _resolve_product_dir(req.product_slug, tenant)
     product_dir.mkdir(parents=True, exist_ok=True)
     (product_dir / "reference").mkdir(exist_ok=True)
     (product_dir / "out").mkdir(exist_ok=True)
@@ -675,6 +778,8 @@ def create_job(req: CreateJobRequest) -> dict[str, Any]:
     spec["prompt_template"] = req.prompt_template
     if req.cad:
         spec["cad"] = req.cad
+    elif (product_dir / "cad.md").is_file():
+        spec["cad"] = "cad.md"
 
     subject = {**(defaults.get("subject") or {}), **req.subject}
     output = req.output if req.output is not None else defaults.get("output")
@@ -724,6 +829,7 @@ def create_job(req: CreateJobRequest) -> dict[str, Any]:
 @app.post("/api/upload")
 async def upload_reference(
     product_slug: str = Query(..., pattern=r"^[a-z0-9][a-z0-9-]*$"),
+    tenant: Optional[str] = None,
     file: UploadFile = File(...),
 ) -> dict[str, Any]:
     """Upload a reference image to {product}/reference/ under jobs root."""
@@ -734,8 +840,7 @@ async def upload_reference(
     if ext not in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
         raise HTTPException(status_code=400, detail="only image files supported")
 
-    jobs_dir = _primary_jobs_dir()
-    ref_dir = jobs_dir / product_slug / "reference"
+    ref_dir = _resolve_product_dir(product_slug, tenant) / "reference"
     ref_dir.mkdir(parents=True, exist_ok=True)
 
     safe_name = re.sub(r"[^a-zA-Z0-9._-]", "-", Path(file.filename).name)

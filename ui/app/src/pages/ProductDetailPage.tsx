@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ArtifactGallery from "../components/ArtifactGallery";
+import BriefModal from "../components/BriefModal";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
 import { useTenant, withTenant } from "../TenantContext";
@@ -27,6 +28,8 @@ export default function ProductDetailPage() {
   const [source, setSource] = useState<ProductSource | null>(null);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
+  const [showBrief, setShowBrief] = useState(false);
+  const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
   const { tenant } = useTenant();
 
   const load = () => {
@@ -162,12 +165,20 @@ export default function ProductDetailPage() {
         <Link to="/campaigns/new" className="btn">
           + Campaign for this product
         </Link>
-        <Link to={`/generate?product=${product.id}`} className="btn btn--primary-solid">
-          Generate
-        </Link>
+        <button type="button" className="btn btn--primary-solid" onClick={() => setShowBrief(true)}>
+          + New shot
+        </button>
       </div>
 
-      <ArtifactGallery productSlug={product.id} title="Recent shots" />
+      {showBrief && (
+        <BriefModal
+          productSlug={product.id}
+          onClose={() => setShowBrief(false)}
+          onGenerated={() => setGalleryRefreshKey((k) => k + 1)}
+        />
+      )}
+
+      <ArtifactGallery key={galleryRefreshKey} productSlug={product.id} title="Recent shots" />
     </div>
   );
 }
