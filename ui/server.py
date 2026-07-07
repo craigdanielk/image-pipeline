@@ -33,6 +33,7 @@ UI_DIR = Path(__file__).resolve().parent
 UI_STATIC = UI_DIR / "static"
 UI_TEMPLATES = UI_DIR / "templates"
 KNOWLEDGE = ROOT / "knowledge"
+_SKILL_DOC_PATH = ROOT / "SKILL.md"
 
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
@@ -704,6 +705,8 @@ def draft_brief(req: BriefDraftRequest) -> dict[str, Any]:
                 k: v for k, v in job["output"].items() if k in ("imgtype", "aspect_ratio", "resolution", "count")
             }
 
+    skill_doc = _SKILL_DOC_PATH.read_text(encoding="utf-8") if _SKILL_DOC_PATH.is_file() else ""
+
     try:
         draft = brief_drafter.draft_prompt_template(
             cad_text=cad_text,
@@ -711,6 +714,7 @@ def draft_brief(req: BriefDraftRequest) -> dict[str, Any]:
             mood=req.mood,
             example_prompts=examples,
             feedback=req.feedback,
+            system_context=skill_doc,
         )
     except brief_drafter.BriefDraftError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

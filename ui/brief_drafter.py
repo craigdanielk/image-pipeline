@@ -13,7 +13,7 @@ import os
 _MODEL = "claude-sonnet-5"
 _MAX_TOKENS = 1024
 
-_SYSTEM = """You draft the `prompt_template` field of a job-v1 JobSpec for a deterministic \
+_TASK_RULES = """You draft the `prompt_template` field of a job-v1 JobSpec for a deterministic \
 image-generation compiler. House style, learned from the real example prompts you're given:
 - Preserve the literal placeholder tokens {cad} and {view} verbatim wherever the object's \
 CAD-derived geometry description or the shot's view/composition description belongs — never \
@@ -36,6 +36,7 @@ def draft_prompt_template(
     mood: str | None = None,
     example_prompts: list[str] | None = None,
     feedback: str | None = None,
+    system_context: str | None = None,
 ) -> str:
     api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
@@ -64,12 +65,20 @@ def draft_prompt_template(
         parts.append(f"FEEDBACK ON A PRIOR REJECTED ATTEMPT — fix this: {feedback}")
     user_msg = "\n\n".join(parts)
 
+    system = _TASK_RULES
+    if system_context:
+        system = (
+            f"SYSTEM CONTEXT — the pipeline you're drafting for (read this to understand the "
+            f"schema, engine constraints, and house conventions before drafting):\n{system_context}"
+            f"\n\n---\n\n{_TASK_RULES}"
+        )
+
     client = anthropic.Anthropic(api_key=api_key)
     try:
         resp = client.messages.create(
             model=_MODEL,
             max_tokens=_MAX_TOKENS,
-            system=_SYSTEM,
+            system=system,
             messages=[{"role": "user", "content": user_msg}],
         )
     except Exception as exc:  # anthropic raises its own exception hierarchy
