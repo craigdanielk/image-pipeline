@@ -1,0 +1,20 @@
+{
+  "_doc": "CAD spec for T4 FOAM CANISTER hero. PIXEL-MEASURED from the real target (tmp/discovery/T4_REAL_target.png, 1358x1434; = Drive canonical T4 hero target v2). White HDPE foam bottle with a CLEAR domed over-cap over the white foamer pump. Large white wrap label, CENTERED stack: filled NAVY CIRCLE schedule badge (white code) upper-left; Regenic|Lab wordmark centered ('Regenic' blue, 'Lab' navy, small leaf); a combined name+strength TITLE (navy, largest, may wrap 2 lines); the FORM 'TOPICAL FOAM' (grey, letter-spaced); a small blue square swatch (left); the size '50 ml' (navy, centered). gpt_image_2 generative + reference; prompt DEFERS to the reference, swaps only the title/form/size/badge text.",
+  "template": "T4", "image_type": "hero",
+  "skus": ["finasteride-minoxidil-topical-foam", "minoxidil-5-topical-foam"],
+  "calibration": {"target_px": [1358,1434], "label_text_proportions_cap_height_relative_to_title": {"title": 1.0, "logo_wordmark": 0.85, "badge_circle_diameter": 0.9, "form": 0.32, "size": 0.5}, "alignment": "CENTERED stack; badge circle + blue swatch are left-positioned"},
+  "object": {"container": "white HDPE cylindrical foam bottle with a white foamer pump head under a CLEAR domed transparent over-cap", "label": "large white wrap-around label, navy text, CENTERED stack"},
+  "artwork": {"metafields": {"title":"{title}","form":"{form}","size":"{size}","badge_code":"{badge_code}"},
+    "hierarchy_centered_top_to_bottom": [
+      "filled NAVY CIRCLE with the schedule code in white, upper-LEFT of the label (omit if no badge_code)",
+      "Regenic|Lab wordmark centered ('Regenic' blue #2e6fb0, small leaf, '|' divider, 'Lab' navy #1b2846)",
+      "TITLE = '{title}' navy #1b2846, largest, centered, wraps to 2 lines for multi-ingredient",
+      "FORM = '{form}' muted grey #5b687b, centered, wide letter-spacing, ~0.32x title",
+      "small blue filled square swatch, left-aligned",
+      "size '{size}' navy, centered, ~0.5x title"]},
+  "palette": {"navy":"#1b2846","logo_blue":"#2e6fb0","muted_grey":"#5b687b","swatch_blue":"#5b7fb0","bg":"#f4f4f3"},
+  "scene": {"camera":"straight-on front, ~85mm","framing":"bottle vertically centered ~90% frame height, portrait","lighting":"soft key top-left, low contrast","background":"seamless very-light warm grey"},
+  "render": {"engine":"higgsfield","model":"gpt_image_2","mode":"generative + reference image","resolution":[1358,1434]},
+  "prompt_template": "Photorealistic e-commerce hero render of a white cylindrical foam bottle with a white foamer pump head under a CLEAR transparent domed over-cap. Match the attached reference image EXACTLY for bottle shape, the clear domed over-cap, the white foamer pump, label shape and CENTERED layout, materials and lighting — change ONLY the printed label text. BACKGROUND seamless very-light warm grey, soft key from top-left, bottle vertically centered ~90% of frame height, soft contact shadow. The large white wrap-around label has a CENTERED stack of navy text: in the UPPER-LEFT a filled dark-navy CIRCLE containing the schedule code '{badge_code}' in white (if '{badge_code}' is blank, omit the circle entirely); centered below, the 'Regenic|Lab' wordmark with 'Regenic' in blue #2e6fb0, a small leaf accent and a '|' divider, and 'Lab' in navy #1b2846; then the title '{title}' in Montserrat SemiBold navy #1b2846, the LARGEST text, centered, wrapping to two lines if needed; then the form '{form}' in Montserrat Medium muted grey #5b687b, centered, with wide letter-spacing, about a third the title size; then a small blue filled square swatch on the left; then the size '{size}' in Montserrat navy, centered, about half the title size. TYPOGRAPHY DISCIPLINE: replicate the reference's text sizes, centering and spacing exactly — title largest, form small and letter-spaced, generous vertical spacing; do not enlarge or left-align text. No 'Novecy' or third-party branding. Clean premium clinical pharmacy, sharp focus, sRGB. Portrait 1358x1434.",
+  "metafield_example": {"title":"Finasteride 0.1% + Minoxidil 5%","form":"TOPICAL FOAM","size":"50 ml","badge_code":"S4"}
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primi-toughkey-card-3q",
+  "subject": {
+    "view": "upright three-quarter beauty angle, device standing and tilted about 20 degrees, USB-C connector pointing up, top face and near long edge visible, keyring loop at the bottom, centred in frame with generous even margins on all sides"
+  },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Ultra-premium studio product photograph of a single matte-black USB-C contactless hardware security key, floating and centred with generous even margins in a 4:3 frame. VIEW: {view}. Preserve the EXACT object shown in the reference images — do not restyle, recolour, or change the geometry. Matte-black glass-filled-nylon body, a single brushed-brass NFC disc with a three-arc contactless wave centred on the face, two subtle debossed marks, nickel-steel USB-C connector. Dramatic dark studio look: near-black background #0a0a0b, a soft deep-blue radial glow behind the key, a crisp electric-blue rim light tracing the top edge, a subtle soft reflection beneath. The product is floating — no surface, no desk, no props. Razor-sharp focus edge to edge, hero product shot, the whole key visible and not cropped. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "card",
+    "aspect_ratio": "4:3",
+    "resolution": "2k"
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {
+      "input_images": [
+        "reference/plates/plate-2-hero34.png",
+        "reference/plates/plate-1-plan.png",
+        "reference/plates/plate-3-profile.png"
+      ]
+    }
+  }
+}

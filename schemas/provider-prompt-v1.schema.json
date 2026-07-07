@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/provider-prompt-v1.schema.json",
+  "title": "ProviderPrompt v1",
+  "description": "Normalized deterministic output of PromptCompiler — the only provider-facing prompt contract.",
+  "type": "object",
+  "required": ["schema_version", "positive", "metadata", "input_assets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "provider-prompt-v1" },
+    "positive": { "type": "string" },
+    "negative": { "type": ["string", "null"] },
+    "metadata": {
+      "type": "object",
+      "required": ["execution_id", "placeholders_resolved"],
+      "properties": {
+        "execution_id": { "type": "string" },
+        "product_spec_id": { "type": "string" },
+        "creative_spec_id": { "type": "string" },
+        "edit_spec_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "placeholders_resolved": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "composition": { "type": "string" },
+        "background": { "type": "string" },
+        "content_hash": {
+          "type": "string",
+          "description": "SHA256 of canonical JSON for cache keying."
+        }
+      },
+      "additionalProperties": false
+    },
+    "input_assets": {
+      "type": "object",
+      "required": ["references", "input_images"],
+      "properties": {
+        "references": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "input_images": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

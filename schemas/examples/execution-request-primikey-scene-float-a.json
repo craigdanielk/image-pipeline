@@ -1,0 +1,31 @@
+{
+  "schema_version": "execution-request-v1",
+  "id": "primikey-usba-scene-float-a",
+  "subject": {
+    "view": "three-quarter hero angle, device tilted about 30 degrees, flat USB-A blade with four gold contact pads pointing up and to the right, top face and near long edge both visible, molded keyring slot at lower-left"
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "scene",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {
+      "input_images": [
+        "reference/plates/plate-2-hero34.png",
+        "reference/plates/plate-1-plan.png",
+        "reference/plates/plate-3-profile.png"
+      ]
+    }
+  },
+  "dry_run": false,
+  "parent_run_id": null,
+  "provenance": {
+    "compiled_from": "job-v1",
+    "source_job_path": "jobs/primikey-usba/scene-float-a.job.json"
+  }
+}

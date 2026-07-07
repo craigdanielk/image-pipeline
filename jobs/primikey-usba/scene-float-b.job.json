@@ -1,0 +1,29 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primikey-usba-scene-float-b",
+  "subject": {
+    "view": "near-vertical hero stance, device tilted about 15 degrees off vertical, USB-A blade pointing straight up, keyring loop at the bottom, face angled toward camera, strong sense of the key standing and floating"
+  },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Ultra-premium studio product photograph of a single satin-white USB-A contactless hardware security key, floating in dark space. VIEW: {view}. Preserve the EXACT object shown in the reference images — do not restyle, recolour, or change the geometry. Satin WHITE glass-filled-nylon body, a single brushed-brass NFC disc with a three-arc contactless wave centred on the face, one plain debossed stadium mark, flat USB-A blade with four exposed gold contact pads. Dramatic dark studio look: near-black background #0a0a0b, a soft deep-blue radial glow behind the key, a crisp electric-blue rim light tracing the top edge, a subtle soft reflection beneath. The product is floating — no surface, no desk, no props, no laptop. Razor-sharp focus edge to edge, hero product shot, generous even margins around the key. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "scene",
+    "aspect_ratio": "4:3",
+    "resolution": "2k"
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {
+      "input_images": [
+        "reference/plates/plate-2-hero34.png",
+        "reference/plates/plate-1-plan.png",
+        "reference/plates/plate-3-profile.png"
+      ]
+    }
+  }
+}

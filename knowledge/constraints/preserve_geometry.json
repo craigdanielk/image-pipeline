@@ -1,0 +1,5 @@
+{
+  "id": "preserve_geometry",
+  "label": "Product geometry must not change",
+  "prompt_fragment": "Preserve exact product geometry, proportions, and material."
+}

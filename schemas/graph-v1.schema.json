@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/graph-v1.schema.json",
+  "title": "ImagePipeline Graph IR",
+  "description": "Directed acyclic graph intermediate representation for deterministic creative workflow execution. Compiles from job-v1 and executes via core/run_graph.py (future).",
+  "type": "object",
+  "required": ["schema_version", "id", "nodes", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "graph-v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "compiled_from": { "type": "string", "description": "Source artifact e.g. job-v1:<job-id>" },
+        "description": { "type": "string" }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/node" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/edge" }
+    }
+  },
+  "definitions": {
+    "port": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Logical port type for compatibility checks (string, image_path, image_path_list, prompt, job_spec, engine_results, file_list, any)."
+        },
+        "required": { "type": "boolean", "default": true }
+      }
+    },
+    "node": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$",
+          "description": "Registered node handler id e.g. cad.load, prompt.build, engine.generate"
+        },
+        "params": {
+          "type": "object",
+          "description": "Static node configuration (paths, templates, engine names)."
+        },
+        "ports": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "in": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/port" }
+            },
+            "out": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/definitions/port" }
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "retries": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "cache": { "type": "boolean" },
+            "dry_run_only": { "type": "boolean" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "$ref": "#/definitions/endpoint" },
+        "to": { "$ref": "#/definitions/endpoint" }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "required": ["node", "port"],
+      "additionalProperties": false,
+      "properties": {
+        "node": { "type": "string" },
+        "port": { "type": "string" }
+      }
+    }
+  }
+}

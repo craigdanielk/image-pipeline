@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/reference-resolve-in.schema.json",
+  "title": "reference.resolve input (job_spec)",
+  "$ref": "../nodes/intake-load-out.schema.json"
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/engine-generate-in.schema.json",
+  "title": "engine.generate input",
+  "type": "object",
+  "required": ["prompt", "job"],
+  "properties": {
+    "prompt": { "$ref": "../nodes/prompt-build-out.schema.json" },
+    "refs": { "$ref": "../nodes/reference-resolve-out.schema.json" },
+    "job": { "$ref": "../nodes/intake-load-out.schema.json" }
+  }
+}

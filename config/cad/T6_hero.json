@@ -1,0 +1,14 @@
+{
+  "_doc": "CAD spec for T6 GLASS MULTIDOSE VIAL hero. Layout from canonical target (tmp/discovery/T6_target.png, 934x1066). Small clear glass vial with a BLUE/navy aluminium crimp flip-cap, clear liquid. White label on the lower body, navy text left-aligned: Regenic logo (navy + cyan leaf), product name, dose, then a small route + form line (e.g. 'IV  2ml Multidose Vial'). Sole SKU = wolverine-stack (Section 21 -> NO badge). gpt_image_2 generative + reference; prompt defers to reference.",
+  "template": "T6", "image_type": "hero",
+  "skus": ["wolverine-stack"],
+  "object": {"container": "small clear glass injection vial with a glossy navy-blue aluminium crimp flip-cap and clear liquid contents", "label": "white adhesive label on the lower body, navy text left-aligned"},
+  "artwork": {"metafields": {"product_name":"{product_name}","dose":"{dose}","form":"{form}","badge":"{schedule_badge}"},
+    "hierarchy": ["Regenic|Lab wordmark navy + cyan leaf","product name navy (SemiBold)","dose navy","route + form small grey (e.g. 'SC  2ml Multidose Vial')"],
+    "fixed_constants": {"route":"SC","form":"Multidose Vial"}},
+  "palette": {"navy":"#1b2846","cyan":"#00a1d6","muted_grey":"#5b687b","cap_blue":"#1b3a8c","bg":"#ececeb"},
+  "scene": {"camera":"straight-on front, slight high angle, ~85mm","framing":"vial vertically centered ~80% frame height (short object), portrait","lighting":"soft key top-left, low contrast","background":"seamless very-light grey"},
+  "render": {"engine":"higgsfield","model":"gpt_image_2","mode":"generative + reference image","resolution":[934,1066]},
+  "prompt_template": "Photorealistic e-commerce hero render of a small clear glass injection vial with a glossy navy-blue aluminium crimp flip-cap and clear liquid. Match the attached reference image EXACTLY for vial shape, blue crimp cap, glass, label shape and placement, materials and lighting — change ONLY the printed label text. BACKGROUND seamless very-light grey, soft key top-left, vial vertically centered, soft contact shadow. The white label on the lower body carries, left-aligned, NAVY text: the 'Regenic|Lab' wordmark navy #1b2846 with cyan leaf; the product name '{product_name}' in Montserrat SemiBold navy (largest); {dose_clause}then a small muted-grey line 'SC · Multidose Vial' in Montserrat Medium #5b687b. TYPOGRAPHY DISCIPLINE: replicate reference sizes/spacing exactly, modest, legible, do not enlarge; if no dose specified do NOT invent one. There is NO schedule badge. No 'Novecy' or third-party branding. Clean premium clinical pharmacy, sharp focus, sRGB. Portrait 934x1066.",
+  "metafield_example": {"product_name":"BPC-157 + TB-500","dose":"10MG/4ML","form":"Multidose Vial","schedule_badge":""}
+}

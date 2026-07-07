@@ -1,0 +1,59 @@
+{
+  "schema_version": "product-spec-v2",
+  "id": "hairbands",
+  "name": "Hairbands",
+  "immutable": true,
+  "product": {
+    "geometry": {
+      "description": "Elastic athletic hairband, continuous loop, bilateral symmetry",
+      "symmetry": "bilateral",
+      "envelope": "torus_loop"
+    },
+    "materials": [
+      {
+        "id": "band",
+        "type": "elastic",
+        "color": "royal_blue",
+        "finish": "matte",
+        "texture": "woven"
+      }
+    ],
+    "dimensions": {
+      "width_mm": 25,
+      "circumference_mm": 480
+    }
+  },
+  "brand": {
+    "logos": [
+      {
+        "id": "joga-band-wordmark",
+        "asset": "refs/joga-band.png",
+        "placement": {
+          "region": "band_center",
+          "anchor": "center"
+        },
+        "scale": 1.0,
+        "safe_zone": "band_face"
+      }
+    ]
+  },
+  "constraints": {
+    "preserve_geometry": true,
+    "preserve_material": true,
+    "preserve_proportions": true
+  },
+  "editing": {
+    "protected_regions": ["band", "hands", "wrists"],
+    "editable_regions": ["chest_mark", "background", "child_subject"]
+  },
+  "references": [
+    {
+      "id": "flatlay",
+      "role": "product_ref",
+      "asset": "refs/flatlay.png"
+    }
+  ],
+  "source": {
+    "knowledge_path": "knowledge/products/hairbands.json"
+  }
+}

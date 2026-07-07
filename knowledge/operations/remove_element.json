@@ -1,0 +1,11 @@
+{
+  "id": "remove_element",
+  "label": "Remove forbidden element from scene",
+  "required_params": ["target"],
+  "optional_params": [],
+  "prompt_fragment": "Remove {target} from the image. Do not alter protected regions.",
+  "constraints_default": {
+    "preserve": ["geometry", "pose", "lighting", "background"],
+    "forbidden": []
+  }
+}

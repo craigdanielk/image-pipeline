@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/product-spec-v2.schema.json",
+  "title": "ProductSpec v2",
+  "description": "Structured immutable product ontology. No prose blobs. geometry_text forbidden.",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "product", "constraints", "editing"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "product-spec-v2" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string" },
+    "immutable": { "type": "boolean", "const": true },
+    "product": {
+      "type": "object",
+      "required": ["geometry"],
+      "additionalProperties": false,
+      "properties": {
+        "geometry": {
+          "type": "object",
+          "required": ["description"],
+          "properties": {
+            "description": { "type": "string" },
+            "symmetry": { "type": "string" },
+            "envelope": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "color": { "type": "string" },
+              "finish": { "type": "string" },
+              "texture": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "dimensions": {
+          "type": "object",
+          "additionalProperties": { "type": ["string", "number"] }
+        }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "logos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "asset", "placement"],
+            "properties": {
+              "id": { "type": "string" },
+              "asset": { "type": "string" },
+              "placement": {
+                "type": "object",
+                "required": ["region"],
+                "properties": {
+                  "region": { "type": "string" },
+                  "anchor": { "type": "string" },
+                  "offset_x": { "type": "number" },
+                  "offset_y": { "type": "number" }
+                },
+                "additionalProperties": false
+              },
+              "scale": { "type": "number" },
+              "rotation": { "type": "number" },
+              "safe_zone": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["preserve_geometry", "preserve_material", "preserve_proportions"],
+      "properties": {
+        "preserve_geometry": { "type": "boolean" },
+        "preserve_material": { "type": "boolean" },
+        "preserve_proportions": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "editing": {
+      "type": "object",
+      "required": ["protected_regions", "editable_regions"],
+      "properties": {
+        "protected_regions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "editable_regions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "role", "asset"],
+        "properties": {
+          "id": { "type": "string" },
+          "role": { "type": "string" },
+          "asset": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "knowledge_path": { "type": "string" },
+        "content_hash": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

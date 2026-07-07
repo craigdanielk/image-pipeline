@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Creative Compiler</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Creative Compiler</h1>
+    <p class="tagline">Compile → inspect → execute → view outputs</p>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Jobs</h2>
+      <select id="job-select" size="12"></select>
+      <div class="actions">
+        <button id="btn-compile" type="button">Compile</button>
+        <button id="btn-dry-run" type="button" disabled>Dry run</button>
+        <button id="btn-generate" type="button" disabled>Generate</button>
+        <button id="btn-refresh-outputs" type="button" disabled>Refresh outputs</button>
+      </div>
+      <p id="status" class="status"></p>
+    </section>
+
+    <section class="panel grow">
+      <h2>Compile</h2>
+      <pre id="prompt" class="prompt"></pre>
+      <details>
+        <summary>Manifest</summary>
+        <pre id="manifest" class="code"></pre>
+      </details>
+    </section>
+
+    <section class="panel full">
+      <h2>Outputs</h2>
+      <div id="gallery" class="gallery"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

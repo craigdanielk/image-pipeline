@@ -1,0 +1,5 @@
+{
+  "id": "preserve_pose",
+  "label": "Subject pose must not change",
+  "prompt_fragment": "Preserve subject pose, limb placement, and camera angle."
+}

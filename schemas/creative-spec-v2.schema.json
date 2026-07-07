@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/creative-spec-v2.schema.json",
+  "title": "CreativeSpec v2",
+  "description": "Structured campaign truth. No prompt_template. No surgical deltas.",
+  "type": "object",
+  "required": ["schema_version", "id", "product_spec_id", "campaign", "scene"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "creative-spec-v2" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "product_spec_id": { "type": "string" },
+    "campaign": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "audience": { "type": "string" },
+        "mood": { "type": "string" },
+        "style": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scene": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "lighting": { "type": "string" },
+        "camera": { "type": "string" },
+        "composition": { "type": "string" },
+        "background": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scene_locks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "invariants"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "invariants": {
+            "type": "object",
+            "additionalProperties": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "default_subject": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "knowledge_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

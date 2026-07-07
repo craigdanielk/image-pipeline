@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/job.schema.json",
+  "title": "ImagePipeline Job Spec",
+  "description": "The universal, provider-agnostic contract for one image-generation job. This is the public API: the same JobSpec drives the CLI today and an HTTP endpoint later. 'Any person's image + prompt' = a JobSpec with reference=<their upload> and spec.prompt_template=<theirs>.",
+  "type": "object",
+  "required": ["schema_version", "id", "spec", "engine"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "job-v1",
+      "description": "Contract version. Bump only on breaking changes."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Slug identifying this job; used in output filenames."
+    },
+    "subject": {
+      "type": "object",
+      "description": "Freeform key/value map. Each key is available as a {placeholder} in spec.prompt_template.",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "spec": {
+      "type": "object",
+      "description": "The FEEDER: the CAD/engineering description + prompt that defines WHAT to render.",
+      "required": ["prompt_template"],
+      "additionalProperties": false,
+      "properties": {
+        "prompt_template": {
+          "type": "string",
+          "description": "Prompt with {placeholder} tokens filled from subject + selected output fields ({composition}, {background})."
+        },
+        "cad": {
+          "type": "string",
+          "description": "Optional CAD/engineering spec: an inline string OR a path (resolved relative to the job file) to a .md/.txt extraction. Informational; fold into prompt_template as you see fit."
+        },
+        "negative": {
+          "type": "string",
+          "description": "Optional negative prompt (engine-dependent)."
+        }
+      }
+    },
+    "reference": {
+      "description": "The DESIRED TARGET image(s) the engine should match (look anchor). Null/absent for pure text-to-image. String path/URL, object form, or array of either for multi-anchor jobs.",
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string" },
+        {
+          "type": "object",
+          "required": ["image"],
+          "additionalProperties": false,
+          "properties": {
+            "image": { "type": "string", "description": "Local path or http(s) URL." },
+            "optional": { "type": "boolean", "default": false, "description": "If true, a missing reference is a warning not an error." }
+          }
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["image"],
+                "additionalProperties": false,
+                "properties": {
+                  "image": { "type": "string" },
+                  "optional": { "type": "boolean", "default": false }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "output": {
+      "type": "object",
+      "description": "The OUTPUT REQUIREMENT — varies case to case. Scalar params map to engine flags; composition/background are folded into the prompt.",
+      "additionalProperties": false,
+      "properties": {
+        "imgtype":      { "type": "string", "default": "hero", "description": "Label used in output filenames (e.g. card, hero, section)." },
+        "aspect_ratio": { "type": "string", "description": "e.g. 1:1, 4:3, 16:9. Passed to engine when supported." },
+        "resolution":   { "type": "string", "description": "e.g. 1k, 2k. Passed to engine when supported." },
+        "count":        { "type": "integer", "minimum": 1, "maximum": 4, "default": 1, "description": "Number of candidates (engine batch_size)." },
+        "background":   { "type": "string", "description": "Freeform background requirement, folded into the prompt (e.g. 'near-black #0b0b0d, floating')." },
+        "composition":  { "type": "string", "description": "Freeform composition requirement, folded into the prompt (e.g. 'upright 3/4 beauty shot')." },
+        "colors":       { "type": "array", "items": { "type": "string" }, "description": "Optional palette hint (engine-dependent)." },
+        "dir":          { "type": "string", "description": "Output directory override (default: <job-dir>/out)." }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "description": "Which generative backend + model. Adapter-selected by name.",
+      "required": ["name", "model"],
+      "additionalProperties": false,
+      "properties": {
+        "name":       { "type": "string", "description": "Adapter id, e.g. 'higgsfield'." },
+        "model":      { "type": "string", "description": "Model / job_set_type, e.g. 'recraft_v4_1', 'nano_banana_2'." },
+        "model_type": { "type": "string", "description": "Optional engine-specific mode, e.g. recraft 'standard'|'vector'|'utility'." },
+        "params":     { "type": "object", "description": "Escape hatch: extra '--name value' flags passed verbatim to the engine.", "additionalProperties": true }
+      }
+    }
+  }
+}

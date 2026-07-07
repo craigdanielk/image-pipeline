@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/prompt-build-out.schema.json",
+  "title": "prompt.build output (prompt string via PromptCompiler)",
+  "type": "string",
+  "minLength": 1,
+  "description": "Fully resolved positive prompt from PromptCompiler.compile_positive."
+}

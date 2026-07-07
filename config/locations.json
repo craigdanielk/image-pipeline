@@ -1,0 +1,126 @@
+{
+  "_doc": "SINGLE ENFORCED LOCATION MAP for the Regenic image pipeline. Source = _CANONICAL_TEMPLATES (BLANK + target render per template). Output = Product Imagery/02_REVIEW/T<n> -> on approval -> 03_APPROVED/T<n>. Per-template folder, per-product file: <slug>__<imgtype>__vN.png. Per-product final pointer written back to matrix tab product_container_image_data.Final Drive URL. Pipeline MUST read/write ONLY these IDs and validate them at runtime (validate_locations.py).",
+  "drive_root": "1c-73Ha4guUpiVPEcnva8QR5IKHEOy7F-",
+  "matrix": {
+    "spreadsheet_id": "1EzxOhzdLS7dX_ck6qG03har-53sZEqgdS62ed58awt0",
+    "tabs": {
+      "routing": "product_container_image_data",
+      "blanks_registry": "canonical_templates",
+      "label_content": "product_label_content",
+      "master": "product_master"
+    },
+    "writeback_column": "Final Drive URL"
+  },
+  "naming": {
+    "output_pattern": "{slug}__{imgtype}__v{version}.png",
+    "imgtypes": [
+      "hero",
+      "back",
+      "open-1",
+      "open-2",
+      "view-1",
+      "view-2"
+    ],
+    "hero_first": true
+  },
+  "templates": {
+    "T2": {
+      "packaging": "Capsule Bottle",
+      "canonical_folder": "18Wd1xixcF9tLPP651t7wgWNAFq4kTmA9",
+      "blank": "12OyUqTRAIBWc-0uzLbWfVgy1oTt2xTR3",
+      "targets": {
+        "hero": "1-jcGaRdgsctT0FKEB-JdJlRlEhpxh-vL"
+      },
+      "review_folder": "1z6MfoepygjNu-StLewYHRFVqTjTpQWio",
+      "approved_folder": "11WsWPLJM8gwiW1w2tRKBwoeW9uEEInCY"
+    },
+    "T3": {
+      "packaging": "Amber Spray Bottle",
+      "canonical_folder": "1GJ9kJfqf6JWTGZYCwMByHkXXgziPpG2J",
+      "blank": "1ZYM2BmTeBkjiXoe3EoJgPSVbQ6J9A2xL",
+      "targets": {
+        "hero": "1KuQKY1ZKQ0YvRSibZtxR8OYkwhLqonp3"
+      },
+      "review_folder": "1EnJVOCgd61CObDouSLZLdv1Bx2xsEj3G",
+      "approved_folder": "19cWIP3PoMT4aW0rTQ1EGGtg9HoO1Au_g"
+    },
+    "T4": {
+      "packaging": "Foam Canister",
+      "canonical_folder": "1eY8tqC6Mq81ajQ4hSje6kjnzbk9YZS8I",
+      "blank": "1Mr9OH5ghbjklcLEcctAVpzuRw8VRzgkB",
+      "targets": {
+        "hero": "1KAkkKqpal2IprPBBDFeiWgJjOq0q_N4f",
+        "back": "1-jxhRm-y_Hw2uDN1i2AQpnTAPpQ4WMgc"
+      },
+      "review_folder": "1OwjqHnbvsMIgKWKaflbogUTrj_-21vlI",
+      "approved_folder": "1HEt-MI-WA_s-XICTPe7V0SgcTdx3havn"
+    },
+    "T5": {
+      "packaging": "Peptide Pen (Navy Case)",
+      "canonical_folder": "16CuISb91FWY4BB_aaHunPwX0ts_EdA-G",
+      "blank": "1SvicVrnneqM6Ju2Ji2nIqbTQUhjT7KyX",
+      "targets": {
+        "hero": "1YldGopMmTlWYFGFxn8Bx4CuND6A7_4XV",
+        "open-1": "13ynVPTaGpPoCKKSjQCcTsXcShi6Jd8Wp",
+        "open-2": "1ETkmt6IjUmVR2sL4LFMOSfyfqNn3jrWU"
+      },
+      "review_folder": "18modHZ0r9zyX9krgR2fMzvwgcxvYTXFR",
+      "approved_folder": "14Z5u1YNm8pStPNAs0QSJ7PHqinGsVZsu"
+    },
+    "T6": {
+      "packaging": "Glass Multidose Vial",
+      "canonical_folder": "1i2hduRqVHBu94mJpy-E-VRPWeXrrWdA_",
+      "blank": "16UhGTbCFJVIJzwLC40f5Yq3rQ1zmmEO3",
+      "targets": {
+        "hero": "11Q3PIreqI7fRN2U_97NEkgZtll0PgVPs"
+      },
+      "review_folder": "1bZwsNNZCg6OXAB14tqn0BcEf2eBzPCXV",
+      "approved_folder": "1PXz0mSbf5OyHAmMOTTGXqlyF_NJ29x07"
+    },
+    "T7": {
+      "packaging": "Cartridge Pen",
+      "canonical_folder": "1OH1RSIrHbDFMB7OugXGCYVf05vqBb1D2",
+      "blank": "1HPT9FB4U1Rjx82nYCZZ9qsMXOW32_2jb",
+      "targets": {
+        "hero": "1FBa-_mZUpu9rSsno4pd450RDGP0Gmabz",
+        "open-2": "1tt-wuTNgK_f5ftQ31IlAoQf25QS0QSBf"
+      },
+      "review_folder": "1Mq4Ohkh1TCqc4B3OceVcDt03Et3KX8wB",
+      "approved_folder": "1YBz4Ce7dVmZRyxgg1nasqzLFIB0puUQY"
+    },
+    "T8": {
+      "packaging": "Blister Syringe",
+      "canonical_folder": "1mjGl0fq6htud5vst1oNx9G9_jgFw4gf-",
+      "blank": "1LoX_ee1OuD0lt0CutazPxtfpSDmPY0oP",
+      "targets": {
+        "hero": "1w0nwTtcye_UuYUrYsWSjHpIb8y0dEvjy",
+        "view-2": "1CWDPV7MFFqP-lkqUXE7yFQ3Fpzi2K3uI"
+      },
+      "review_folder": "1uWA99eyvSVaKlxLY6hVqvKzBjUxCxH8x",
+      "approved_folder": "1KScK3SGTggFJh-lL2VzpPn4XJCwMYPLB"
+    },
+    "T9": {
+      "packaging": "Airless Pump Jar",
+      "canonical_folder": "1imKNUt55LAvQXxW4TbDdiIbiydcAE3uf",
+      "blank": null,
+      "targets": {
+        "hero": "1Uku-SggHn9RPBesy6P-hwuFE2hHkNSBW"
+      },
+      "review_folder": "1oesEMnYPpGXuJez1TYsdzWAsIMekHtnE",
+      "approved_folder": "1symJag2AGmfZKrSjFd7LnJlH9rRSx00Z",
+      "note": "Covered by T4 form / AVID-RA brand. No own blank."
+    },
+    "T10": {
+      "packaging": "Amber Dropper Bottle",
+      "canonical_folder": "1tIWot5iXJZsvUk1LGegOasiPXsIknsvD",
+      "blank": "1q1teDoiT1S27GYs4Rj2JGJV8OAHBDoXV",
+      "targets": {
+        "hero": "1LYhjI-AYCdj0DXY5V7yWOFBHC6lcI8cE",
+        "back": "1bVvYcolBbd_iu7nY15E9kHpuo-Q-hkhY"
+      },
+      "review_folder": "1ZsAk9CrZ_n5rn_TAAWPLs1BbmSEsRzPN",
+      "approved_folder": "1kpAWNEfzapqAMUXUfJc1VbjusNFFFtIN",
+      "brand": "AVID-RA"
+    }
+  }
+}

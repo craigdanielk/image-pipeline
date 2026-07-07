@@ -1,0 +1,51 @@
+{
+  "_doc": "NODE 2 artifact — engineering CAD spec for T2 capsule-bottle HERO. Geometry EXTRACTED from canonical target render T2__capsule-bottle__regenic-front.png (874x1326) + blank T2__capsule-bottle__BLANK.png (848x1264). Metafields {curly} are swapped per SKU from matrix product_container_image_data + product_label_content. mm column needs ONE real-world anchor (operator: true bottle height) — flagged TODO. Engine decision deferred until this spec is signed off.",
+  "template": "T2",
+  "image_type": "hero",
+  "calibration": {
+    "target_render_px": [874, 1326],
+    "blank_px": [848, 1264],
+    "object_bbox_target_px": {"x0": 91, "y0": 85, "x1": 873, "y1": 1262, "w": 782, "h": 1177},
+    "cap_bottom_y_px": 751,
+    "mm_anchor": {"status": "PROVISIONAL_STANDARD", "basis": "standard 60cc HDPE packer (no scale object in real photo; angled shot foreshortens height)", "real_bottle_height_mm": 70, "real_bottle_diameter_mm": 40, "px_per_mm_target_render": 16.81, "note": "px/mm = object_bbox h 1177px / 70mm. Lock exact value if operator calipers the real bottle (5s)."}
+  },
+  "real_reference": {
+    "photo": "tmp/discovery/T2_REAL_photo.jpeg",
+    "brand_on_sample": "Novecy (contract compounder) — IGNORED; replaced by Regenic|Lab",
+    "measured_proportions": {"diameter_to_height": "1:2.1 (foreshortened)", "cap_h_over_body_h": 0.52},
+    "confirms": ["blue ribbed screw cap + tamper ring", "matte white opaque HDPE", "label stack: badge+brand / name(2 lines) / FORM / dotted code strip", "left-aligned label"]
+  },
+  "metafields": {
+    "product_name": "{product_name}",
+    "dose": "{dose}",
+    "form": "{form}",
+    "schedule_badge": "{schedule_badge}",
+    "brand": "{brand}"
+  },
+  "object": {
+    "container": {
+      "type": "cylindrical capsule bottle, HDPE",
+      "body": "matte white opaque",
+      "cap": "glossy royal-blue ribbed screw cap",
+      "dims_mm": {"height": 70, "diameter": 40, "cap_height": 24, "_status": "PROVISIONAL_60cc_packer"}
+    },
+    "label": {"mode": "direct-print on bottle body (no separate label panel)", "finish": "matte"}
+  },
+  "artwork": {
+    "anchor": "left margin shared by all elements; logo+badge BAKED into blank above the name",
+    "left_margin": {"px": 174, "frac_obj_w": 0.106},
+    "baked_on_blank": ["schedule_badge", "logo"],
+    "elements": [
+      {"id": "schedule_badge", "metafield": "schedule_badge", "baked": true, "geom": {"note": "navy outlined square, top-left of logo; dynamic per SKU (S4/S3/S2/OTC/none-S21)"}},
+      {"id": "logo", "baked": true, "geom": {"bottom_y_px": 790, "note": "Regenic|Lab wordmark, navy + cyan divider bar"}},
+      {"id": "product_name", "metafield": "product_name", "style": {"font": "Montserrat", "weight": 600, "color": "#1b2846", "case": "as-is"}, "geom": {"y_top_px": 805, "y_bot_px": 877, "cap_h_px": 73, "frac_y_top": 0.612, "x_left_px": 174}},
+      {"id": "dose", "metafield": "dose", "style": {"font": "Montserrat", "weight": 600, "color": "#1b2846", "case": "upper"}, "geom": {"y_top_px": 927, "y_bot_px": 988, "cap_h_px": 62, "frac_y_top": 0.715, "x_left_px": 174, "gap_above_px": 50}},
+      {"id": "form", "metafield": "form", "style": {"font": "Montserrat", "weight": 500, "color": "#5b687b", "case": "upper", "tracking": "wide"}, "geom": {"y_top_px": 1026, "y_bot_px": 1084, "cap_h_px": 59, "frac_y_top": 0.799, "x_left_px": 174, "gap_above_px": 38}}
+    ]
+  },
+  "palette": {"navy": "#1b2846", "cyan": "#00a1d6", "muted_grey": "#5b687b", "bg": "#e8e8e7"},
+  "scene": {"camera": "straight-on front, eye-level with ~5deg high angle", "lens_mm": 85, "framing": "bottle vertically centered, ~88% frame height", "lighting": "soft large key top-left, gentle fill, low contrast, no harsh speculars", "background": "seamless very-light warm grey #e8e8e7", "shadow": "soft contact + faint cast lower-right", "reflection": "subtle floor"},
+  "render": {"engine": "higgsfield", "mode": "generative + reference image", "model_hint": "nano_banana / gpt_image_2 (image-to-image)", "reference_images": ["canonical_target_hero (look/identity)", "real_reference_photo (material realism)"], "resolution": [874, 1326], "aspect": "2:3 portrait", "color_profile": "sRGB"},
+  "prompt_template": "Photorealistic e-commerce hero render of a pharmaceutical capsule bottle. CONTAINER: cylindrical 60cc HDPE packer, matte white opaque body 70mm tall x 40mm diameter (diameter:height ~1:1.9), glossy royal-blue ribbed screw cap with tamper-evident ring (~24mm tall). CAMERA: straight-on front, eye-level with slight 5deg high angle, ~85mm equivalent, bottle vertically centered filling ~88% of frame height. LIGHTING: soft large key from top-left, gentle fill, low contrast, no harsh speculars; soft contact shadow plus faint cast to lower-right. BACKGROUND: seamless very-light warm grey #e8e8e7 with subtle floor reflection. LABEL direct-printed on the body, left-aligned on a shared left margin: {badge_clause}the 'Regenic|Lab' wordmark in navy with a cyan vertical divider bar and small cyan leaf accent; after a generous gap, the product name '{product_name}' in Montserrat SemiBold navy #1b2846 (largest element); {dose_clause}below that the form '{form}' in Montserrat Medium muted grey #5b687b with wide letter-spacing. PALETTE: navy #1b2846, cyan #00a1d6, grey #5b687b. TYPOGRAPHY DISCIPLINE (critical): replicate the reference image's text SIZE and SPACING exactly — the product name is modest, about one-eighth of the bottle width tall, NOT large; keep a generous gap (about 1.2x the logo height) between the Regenic|Lab logo and the product name; do NOT enlarge or stretch text to fill the label width — short or single-word names use the SAME modest size as long ones; leave ample empty white space below the form line. If a dose line is shown above, render it EXACTLY as given, preserving commas and UPPERCASE units (e.g. '50,000IU' must appear as '50,000IU', never '50000ui'); if NO dose line is specified above, do NOT invent or add any dose, number or unit anywhere on the label. STYLE: clean, premium, clinical pharmacy, sharp focus, high detail, sRGB. Match the attached reference image for bottle shape, materials, label placement and typography; change ONLY the badge text, product name, dose and form to the values above. Do NOT render 'Novecy' or any third-party/compounder branding. Portrait 874x1326.",
+  "metafield_example_T2_p1": {"schedule_badge": "S4", "product_name": "Minoxidil + Biotin", "dose": "2.5MG + 10MG", "form": "CAPSULES", "brand": "Regenic|Lab"}
+}

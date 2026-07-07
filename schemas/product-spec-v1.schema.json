@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/product-spec-v1.schema.json",
+  "title": "ProductSpec v1",
+  "description": "Immutable product truth — geometry, brand marks, reference assets. Never mutated per campaign or run.",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "geometry_text"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "product-spec-v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "name": { "type": "string" },
+    "immutable": { "type": "boolean", "const": true },
+    "geometry_text": {
+      "type": "string",
+      "description": "Canonical object-truth text injected as {cad} in prompts."
+    },
+    "geometry_sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["section_id", "title", "body"],
+        "properties": {
+          "section_id": { "type": "string" },
+          "title": { "type": "string" },
+          "body": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "brand_marks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "path"],
+        "properties": {
+          "role": { "type": "string" },
+          "path": { "type": "string" },
+          "label": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "asset_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "role"],
+        "properties": {
+          "path": { "type": "string" },
+          "role": { "type": "string" },
+          "label": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "cad_path": { "type": "string" },
+        "content_hash": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

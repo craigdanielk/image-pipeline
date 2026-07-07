@@ -1,0 +1,11 @@
+{
+  "id": "replace_logo",
+  "label": "Replace logo at target region",
+  "required_params": ["target", "asset"],
+  "optional_params": ["scale", "region"],
+  "prompt_fragment": "Replace the logo at {target} with the reference asset {asset}. Scale {scale}.",
+  "constraints_default": {
+    "preserve": ["geometry", "pose", "lighting", "background"],
+    "forbidden": ["crop_product", "distort_logo"]
+  }
+}

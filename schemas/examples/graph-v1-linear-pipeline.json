@@ -1,0 +1,58 @@
+{
+  "schema_version": "graph-v1",
+  "id": "compile-artifacts-exec-example",
+  "metadata": {
+    "compiled_from": "compile-artifacts-v1:example",
+    "description": "Execution-only four-node pipeline (runtime never compiles)"
+  },
+  "nodes": [
+    {
+      "id": "load",
+      "type": "artifacts.load",
+      "params": {},
+      "ports": {
+        "out": {"artifacts": {"type": "compile_artifacts"}}
+      }
+    },
+    {
+      "id": "resolve_refs",
+      "type": "reference.resolve",
+      "params": {"adapter": "local"},
+      "ports": {
+        "in": {"artifacts": {"type": "compile_artifacts"}},
+        "out": {"refs": {"type": "image_path_list"}}
+      }
+    },
+    {
+      "id": "generate",
+      "type": "engine.generate",
+      "params": {},
+      "ports": {
+        "in": {
+          "artifacts": {"type": "compile_artifacts"},
+          "refs": {"type": "image_path_list"}
+        },
+        "out": {"results": {"type": "engine_results"}}
+      }
+    },
+    {
+      "id": "persist",
+      "type": "output.persist",
+      "params": {"imgtype": "hero", "adapter": "local"},
+      "ports": {
+        "in": {
+          "artifacts": {"type": "compile_artifacts"},
+          "results": {"type": "engine_results"}
+        },
+        "out": {"files": {"type": "file_list"}}
+      }
+    }
+  ],
+  "edges": [
+    {"from": {"node": "load", "port": "artifacts"}, "to": {"node": "resolve_refs", "port": "artifacts"}},
+    {"from": {"node": "load", "port": "artifacts"}, "to": {"node": "generate", "port": "artifacts"}},
+    {"from": {"node": "load", "port": "artifacts"}, "to": {"node": "persist", "port": "artifacts"}},
+    {"from": {"node": "resolve_refs", "port": "refs"}, "to": {"node": "generate", "port": "refs"}},
+    {"from": {"node": "generate", "port": "results"}, "to": {"node": "persist", "port": "results"}}
+  ]
+}

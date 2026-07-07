@@ -1,0 +1,26 @@
+{
+  "schema_version": "product-spec-v1",
+  "id": "usb-a-primikey-engineering-grade-cad-extraction-object-model",
+  "name": "USB-A PrimiKey™ — Engineering-Grade CAD Extraction (object model)",
+  "immutable": true,
+  "geometry_text": "| Axis | Feature | Dimension |\n|------|---------|-----------|\n| X (long) | full length, keyring end → USB-A tip | **≈ 45.0 mm** |\n| X | body slab only (excl. connector blade) | **≈ 33.0 mm** |\n| X | USB-A flat blade protrusion | **≈ 12.0 mm** |\n| Y (width) | body width | **18.0 mm** |\n| Y | USB-A blade width | **≈ 12.0 mm** |\n| Z (thickness) | body thickness | **3.35 mm** |\n| Z | USB-A blade thickness | **≈ 2.0 mm** |\n| — | mass (archetype) | ≈ 3 g |\n\nCoordinate frame: **X** = long axis (loop→connector), **Y** = width, **Z** =\nthickness. Mirror-symmetric about the X–Z plane; NFC disc and blade centered on Y.",
+  "geometry_sections": [
+    {
+      "section_id": "1-overall-envelope-orthographic",
+      "title": "1. Overall envelope (orthographic)",
+      "body": "| Axis | Feature | Dimension |\n|------|---------|-----------|\n| X (long) | full length, keyring end → USB-A tip | **≈ 45.0 mm** |\n| X | body slab only (excl. connector blade) | **≈ 33.0 mm** |\n| X | USB-A flat blade protrusion | **≈ 12.0 mm** |\n| Y (width) | body width | **18.0 mm** |\n| Y | USB-A blade width | **≈ 12.0 mm** |\n| Z (thickness) | body thickness | **3.35 mm** |\n| Z | USB-A blade thickness | **≈ 2.0 mm** |\n| — | mass (archetype) | ≈ 3 g |\n\nCoordinate frame: **X** = long axis (loop→connector), **Y** = width, **Z** =\nthickness. Mirror-symmetric about the X–Z plane; NFC disc and blade centered on Y."
+    }
+  ],
+  "brand_marks": [],
+  "asset_refs": [
+    {
+      "path": "reference/primikey-usba-target.png",
+      "role": "source",
+      "label": "Source"
+    }
+  ],
+  "source": {
+    "cad_path": "/Users/craigkunte/Developer/GitHub/services/aragon/image-pipeline/jobs/primikey-usba/cad.md",
+    "content_hash": "73c957192a5db4864a6816735e1bc60b9a3c489234e06426c82b4488b6536ed1"
+  }
+}

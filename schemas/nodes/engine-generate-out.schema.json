@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/engine-generate-out.schema.json",
+  "title": "engine.generate output (engine_results)",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["result_url"],
+    "properties": {
+      "result_url": { "type": "string" },
+      "seed": {},
+      "meta": { "type": "object" }
+    },
+    "additionalProperties": true
+  }
+}

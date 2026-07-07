@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/provider-execution-plan-v1.schema.json",
+  "title": "ProviderExecutionPlan v1",
+  "description": "Concrete provider invocation plan — LLVM backend. Produced by CapabilityResolver; consumed by ProviderAdapter only.",
+  "type": "object",
+  "required": ["schema_version", "id", "provider", "model", "method", "params"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "provider-execution-plan-v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "provider_prompt_id": {
+      "type": "string",
+      "description": "Links to ProviderPrompt.metadata.content_hash or execution_id."
+    },
+    "provider": {
+      "type": "string",
+      "description": "Adapter family id (higgsfield, fal, openai, …)."
+    },
+    "model": {
+      "type": "string",
+      "description": "Provider-native model identifier."
+    },
+    "method": {
+      "type": "string",
+      "enum": ["generate", "edit", "cost_estimate"]
+    },
+    "params": {
+      "type": "object",
+      "description": "Provider-specific invocation flags.",
+      "additionalProperties": true
+    },
+    "uploads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["local_path"],
+        "properties": {
+          "local_path": { "type": "string" },
+          "provider_media_id": { "type": "string" },
+          "content_hash": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "media_inputs": {
+      "type": "array",
+      "items": { "type": "object" },
+      "description": "Provider-native input image descriptors after normalisation."
+    },
+    "retries": {
+      "type": "object",
+      "properties": {
+        "max_attempts": { "type": "integer", "minimum": 0 },
+        "backoff": { "type": "string", "enum": ["none", "linear", "exponential"] }
+      },
+      "additionalProperties": false
+    },
+    "masks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["region_id"],
+        "properties": {
+          "region_id": { "type": "string" },
+          "provider_mask_ref": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "content_hash": { "type": "string" },
+        "capability_registry_version": { "type": "string" },
+        "job_dir": { "type": "string" },
+        "accepts_reference": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "prompt": {
+      "type": "object",
+      "required": ["positive"],
+      "properties": {
+        "positive": { "type": "string" },
+        "negative": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

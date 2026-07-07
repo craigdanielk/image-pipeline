@@ -1,0 +1,16 @@
+node_modules/
+.env
+__pycache__/
+*.pyc
+.venv/
+ui/.venv/
+.DS_Store
+.pytest_cache/
+
+# Legacy pipeline outputs
+templates/*.png
+out/
+data/products.json
+reference/
+jobs/**/out/
+jobs/**/compile/

@@ -1,0 +1,20 @@
+{
+  "$schema": "../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "example-widget",
+  "subject": { "product_name": "Widget", "brand": "Acme" },
+  "spec": {
+    "prompt_template": "Photorealistic studio product photograph of a {brand} {product_name}, a small matte-black device, dramatic dark studio lighting, crisp electric-blue rim light, shallow depth of field.",
+    "cad": "Optional: path to a CAD/engineering extraction .md, or inline text describing the exact geometry."
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "count": 1,
+    "background": "near-black #0b0b0d, subtle deep-blue radial glow, product floating",
+    "composition": "upright three-quarter beauty shot, connector pointing up"
+  },
+  "engine": { "name": "higgsfield", "model": "recraft_v4_1", "model_type": "standard" }
+}

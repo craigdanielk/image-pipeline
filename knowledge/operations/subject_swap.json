@@ -1,0 +1,11 @@
+{
+  "id": "subject_swap",
+  "label": "Swap child subject while preserving product placement",
+  "required_params": ["asset"],
+  "optional_params": ["region"],
+  "prompt_fragment": "Replace the child subject using reference {asset}. Preserve product placement and pose context.",
+  "constraints_default": {
+    "preserve": ["geometry", "band_placement", "lighting", "background"],
+    "forbidden": ["crop_product", "occlude_band"]
+  }
+}

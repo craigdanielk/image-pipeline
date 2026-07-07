@@ -1,0 +1,13 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primikey-usba-plate-plan",
+  "subject": { "view": "top-down plan view, flat top face square to camera, long axis horizontal" },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Clean studio product photograph, a single USB-A contactless hardware security key with a SATIN WHITE body, isolated on a seamless neutral light-grey (#d9d9dd) background. VIEW: {view} — show the full top face: molded keyring through-slot at the left end, a single small debossed rounded-rectangle mark, the central brushed-brass NFC disc with a three-arc contactless wave, and at the right end the FLAT USB-A blade with four exposed gold contact pads in a recessed window. Preserve the EXACT object in the attached reference image; do not restyle the product. Soft even large-softbox lighting, NO coloured rim light, NO dramatic shadows, only a subtle soft contact shadow, true-to-material colour (satin white glass-filled-nylon body, brushed brass disc, gold USB-A pads). Sharp focus edge to edge, catalogue reference plate, centered with even margins. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": "reference/primikey-usba-target.png",
+  "output": { "imgtype": "plate", "aspect_ratio": "4:3", "resolution": "2k" },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}

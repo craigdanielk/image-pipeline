@@ -1,0 +1,43 @@
+{
+  "_doc": "NODE 2 artifact — CAD spec for T5 peptide-pen NAVY CARRY CASE (closed) HERO. Geometry PIXEL-MEASURED from the real canonical target (tmp/discovery/T5_REAL_target.png, 832x1418; identical to Drive ref 1YldGopMmTlWYFGFxn8Bx4CuND6A7_4XV). The case has TWO white rounded-rect labels: (A) an UPPER narrow/tall label carrying the Regenic|Lab wordmark ROTATED 90deg clockwise (vertical), and (B) a LOWER pharma label with navy left-aligned text. Latch clasps protrude on both long edges. NO schedule badge. Generation = gpt_image_2 generative + canonical reference image; PROMPT MUST AGREE WITH THE REFERENCE (the prior delta was the prompt describing a horizontal logo on navy + a single panel, overriding the correct reference). Metafields {curly} swap per SKU; compounded_by/storage/route/form are fixed constants.",
+  "template": "T5",
+  "image_type": "hero",
+  "skus": ["tirzepatide-pen", "semaglutide", "cjc-ipamorelin-pen"],
+  "calibration": {
+    "target_px": [832, 1418],
+    "case_bbox_px": {"x0": 212, "y0": 36, "x1": 653, "y1": 1362, "w": 441, "h": 1326, "aspect_h_over_w": 3.01, "center_x": 432},
+    "top_logo_label_px": {"x0": 357, "y0": 299, "x1": 442, "y1": 692, "w": 85, "h": 393, "aspect_h_over_w": 4.6, "frac_x": [0.329, 0.521], "frac_y": [0.198, 0.495], "note": "white rounded-rect; Regenic|Lab wordmark ROTATED 90deg CW (vertical, reads bottom->top): 'Regenic' navy, grey pipe, 'Lab' cyan"},
+    "lower_pharma_label_px": {"x0": 301, "y0": 836, "x1": 510, "y1": 1266, "w": 209, "h": 430, "aspect_h_over_w": 2.06, "frac_x": [0.202, 0.676], "frac_y": [0.603, 0.928]},
+    "route_form_strip_px": {"x0": 319, "y0": 975, "x1": 495, "y1": 1002, "w": 176, "h": 27, "note": "light-grey bar: small boxed route 'SC' at left + form '2ml Peptide Pen'"},
+    "clasps": ["upper-left edge tab", "upper-right edge tab (larger)", "lower-right edge tab"],
+    "mm_anchor": {"status": "PROVISIONAL", "basis": "rigid auto-injector hard case ~130mm tall x 44mm wide", "real_case_height_mm": 130}
+  },
+  "object": {
+    "container": {
+      "type": "rigid injection-pen carry case, CLOSED, standing vertical on short edge",
+      "proportions": "slim, height:width ~3:1",
+      "body": "matte deep-navy #1b2846 hard shell, rounded-rectangle, an embossed inner bevel frame line around the face, subtle vertical brushed sheen",
+      "clasps": "navy latch tabs of the same material protruding from the long edges (upper-left, upper-right larger, lower-right)"
+    },
+    "labels": {
+      "top_logo": {"shape": "white rounded-rect adhesive label, tall and narrow, centered on the upper-middle of the face", "content": "Regenic|Lab wordmark rotated 90deg clockwise (vertical) — 'Regenic' navy #1b2846, thin grey pipe divider, 'Lab' cyan #00a1d6"},
+      "lower_pharma": {"shape": "white rounded-rect adhesive label, larger, lower third of the face", "text_color": "#1b2846", "align": "left"}
+    }
+  },
+  "artwork": {
+    "metafields": {"product_name": "{product_name}", "dose": "{dose}", "composition": "{composition}", "brand": "{brand}"},
+    "fixed_constants": {"route": "SC", "form": "2ml Peptide Pen", "storage": "Store in fridge (2-8C)", "compounded_by": "Regenic Lab, George, South Africa", "batch_line": "OMITTED (operator: no blank placeholder batch text on hero)"},
+    "lower_label_hierarchy_top_to_bottom": [
+      {"id": "product_name", "metafield": "product_name", "style": {"font": "Montserrat", "weight": 700, "color": "#1b2846"}, "role": "largest"},
+      {"id": "dose", "metafield": "dose", "style": {"font": "Montserrat", "weight": 600, "color": "#1b2846"}},
+      {"id": "route_form_strip", "constants": ["route", "form"], "style": {"font": "Montserrat", "weight": 500, "color": "#5b687b", "bg": "#eef1f4"}, "role": "light-grey bar: small boxed 'SC' + '2ml Peptide Pen' — NOT a schedule badge"},
+      {"id": "composition_block", "uses": ["composition", "storage"], "style": {"header": "Montserrat 700 navy 'Composition:'", "body": "Montserrat 400 navy small"}},
+      {"id": "compounder_block", "constants": ["compounded_by"], "style": {"header": "Montserrat 700 navy 'Compounded by:'", "body": "Montserrat 400 muted-grey x-small"}, "role": "REPLACES 'Novecy' on the sample"}
+    ]
+  },
+  "palette": {"navy": "#1b2846", "cyan": "#00a1d6", "muted_grey": "#5b687b", "strip_grey": "#eef1f4", "panel_white": "#ffffff", "bg": "#e8e8e7"},
+  "scene": {"camera": "straight-on front, eye-level with slight high angle, ~85mm equivalent", "framing": "case vertically centered, ~88% of frame height, portrait", "lighting": "soft large key top-left, gentle fill, low contrast, no harsh speculars; soft contact shadow + faint cast lower-right", "background": "seamless very-light warm grey #e8e8e7, subtle floor reflection"},
+  "render": {"engine": "higgsfield", "model": "gpt_image_2", "mode": "generative + reference image", "reference_images": ["canonical_target_hero 1Yld... (look/identity/layout — MUST be honoured)"], "resolution": [832, 1418], "aspect": "approx 7:12 portrait", "color_profile": "sRGB"},
+  "prompt_template": "Photorealistic e-commerce hero render of a pharmaceutical injection-pen carry CASE, CLOSED, standing vertical on its short edge. Match the attached reference image EXACTLY for the case shape, proportions, materials, clasps, label placement and layout — reproduce it faithfully and change ONLY the text on the lower label. CONTAINER: a slim rigid matte deep-navy #1b2846 hard-shell case, height-to-width about 3 to 1, rounded-rectangle with a subtle embossed bevel frame line around the front face and a faint vertical brushed sheen; small navy latch tabs of the same material protrude from the long edges (upper-left, a larger one upper-right, and one lower-right). CAMERA: straight-on front, eye-level with a slight high angle, ~85mm equivalent, the case vertically centered filling ~88% of frame height, portrait. LIGHTING: soft large key from top-left, gentle fill, low contrast, no harsh speculars; soft contact shadow plus faint cast to lower-right. BACKGROUND: seamless very-light warm grey #e8e8e7 with a subtle floor reflection. THERE ARE EXACTLY TWO WHITE ROUNDED-RECTANGLE ADHESIVE LABELS on the navy face, nothing printed directly on the navy: (1) an UPPER label that is TALL and NARROW, centered on the upper-middle of the face, carrying ONLY the 'Regenic|Lab' wordmark ROTATED 90 DEGREES CLOCKWISE so it runs vertically up the case — 'Regenic' in navy #1b2846, a thin grey pipe divider, then 'Lab' in cyan #00a1d6; (2) a LARGER LOWER label in the lower third of the face with all text NAVY #1b2846, left-aligned on a shared left margin, top to bottom: the product name '{product_name}' in Montserrat Bold (largest); {dose_clause}then a small light-grey rounded bar with a tiny boxed 'SC' at its left followed by '2ml Peptide Pen' in Montserrat Medium muted grey #5b687b (a route/form tag, NOT a schedule badge); then 'Composition:' in Montserrat Bold navy followed by '{composition}' and 'Store in fridge (2-8°C)' in Montserrat Regular navy small; then 'Compounded by:' in Montserrat Bold navy followed by 'Regenic Lab, George, South Africa' in Montserrat Regular muted grey x-small. PALETTE: navy #1b2846, cyan #00a1d6, grey #5b687b, label white. TYPOGRAPHY DISCIPLINE (critical): replicate the reference image's text SIZES and SPACING exactly — the product name is modest, the lower blocks are small, tidy and legible with generous line spacing; do NOT enlarge text to fill the label; keep the vertical logo on the upper label crisp and correctly oriented. There is NO schedule badge or round schedule mark anywhere. If a dose line is shown above render it EXACTLY as given preserving units; if no dose line is specified, do NOT invent one. Do NOT print 'Novecy' or any third-party/compounder name — the compounder line reads 'Regenic Lab' only. Do NOT add any batch/BN/BUD line. STYLE: clean, premium, clinical pharmacy, sharp focus, high detail, sRGB. Portrait 832x1418.",
+  "metafield_example_tirzepatide_pen": {"product_name": "Tirzepatide", "dose": "5MG/2ML", "composition": "Each unit contains Tirzepatide 5 mg / 2 ml.", "brand": "Regenic|Lab"}
+}

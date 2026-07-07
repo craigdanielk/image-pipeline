@@ -1,0 +1,13 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primikey-usba-plate-profile",
+  "subject": { "view": "side profile view, the long edge facing camera, long axis horizontal, showing the racetrack cross-section thickness" },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Clean studio product photograph, a single USB-A contactless hardware security key with a SATIN WHITE body, isolated on a seamless neutral light-grey (#d9d9dd) background. VIEW: {view} — show the thin 3.35mm racetrack edge profile: the molded keyring through-slot at the left end, the slab thickness with its full-radius rounded long edge, the brass NFC disc seen edge-on as a slight dome, and the thin 2mm-thick FLAT USB-A blade protruding at the right end (edge-on, its gold pads barely visible). Preserve the EXACT object in the attached reference image; do not restyle the product. Soft even large-softbox lighting, NO coloured rim light, NO dramatic shadows, only a subtle soft contact shadow, true-to-material colour (satin white body, brushed brass disc, gold pads). Sharp focus edge to edge, catalogue reference plate, centered with even margins. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": "reference/primikey-usba-target.png",
+  "output": { "imgtype": "plate", "aspect_ratio": "3:2", "resolution": "2k" },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}

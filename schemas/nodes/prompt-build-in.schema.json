@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/prompt-build-in.schema.json",
+  "title": "prompt.build input (job_spec)",
+  "$ref": "../nodes/intake-load-out.schema.json"
+}

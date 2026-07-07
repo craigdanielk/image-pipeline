@@ -1,0 +1,27 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primi-toughkey-profile-edge",
+  "subject": {
+    "view": "pure orthographic side elevation, camera exactly level with the device and dead-on to its long edge (zero elevation, eye-level with the seam), the device lying horizontal with its long axis running left-to-right. Only the thin outline/edge silhouette is visible — the TOP FACE IS NOT VISIBLE AT ALL, no NFC disc, no debossed marks in view. USB-C connector at the right end, moulded keyring through-hole at the left end, positioned low in the frame with large empty space above"
+  },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Ultra-premium studio product photograph of a single matte-black USB-C contactless hardware security key, floating in a wide 16:9 frame with dramatic negative space. VIEW: {view}. Preserve the EXACT object shown in the reference images — do not restyle or recolour. CRITICAL GEOMETRY: this is a VERY THIN, flat slab device — per the CAD spec the body is only ~3.35 mm thick against ~78 mm length (a razor-thin wafer). The side profile reference plate renders the thickness roughly TWICE too thick — IGNORE that plate's thickness and follow the CAD dimension: make it dramatically thin and flat, an elegant blade-like slab, NOT a chunky bar. Camera is perfectly side-on so we see the slim edge silhouette only. Matte-black glass-filled-nylon body, nickel-steel USB-C connector at the right end, moulded oval keyring slot at the left end. Cinematic low-key lighting: near-black background #0a0a0b, one crisp electric-blue rim light raking along the top edge to define the thin silhouette, a faint deep-blue ambient glow, a whisper of soft reflection beneath. Floating — no surface, no desk, no props, no hands. Razor-sharp edge, the entire key visible and not cropped. Object geometry and proportions must match this spec exactly:\n\n{cad}"
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "profile",
+    "aspect_ratio": "16:9",
+    "resolution": "2k"
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {
+      "input_images": [
+        "reference/plates/plate-3-profile.png"
+      ]
+    }
+  }
+}
