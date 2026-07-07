@@ -418,6 +418,28 @@ def get_workspace(tenant: Optional[str] = None) -> dict[str, Any]:
     }
 
 
+@app.get("/api/products/{slug}")
+def get_product_unified(slug: str, tenant: Optional[str] = None) -> dict[str, Any]:
+    """Knowledge ProductSpec if one exists, else a synthesized jobs_only view.
+
+    Most real products (any tenant that hasn't run the greenfield product wizard)
+    only exist as job folders on disk — they never get a knowledge/products/*.json
+    entry. Detail pages must still be able to open them.
+    """
+    try:
+        spec = _knowledge(tenant).get_product(slug)
+        return {"product": spec, "source": "knowledge"}
+    except knowledge_store.KnowledgeError:
+        pass
+    shots = _shots_for_product(slug, tenant)
+    if not shots:
+        raise HTTPException(status_code=404, detail=f"product not found: {slug}")
+    return {
+        "product": {"id": slug, "name": slug.replace("-", " ").title(), "shots": shots},
+        "source": "jobs_only",
+    }
+
+
 @app.get("/api/knowledge/products")
 def knowledge_list_products(tenant: Optional[str] = None) -> dict[str, Any]:
     return {"products": _knowledge(tenant).list_products()}
