@@ -100,7 +100,7 @@ Example fixtures: `schemas/examples/`
 ## Tests
 
 ```bash
-cd services/aragon/image-pipeline
+cd services/image-pipeline
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 ```
 

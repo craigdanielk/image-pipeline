@@ -48,6 +48,7 @@ def compile_execution_graph(artifacts: dict[str, Any]) -> dict[str, Any]:
 
     execution = artifacts["execution_request"]
     reference = execution.get("reference")
+    engine = execution.get("engine") or {}
     output = execution.get("output") or {}
     if isinstance(reference, list):
         ref_port_type = "image_path_list"
@@ -67,7 +68,7 @@ def compile_execution_graph(artifacts: dict[str, Any]) -> dict[str, Any]:
         {
             "id": "resolve_refs",
             "type": "reference.resolve",
-            "params": {"adapter": "local"},
+            "params": {"adapter": "local", "reference": reference},
             "ports": {
                 "in": {"artifacts": {"type": "compile_artifacts"}},
                 "out": {"refs": {"type": ref_port_type}},
@@ -76,7 +77,7 @@ def compile_execution_graph(artifacts: dict[str, Any]) -> dict[str, Any]:
         {
             "id": "generate",
             "type": "engine.generate",
-            "params": {},
+            "params": {"model": engine.get("model"), "provider": engine.get("name")},
             "ports": {
                 "in": {
                     "artifacts": {"type": "compile_artifacts"},

@@ -74,6 +74,38 @@ class TestGraphCompiler(unittest.TestCase):
         gen = next(n for n in graph["nodes"] if n["id"] == "generate")
         self.assertEqual(gen["ports"]["in"]["refs"]["type"], "image_path_list")
 
+    def test_preserves_engine_model_and_reference_path(self):
+        path = os.path.join(JOBS_DIR, "primikey-usba", "scene-float-a.job.json")
+        artifacts = job_compiler.compile_path(path, dry_run=True)
+        job_engine = artifacts["execution_request"]["engine"]
+        job_reference = artifacts["execution_request"]["reference"]
+
+        graph = graph_compiler.compile_path(path)
+        generate = next(n for n in graph["nodes"] if n["id"] == "generate")
+        resolve_refs = next(n for n in graph["nodes"] if n["id"] == "resolve_refs")
+
+        self.assertEqual(generate["params"]["model"], job_engine["model"])
+        self.assertEqual(generate["params"]["provider"], job_engine["name"])
+        self.assertEqual(resolve_refs["params"]["reference"], job_reference)
+
+    def test_preserves_engine_model_for_inline_job_with_reference(self):
+        job = {
+            "schema_version": "job-v1",
+            "id": "sample-shot-with-ref",
+            "spec": {"prompt_template": "Product render: {product}."},
+            "subject": {"product": "hardware token"},
+            "reference": "reference/product-hero.png",
+            "output": {"imgtype": "hero", "count": 1},
+            "engine": {"name": "higgsfield", "model": "nano_banana_2"},
+            "_dir": "/tmp",
+        }
+        graph = graph_compiler.compile_job(job)
+        gen = next(n for n in graph["nodes"] if n["id"] == "generate")
+        resolve_refs = next(n for n in graph["nodes"] if n["id"] == "resolve_refs")
+        self.assertEqual(gen["params"]["model"], "nano_banana_2")
+        self.assertEqual(gen["params"]["provider"], "higgsfield")
+        self.assertEqual(resolve_refs["params"]["reference"], "reference/product-hero.png")
+
     def test_metadata_compiled_from_artifacts(self):
         path = os.path.join(JOBS_DIR, "primikey-usba", "scene-float-a.job.json")
         graph = graph_compiler.compile_path(path)
