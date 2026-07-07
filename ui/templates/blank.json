@@ -1,0 +1,27 @@
+{
+  "id": "blank",
+  "label": "Blank Canvas",
+  "description": "Start from scratch with a minimal prompt template",
+  "icon": "blank",
+  "category": "custom",
+  "defaults": {
+    "subject": {
+      "product_name": "Product"
+    },
+    "spec": {
+      "prompt_template": "Photorealistic studio product photograph of a {product_name}, dramatic dark studio lighting, crisp rim light, shallow depth of field."
+    },
+    "reference": null,
+    "output": {
+      "imgtype": "hero",
+      "aspect_ratio": "4:3",
+      "resolution": "2k",
+      "count": 1
+    },
+    "engine": {
+      "name": "higgsfield",
+      "model": "recraft_v4_1",
+      "model_type": "standard"
+    }
+  }
+}

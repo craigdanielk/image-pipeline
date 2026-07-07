@@ -36,21 +36,31 @@ python3 core/run_graph.py ./compile/example --dry-run
 
 ---
 
-## Operator UI (compile + view outputs)
+## Operator UI (compile + graph + inspect + outputs)
 
-Local web UI to compile jobs, dry-run, generate, and **view output PNGs**.
+React Flow operator surface with FractalOS ARAGON styling.
 
 ```bash
-pip install -r ui/requirements.txt
-python ui/server.py
+./ui/run.sh
 # → http://127.0.0.1:8787
 ```
 
-1. Select a job under `jobs/`
-2. **Compile** — writes `jobs/<product>/compile/<job-id>/`
-3. **Dry run** — cost estimate
-4. **Generate** — calls engine (spends credits if configured)
-5. **Outputs** — gallery of `out/*.png` for that job
+**With tenant jobs outside the repo:**
+
+```bash
+export IMAGE_PIPELINE_JOBS_ROOT="$HOME/Developer/GitHub/tenants/joga/tools/image-pipeline/jobs"
+./ui/run.sh
+```
+
+| Step | Action |
+|------|--------|
+| 1 | Select job (repo `jobs/` or `JOBS_ROOT`) |
+| 2 | **Compile** — writes `compile/<job-id>/` + renders `graph.json` |
+| 3 | **Inspect** — per-stage JSON (manifest, ProductSpec, graph, …) |
+| 4 | **Dry run** / **Generate** — graph execution |
+| 5 | **Outputs** — PNG gallery |
+
+Graph conversion CLI: `python3 tools/graph_to_reactflow.py compile/<job-id>/`
 
 See [`ui/README.md`](./ui/README.md).
 

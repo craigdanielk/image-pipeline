@@ -1,0 +1,25 @@
+{
+  "id": "hero-scene",
+  "label": "Hero Scene",
+  "description": "Premium floating product shot with dramatic studio lighting",
+  "icon": "scene",
+  "category": "product",
+  "defaults": {
+    "subject": {
+      "view": "three-quarter hero angle, device tilted about 30 degrees"
+    },
+    "spec": {
+      "prompt_template": "Ultra-premium studio product photograph of a single {product_name}, floating in dark space. VIEW: {view}. Preserve the EXACT object shown in the reference images — do not restyle, recolour, or change the geometry. Dramatic dark studio look: near-black background #0a0a0b, a soft deep-blue radial glow behind the product, a crisp electric-blue rim light tracing the top edge, a subtle soft reflection beneath. The product is floating — no surface, no desk, no props. Razor-sharp focus edge to edge, hero product shot, generous even margins."
+    },
+    "reference": null,
+    "output": {
+      "imgtype": "scene",
+      "aspect_ratio": "4:3",
+      "resolution": "2k"
+    },
+    "engine": {
+      "name": "higgsfield",
+      "model": "nano_banana_2"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "studio-plate",
+  "label": "Studio Plate",
+  "description": "Clean catalogue reference shot on a neutral studio background",
+  "icon": "plate",
+  "category": "product",
+  "defaults": {
+    "subject": {
+      "view": "top-down plan view, flat top face square to camera"
+    },
+    "spec": {
+      "prompt_template": "Clean studio product photograph of a single {product_name}, isolated on a seamless neutral light-grey (#d9d9dd) background. VIEW: {view}. Preserve the EXACT object in the attached reference image; do not restyle the product. Soft even large-softbox lighting, NO coloured rim light, NO dramatic shadows, only a subtle soft contact shadow. Sharp focus edge to edge, catalogue reference plate, centered with even margins."
+    },
+    "reference": null,
+    "output": {
+      "imgtype": "plate",
+      "aspect_ratio": "4:3",
+      "resolution": "2k"
+    },
+    "engine": {
+      "name": "higgsfield",
+      "model": "nano_banana_2"
+    }
+  }
+}

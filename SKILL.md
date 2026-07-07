@@ -1,6 +1,6 @@
 ---
 name: image-pipeline
-description: Provider- and tenant-agnostic image-generation service driven by a single JobSpec JSON (schema job-v1). Use when an agent needs to generate a product/scene image from a CAD/engineering spec + prompt + optional reference photo — especially the two-stage "canonical plates then scenario" recipe for keeping a product on-model across renders. Triggers on "generate a product image", "image-pipeline", "run a JobSpec", "make studio plates", "render the hero/card/section image", "on-model product render". Lives at services/aragon/image-pipeline.
+description: Provider- and tenant-agnostic image-generation service driven by a single JobSpec JSON (schema job-v1). Use when an agent needs to generate a product/scene image from a CAD/engineering spec + prompt + optional reference photo — especially the two-stage "canonical plates then scenario" recipe for keeping a product on-model across renders. Triggers on "generate a product image", "image-pipeline", "run a JobSpec", "make studio plates", "render the hero/card/section image", "on-model product render". Lives at services/image-pipeline.
 ---
 
 # image-pipeline — agent playbook
@@ -10,7 +10,7 @@ A JobSpec-in / image-out service. The **JobSpec is the public contract**
 future HTTP/SaaS endpoint. Nothing tenant- or product-specific lives in the
 core — it asks an **adapter registry** by name.
 
-**Repo:** `~/Developer/GitHub/services/aragon/image-pipeline`
+**Repo:** `~/Developer/GitHub/services/image-pipeline`
 **Full docs:** `README.md` (how-to) · `WORKFLOW.md` (node contract) ·
 `core/job.schema.json` (schema)
 

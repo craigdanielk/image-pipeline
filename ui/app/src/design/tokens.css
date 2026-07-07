@@ -1,0 +1,79 @@
+/* FractalOS ARAGON — Creative IDE design tokens */
+:root {
+  color-scheme: dark;
+
+  --color-bg-base: #0a0a0a;
+  --color-bg-elevated: #111111;
+  --color-bg-card: #161616;
+  --color-canvas: #0a0a0a;
+
+  --color-glass-neutral: rgba(255, 255, 255, 0.04);
+  --color-glass-active: rgba(99, 102, 241, 0.12);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-border-active: rgba(99, 102, 241, 0.35);
+
+  --color-accent: #6366f1;
+  --color-accent-bright: #818cf8;
+  --color-accent-dim: rgba(99, 102, 241, 0.2);
+
+  --color-text-primary: #fafafa;
+  --color-text-secondary: rgba(255, 255, 255, 0.5);
+  --color-text-tertiary: rgba(255, 255, 255, 0.28);
+
+  --color-connector: #6366f1;
+  --color-status-ok: #22c55e;
+  --color-status-warn: #f59e0b;
+  --color-status-error: #ef4444;
+
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-card: 20px;
+  --radius-panel: 16px;
+  --radius-pill: 100px;
+  --radius-sm: 12px;
+  --radius: 12px;
+
+  --color-text-on-card: #1a1a1a;
+  --color-bg-card-dark: #2a2a2a;
+
+  --sidebar-width: 220px;
+  --inspector-width: 300px;
+  --run-bar-height: 64px;
+
+  --shell-inset: 24px;
+  --nav-rail-width: 72px;
+  --nav-rail-expanded: 220px;
+  --glass-blur: 24px;
+  --glass-blur-modal: 40px;
+  --color-media-backdrop: #000000;
+  --color-overlay-heavy: rgba(10, 10, 10, 0.92);
+  --color-overlay-panel: rgba(0, 0, 0, 0.35);
+  --color-overlay-scrim: rgba(0, 0, 0, 0.65);
+  --color-surface-inset: rgba(0, 0, 0, 0.25);
+  --color-text-on-accent: #0a0a0a;
+
+  /* Canvas / mesh backgrounds */
+  --color-dot-grid: rgba(255, 255, 255, 0.06);
+  --color-accent-mesh-strong: rgba(99, 102, 241, 0.08);
+  --color-accent-mesh-soft: rgba(99, 102, 241, 0.05);
+
+  /* Light cards on dark canvas (React Flow nodes) */
+  --color-node-border: rgba(0, 0, 0, 0.08);
+  --color-shadow-node: rgba(0, 0, 0, 0.25);
+  --color-shadow-node-ring: rgba(255, 255, 255, 0.04);
+  --color-text-on-card-muted: rgba(0, 0, 0, 0.45);
+  --color-status-ok-glow: rgba(34, 197, 94, 0.25);
+
+  /* Workbench surfaces */
+  --color-badge-bg: rgba(255, 255, 255, 0.06);
+  --color-btn-surface: rgba(255, 255, 255, 0.05);
+  --color-input-bg: rgba(0, 0, 0, 0.3);
+  --color-shadow-modal: rgba(0, 0, 0, 0.5);
+
+  /* Pills / minimap */
+  --color-pill-bg: rgba(255, 255, 255, 0.08);
+  --color-pill-border: rgba(255, 255, 255, 0.1);
+  --color-minimap-bg: #1a1a1a;
+  --color-minimap-node: #e8e8e8;
+}
