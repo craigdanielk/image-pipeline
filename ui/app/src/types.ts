@@ -18,6 +18,9 @@ export type Product = {
   slug: string;
   name: string;
   shots: Shot[];
+  geometry_description?: string;
+  reference_count?: number;
+  source?: string;
 };
 
 export type Output = {

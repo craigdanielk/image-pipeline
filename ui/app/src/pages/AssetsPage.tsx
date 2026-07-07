@@ -5,9 +5,17 @@ import type { Output } from "../types";
 
 export default function AssetsPage() {
   const [outputs, setOutputs] = useState<Output[]>([]);
+  const [approvals, setApprovals] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
 
+  const loadApprovals = () => {
+    api<{ approvals: Record<string, string> }>("/api/assets/approvals")
+      .then((d) => setApprovals(d.approvals || {}))
+      .catch(() => {});
+  };
+
   useEffect(() => {
+    loadApprovals();
     api<{ products: { slug: string; shots: { dir: string }[] }[] }>("/api/products").then(
       async (d) => {
         const all: Output[] = [];
@@ -27,6 +35,14 @@ export default function AssetsPage() {
       }
     );
   }, []);
+
+  const setApproval = async (path: string, status: string) => {
+    await api(`/api/assets/approval?path=${encodeURIComponent(path)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
+    loadApprovals();
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -59,7 +75,20 @@ export default function AssetsPage() {
             <a href={o.url} target="_blank" rel="noopener noreferrer">
               <img src={o.url} alt={o.name} loading="lazy" />
             </a>
-            <figcaption>{o.name}</figcaption>
+            <figcaption>
+              {o.name}
+              <span className={`accent-pill asset-approval ${approvals[o.path] === "approved" ? "accent-pill--active" : ""}`}>
+                {approvals[o.path] || "pending"}
+              </span>
+            </figcaption>
+            <div className="asset-card__actions">
+              <button type="button" className="btn btn--sm" onClick={() => setApproval(o.path, "approved")}>
+                Approve
+              </button>
+              <button type="button" className="btn btn--sm" onClick={() => setApproval(o.path, "rejected")}>
+                Reject
+              </button>
+            </div>
           </GlassCard>
         ))}
       </div>

@@ -1,12 +1,16 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { CreatorModeProvider } from "./CreatorModeContext";
+import { WorkspaceProvider } from "./WorkspaceContext";
 import GlassShell from "./design/GlassShell";
 import AssetsPage from "./pages/AssetsPage";
+import CampaignNewPage from "./pages/CampaignNewPage";
 import CampaignsPage from "./pages/CampaignsPage";
 import Dashboard from "./pages/Dashboard";
 import GeneratePage from "./pages/GeneratePage";
 import LegacyWorkbench from "./pages/LegacyWorkbench";
 import PipelinesPage from "./pages/PipelinesPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import ProductNewPage from "./pages/ProductNewPage";
 import ProductsPage from "./pages/ProductsPage";
 import RunsPage from "./pages/RunsPage";
 import StubPage from "./pages/StubPage";
@@ -14,7 +18,8 @@ import StubPage from "./pages/StubPage";
 export default function App() {
   return (
     <CreatorModeProvider>
-      <BrowserRouter>
+      <WorkspaceProvider>
+        <BrowserRouter>
         <Routes>
           <Route
             path="/workbench"
@@ -31,7 +36,10 @@ export default function App() {
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/new" element={<ProductNewPage />} />
+                  <Route path="/products/:slug" element={<ProductDetailPage />} />
                   <Route path="/campaigns" element={<CampaignsPage />} />
+                  <Route path="/campaigns/new" element={<CampaignNewPage />} />
                   <Route path="/assets" element={<AssetsPage />} />
                   <Route path="/generate" element={<GeneratePage />} />
                   <Route path="/runs" element={<RunsPage />} />
@@ -58,7 +66,8 @@ export default function App() {
             }
           />
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </WorkspaceProvider>
     </CreatorModeProvider>
   );
 }

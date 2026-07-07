@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
 import type { Campaign, Operation, Product } from "../types";
@@ -11,6 +12,7 @@ const OUTPUT_TYPES = [
 ];
 
 export default function GeneratePage() {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -31,10 +33,20 @@ export default function GeneratePage() {
       setProducts(p.products || []);
       setCampaigns(c.campaigns || []);
       setOperations(o.operations || []);
-      if (p.products?.[0]) setProductSlug(p.products[0].slug);
-      if (c.campaigns?.[0]) setCampaignId(c.campaigns[0].id);
+      const qProduct = searchParams.get("product");
+      const qCampaign = searchParams.get("campaign");
+      if (qProduct && p.products?.some((x) => x.slug === qProduct)) {
+        setProductSlug(qProduct);
+      } else if (p.products?.[0]) {
+        setProductSlug(p.products[0].slug);
+      }
+      if (qCampaign && c.campaigns?.some((x) => x.id === qCampaign)) {
+        setCampaignId(qCampaign);
+      } else if (c.campaigns?.[0]) {
+        setCampaignId(c.campaigns[0].id);
+      }
     });
-  }, []);
+  }, [searchParams]);
 
   const toggle = (set: Set<string>, id: string, setter: (s: Set<string>) => void) => {
     const next = new Set(set);
@@ -100,6 +112,18 @@ export default function GeneratePage() {
     <div className="generate-page">
       <h1 className="page-title">Generate</h1>
       <p className="page-subtitle">Intent only — compiler owns prompts. Zero prompt boxes.</p>
+
+      {products.length === 0 && (
+        <GlassCard className="stub-note dashboard-empty-state" style={{ marginBottom: "1rem" }}>
+          <strong>Create knowledge before generating</strong>
+          <p style={{ margin: "0.5rem 0 1rem" }}>
+            1. Product → 2. Campaign → 3. Upload refs → 4. Generate
+          </p>
+          <Link to="/products/new" className="btn btn--primary-solid">
+            Start: New product
+          </Link>
+        </GlassCard>
+      )}
 
       <GlassCard className="generate-panel">
         <div className="generate-panel__grid">

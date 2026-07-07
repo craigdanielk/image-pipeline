@@ -29,14 +29,22 @@ from pydantic import BaseModel, Field
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
 TOOLS = ROOT / "tools"
-UI_STATIC = Path(__file__).resolve().parent / "static"
-UI_TEMPLATES = Path(__file__).resolve().parent / "templates"
+UI_DIR = Path(__file__).resolve().parent
+UI_STATIC = UI_DIR / "static"
+UI_TEMPLATES = UI_DIR / "templates"
 KNOWLEDGE = ROOT / "knowledge"
 
 if str(TOOLS) not in sys.path:
     sys.path.insert(0, str(TOOLS))
+if str(CORE) not in sys.path:
+    sys.path.insert(0, str(CORE))
+if str(UI_DIR) not in sys.path:
+    sys.path.insert(0, str(UI_DIR))
 
 import graph_to_reactflow  # noqa: E402
+import knowledge_store  # noqa: E402
+import spec_validator_v2  # noqa: E402
+import workspace_runs  # noqa: E402
 
 app = FastAPI(title="Creative Compiler UI", version="0.3.0")
 
@@ -236,6 +244,31 @@ class GenerateIntentRequest(BaseModel):
     dry_run: bool = True
 
 
+class CreateProductRequest(BaseModel):
+    id: Optional[str] = None
+    name: str = Field(..., min_length=1)
+    geometry_description: str = Field(..., min_length=1)
+    material_color: str = "neutral"
+    material_type: str = "generic"
+
+
+class CreateCampaignRequest(BaseModel):
+    id: Optional[str] = None
+    product_spec_id: str = Field(..., pattern=r"^[a-z0-9][a-z0-9-]*$")
+    label: str = Field(..., min_length=1)
+    mood: str = "studio"
+    style: str = "product_hero"
+    scene_description: str = Field(..., min_length=1)
+    lighting: str = "soft_key_fill, neutral backdrop"
+    camera: str = "eye_level, product legible"
+    background: str = "neutral_studio"
+    composition: str = "product centered, clean negative space"
+
+
+class ApprovalRequest(BaseModel):
+    status: str = Field(..., pattern=r"^(pending|approved|rejected)$")
+
+
 _OUTPUT_TEMPLATE_MAP = {
     "pdp": "studio-plate",
     "hero": "hero-scene",
@@ -244,11 +277,33 @@ _OUTPUT_TEMPLATE_MAP = {
 }
 
 
+def _knowledge() -> knowledge_store.KnowledgeStore:
+    return knowledge_store.KnowledgeStore(ROOT)
+
+
+def _workspace_id() -> str:
+    return os.environ.get("IMAGE_PIPELINE_WORKSPACE_ID", "default").strip() or "default"
+
+
+def _shots_for_product(slug: str) -> list[dict[str, Any]]:
+    shots: list[dict[str, Any]] = []
+    for job in _glob_jobs():
+        if job["product"] == slug:
+            shots.append(
+                {
+                    "id": job["id"],
+                    "label": job["label"],
+                    "path": job["path"],
+                    "dir": job["dir"],
+                }
+            )
+    return shots
+
+
 def _load_knowledge_campaign(campaign_id: str) -> dict[str, Any]:
     for path in [KNOWLEDGE / "campaigns" / f"{campaign_id}.json"]:
         if path.is_file():
             return json.loads(path.read_text(encoding="utf-8"))
-    # fuzzy match by id field inside files
     camp_dir = KNOWLEDGE / "campaigns"
     if camp_dir.is_dir():
         for path in camp_dir.glob("*.json"):
@@ -263,7 +318,7 @@ def health() -> dict[str, str]:
     return {
         "status": "ok",
         "root": str(ROOT),
-        "api_version": "0.3.0-creative-ide",
+        "api_version": "0.4.0-greenfield",
     }
 
 
@@ -285,26 +340,174 @@ def list_jobs() -> dict[str, Any]:
 
 @app.get("/api/products")
 def list_products() -> dict[str, Any]:
-    """Group jobs by product folder for creator sidebar."""
-    jobs = _glob_jobs()
-    by_product: dict[str, dict[str, Any]] = {}
-    for job in jobs:
-        slug = job["product"]
-        if slug not in by_product:
-            name = slug.replace("-", " ").replace("_", " ").title()
-            if slug == "_general":
-                name = "General"
-            by_product[slug] = {"slug": slug, "name": name, "shots": []}
-        by_product[slug]["shots"].append(
+    """Knowledge-first products with optional job shot counts."""
+    store = _knowledge()
+    products: list[dict[str, Any]] = []
+    for row in store.list_products():
+        slug = row["slug"]
+        products.append(
             {
-                "id": job["id"],
-                "label": job["label"],
-                "path": job["path"],
-                "dir": job["dir"],
+                "slug": slug,
+                "name": row["name"],
+                "geometry_description": row.get("geometry_description"),
+                "reference_count": row.get("reference_count", 0),
+                "shots": _shots_for_product(slug),
+                "source": "knowledge",
             }
         )
-    products = sorted(by_product.values(), key=lambda p: (p["slug"] == "_general", p["name"]))
+    known = {p["slug"] for p in products}
+    for job in _glob_jobs():
+        slug = job["product"]
+        if slug in known or slug == "_general":
+            continue
+        products.append(
+            {
+                "slug": slug,
+                "name": slug.replace("-", " ").title(),
+                "shots": _shots_for_product(slug),
+                "source": "jobs_only",
+            }
+        )
+    products.sort(key=lambda p: p["name"].lower())
     return {"products": products}
+
+
+@app.get("/api/workspace")
+def get_workspace() -> dict[str, Any]:
+    wid = _workspace_id()
+    meta = workspace_runs.workspace_meta(ROOT, wid)
+    products = len(_knowledge().list_products())
+    campaigns = len(_knowledge().list_campaigns())
+    runs = workspace_runs.list_runs(ROOT, wid, limit=100)
+    return {
+        "workspace": meta,
+        "stats": {
+            "products": products,
+            "campaigns": campaigns,
+            "runs": len(runs),
+            "runs_active": sum(1 for r in runs if r.get("status") in ("queued", "running")),
+        },
+    }
+
+
+@app.get("/api/knowledge/products")
+def knowledge_list_products() -> dict[str, Any]:
+    return {"products": _knowledge().list_products()}
+
+
+@app.get("/api/knowledge/products/{slug}")
+def knowledge_get_product(slug: str) -> dict[str, Any]:
+    try:
+        return {"product": _knowledge().get_product(slug)}
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/knowledge/products")
+def knowledge_create_product(req: CreateProductRequest) -> dict[str, Any]:
+    try:
+        row = _knowledge().create_product(req.model_dump())
+        return {"ok": True, "product": row}
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.put("/api/knowledge/products/{slug}")
+def knowledge_update_product(slug: str, body: dict[str, Any]) -> dict[str, Any]:
+    try:
+        if body.get("id") and body["id"] != slug:
+            raise HTTPException(status_code=400, detail="id mismatch")
+        body["id"] = slug
+        row = _knowledge().save_product(body)
+        return {"ok": True, "product": row}
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except spec_validator_v2.SpecV2Error as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/knowledge/products/{slug}/refs")
+async def knowledge_upload_product_ref(
+    slug: str,
+    role: str = Query("product_ref"),
+    ref_id: str = Query("ref"),
+    file: UploadFile = File(...),
+) -> dict[str, Any]:
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="missing filename")
+    store = _knowledge()
+    try:
+        store.get_product(slug)
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    safe_name = re.sub(r"[^a-zA-Z0-9._-]+", "-", file.filename).strip("-") or "upload.png"
+    refs_dir = store.product_refs_dir(slug)
+    dest = refs_dir / safe_name
+    content = await file.read()
+    dest.write_bytes(content)
+    asset_path = f"knowledge/products/{slug}/refs/{safe_name}"
+    try:
+        store.add_product_reference(slug, ref_id=ref_id, role=role, asset_path=asset_path)
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    try:
+        rel = dest.relative_to(ROOT).as_posix()
+    except ValueError:
+        rel = dest.as_posix()
+    return {
+        "ok": True,
+        "path": rel,
+        "url": f"/media?path={rel}",
+        "asset": asset_path,
+        "ref_id": ref_id,
+    }
+
+
+@app.get("/api/knowledge/campaigns")
+def knowledge_list_campaigns(product_spec_id: Optional[str] = None) -> dict[str, Any]:
+    return {"campaigns": _knowledge().list_campaigns(product_spec_id)}
+
+
+@app.get("/api/knowledge/campaigns/{campaign_id}")
+def knowledge_get_campaign(campaign_id: str) -> dict[str, Any]:
+    try:
+        return {"campaign": _knowledge().get_campaign(campaign_id)}
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.post("/api/knowledge/campaigns")
+def knowledge_create_campaign(req: CreateCampaignRequest) -> dict[str, Any]:
+    try:
+        row = _knowledge().create_campaign(req.model_dump())
+        return {"ok": True, "campaign": row}
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/runs/registry")
+def list_run_registry(limit: int = 50) -> dict[str, Any]:
+    wid = _workspace_id()
+    return {"runs": workspace_runs.list_runs(ROOT, wid, limit=limit)}
+
+
+@app.get("/api/runs/registry/{run_id}")
+def get_run_registry(run_id: str) -> dict[str, Any]:
+    try:
+        return {"run": workspace_runs.get_run(ROOT, run_id, _workspace_id())}
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.patch("/api/assets/approval")
+def patch_asset_approval(req: ApprovalRequest, path: str = Query(...)) -> dict[str, Any]:
+    workspace_runs.set_approval(ROOT, path, req.status, _workspace_id())
+    return {"ok": True, "path": path, "status": req.status}
+
+
+@app.get("/api/assets/approvals")
+def get_asset_approvals() -> dict[str, Any]:
+    return {"approvals": workspace_runs.load_approvals(ROOT, _workspace_id())}
 
 
 @app.get("/api/templates")
@@ -608,13 +811,32 @@ def dashboard_stats() -> dict[str, Any]:
         )
 
     recent.sort(key=lambda r: r["mtime"], reverse=True)
+    registry_runs = workspace_runs.list_runs(ROOT, _workspace_id(), limit=8)
+    if registry_runs:
+        recent_runs = [
+            {
+                "id": r.get("shot_id", r["id"]),
+                "label": r.get("shot_id", r["id"]),
+                "product": r.get("product_slug", ""),
+                "path": r.get("job_path", ""),
+                "mtime": r.get("updated_at", r.get("created_at", 0)),
+                "status": r.get("status", "pending"),
+                "outputs": len(r.get("outputs") or []),
+                "run_id": r["id"],
+            }
+            for r in registry_runs
+        ]
+    else:
+        recent_runs = recent[:8]
+    meta = workspace_runs.workspace_meta(ROOT, _workspace_id())
     return {
+        "workspace": meta,
         "products": products,
         "campaigns": campaigns,
         "jobs": len(jobs),
         "outputs": outputs,
         "credits_estimated": credits_estimated,
-        "recent_runs": recent[:8],
+        "recent_runs": recent_runs,
     }
 
 
@@ -663,9 +885,10 @@ def generate_intent(req: GenerateIntentRequest) -> dict[str, Any]:
     )
     created = create_job(create_req)
     job_path = created["job"]["path"]
+    job_dir = created["job"]["dir"]
 
     if req.dry_run:
-        compile_abs_parent = _resolve_path(created["job"]["dir"])
+        compile_abs_parent = _resolve_path(job_dir)
         job_file = _resolve_path(job_path)
         compile_dir = compile_abs_parent / "compile" / shot_id
         compile_dir.mkdir(parents=True, exist_ok=True)
@@ -691,21 +914,53 @@ def generate_intent(req: GenerateIntentRequest) -> dict[str, Any]:
             "job_path": job_path,
         }
 
-    job_file = _resolve_path(job_path)
-    compile_dir = job_file.parent / "compile" / shot_id
-    compile_dir.mkdir(parents=True, exist_ok=True)
-    _run_core(
-        "compile_job.py",
-        job_file.as_posix(),
-        "--compile-dir",
-        compile_dir.as_posix(),
+    run = workspace_runs.create_run(
+        ROOT,
+        product_slug=req.product_slug,
+        campaign_id=req.campaign_id,
+        job_path=job_path,
+        job_dir=job_dir,
+        shot_id=shot_id,
+        output_types=req.output_types,
+        changes=req.changes,
+        workspace_id=_workspace_id(),
     )
-    _run_core("run_graph.py", compile_dir.as_posix())
-    return {
-        "message": f"Generated {shot_id}",
-        "job_path": job_path,
-        "compile_dir": compile_dir.as_posix(),
-    }
+    workspace_runs.update_run(ROOT, run["id"], status="running", workspace_id=_workspace_id())
+    try:
+        job_file = _resolve_path(job_path)
+        compile_dir = job_file.parent / "compile" / shot_id
+        compile_dir.mkdir(parents=True, exist_ok=True)
+        _run_core(
+            "compile_job.py",
+            job_file.as_posix(),
+            "--compile-dir",
+            compile_dir.as_posix(),
+        )
+        _run_core("run_graph.py", compile_dir.as_posix())
+        outputs = _glob_outputs(job_dir)
+        workspace_runs.update_run(
+            ROOT,
+            run["id"],
+            status="complete",
+            outputs=outputs,
+            workspace_id=_workspace_id(),
+        )
+        return {
+            "message": f"Generated {shot_id}",
+            "job_path": job_path,
+            "compile_dir": compile_dir.as_posix(),
+            "run_id": run["id"],
+            "outputs": outputs,
+        }
+    except Exception as exc:
+        workspace_runs.update_run(
+            ROOT,
+            run["id"],
+            status="failed",
+            error=str(exc),
+            workspace_id=_workspace_id(),
+        )
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/api/graph-reactflow")

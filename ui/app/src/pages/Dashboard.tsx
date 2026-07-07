@@ -54,10 +54,24 @@ export default function Dashboard() {
         <p className="dashboard-hero__eyebrow">Creative IDE</p>
         <h1 className="dashboard-hero__title">Compile knowledge into assets</h1>
         <p className="dashboard-hero__copy">{HERO}</p>
+        {stats.products === 0 ? (
+          <div className="greenfield-steps">
+            <div className="greenfield-step">1. Create product</div>
+            <div className="greenfield-step">2. Create campaign</div>
+            <div className="greenfield-step">3. Upload refs</div>
+            <div className="greenfield-step">4. Generate</div>
+          </div>
+        ) : null}
         <div className="dashboard-hero__actions">
-          <Link to="/generate" className="btn btn--primary-solid">
-            Generate
-          </Link>
+          {stats.products === 0 ? (
+            <Link to="/products/new" className="btn btn--primary-solid">
+              Start greenfield
+            </Link>
+          ) : (
+            <Link to="/generate" className="btn btn--primary-solid">
+              Generate
+            </Link>
+          )}
           <Link to="/products" className="btn">
             Browse products
           </Link>

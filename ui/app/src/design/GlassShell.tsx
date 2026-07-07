@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import ContextCanvas from "./ContextCanvas";
 import GlassNavRail from "./GlassNavRail";
 import { useCreatorMode } from "../CreatorModeContext";
+import { useWorkspace } from "../WorkspaceContext";
 
 type Props = {
   children: ReactNode;
@@ -10,6 +11,7 @@ type Props = {
 
 export default function GlassShell({ children }: Props) {
   const { creatorMode, toggleMode } = useCreatorMode();
+  const { workspace } = useWorkspace();
 
   return (
     <div className="glass-shell">
@@ -22,7 +24,9 @@ export default function GlassShell({ children }: Props) {
         <div className="glass-shell__main">
           <header className="glass-shell__topbar glass-panel">
             <div>
-              <span className="glass-shell__product">Creative IDE</span>
+              <span className="glass-shell__product">
+                {workspace?.name || "Creative IDE"}
+              </span>
               <span className="glass-shell__tagline">Structured knowledge → deterministic compilation</span>
             </div>
             <div className="glass-shell__actions">

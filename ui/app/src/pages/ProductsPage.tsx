@@ -13,27 +13,44 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <h1 className="page-title">Products</h1>
-      <p className="page-subtitle">PIM — geometry, materials, logos, constraints. No prompts.</p>
+      <div className="page-header-row">
+        <div>
+          <h1 className="page-title">Products</h1>
+          <p className="page-subtitle">PIM — geometry, materials, logos, constraints. No prompts.</p>
+        </div>
+        <Link to="/products/new" className="btn btn--primary-solid">
+          + New product
+        </Link>
+      </div>
+
       <div className="page-grid">
         {products.map((p) => (
           <GlassCard key={p.slug} className="stub-note">
-            <strong>{p.name}</strong>
-            <p style={{ margin: "0.5rem 0 0", color: "var(--color-text-tertiary)" }}>
-              {p.shots.length} shot{p.shots.length !== 1 ? "s" : ""}
+            <Link to={`/products/${p.slug}`} style={{ color: "inherit", textDecoration: "none" }}>
+              <strong>{p.name}</strong>
+            </Link>
+            <p style={{ margin: "0.5rem 0 0", color: "var(--color-text-tertiary)", fontSize: "0.75rem" }}>
+              {p.slug}
+              {p.source === "knowledge" ? " · knowledge" : p.source === "jobs_only" ? " · legacy jobs" : ""}
             </p>
-            <p style={{ margin: "0.75rem 0 0", fontSize: "0.75rem" }}>
-              Phase 2: Product explorer (geometry, versions, assets)
+            <p style={{ margin: "0.35rem 0 0", fontSize: "0.8rem", color: "var(--color-text-secondary)" }}>
+              {(p.reference_count ?? 0) > 0 && `${p.reference_count} refs · `}
+              {p.shots?.length ?? 0} run{p.shots?.length === 1 ? "" : "s"}
             </p>
           </GlassCard>
         ))}
         {!products.length && (
-          <GlassCard className="stub-note">No products yet. Use Generate or add jobs under <code>jobs/</code>.</GlassCard>
+          <GlassCard className="stub-note dashboard-empty-state">
+            <strong>No products yet</strong>
+            <p style={{ margin: "0.5rem 0 1rem" }}>
+              Start greenfield: create a product, add a campaign, upload refs, then Generate.
+            </p>
+            <Link to="/products/new" className="btn btn--primary-solid">
+              Create first product
+            </Link>
+          </GlassCard>
         )}
       </div>
-      <Link to="/generate" className="btn btn--primary" style={{ marginTop: "1rem", display: "inline-block" }}>
-        Generate from product
-      </Link>
     </div>
   );
 }
