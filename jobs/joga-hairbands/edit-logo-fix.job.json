@@ -1,0 +1,22 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "joga-hairbands-edit-logo-fix",
+  "subject": {
+    "operation": "replace_logo"
+  },
+  "spec": {
+    "prompt_template": "Re-render reference image 1 in place. Lock the child, hairband, hands, pose, lighting, background and kit colours exactly.\n\nONLY CHANGE — chest branding:\n1. Remove completely any white swoosh, Joma J, or wrong chest mark.\n2. Apply the stacked JO/GA chest logo from reference image 2 (yellow), small on the chest at sternum height, scale ~0.9, crisp and undistorted.\n\nDo not crop the product. Do not distort the logo.",
+    "negative": "joma_j, white_swoosh, crop_product, distort_logo"
+  },
+  "reference": [
+    { "image": "reference/parent-shot-1-base.png", "optional": true },
+    { "image": "reference/joga-chest-logo-stacked-yellow.png", "optional": true }
+  ],
+  "output": {
+    "imgtype": "edit",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}

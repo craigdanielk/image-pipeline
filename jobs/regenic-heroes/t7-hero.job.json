@@ -1,0 +1,21 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t7-hero",
+  "subject": {
+    "product_name": "BPC-157",
+    "dose_clause": "below it the dose '2MG/ML' in Montserrat SemiBold navy, rendered EXACTLY as given, "
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of an OPEN pharmaceutical injection-pen carry kit. Match the attached reference image EXACTLY and reproduce the WHOLE scene faithfully — change ONLY the small text printed on the white pen's label. SCENE: a navy rigid carry case lying horizontal with its hinged lid open and standing up at the back; inside, a sleek WHITE cartridge injection pen rests in the foreground along the case, and three dark-green glass cartridge vials stand upright in a moulded tray slot behind it; everything sits on a light grey stone/marble surface. CAMERA: slight top-down three-quarter angle over the open case, the kit filling ~90% of frame width. LIGHTING: soft key from top-left, gentle realistic shadows on the stone. ON THE WHITE PEN, a small neat label in navy #1b2846, left-aligned: the 'Regenic|Lab' wordmark with cyan accent, the product name '{product_name}' (Montserrat SemiBold, the largest line on the small label), {dose_clause}and a small muted-grey 'SC · Cartridge Pen'. TYPOGRAPHY DISCIPLINE: keep the pen label small, crisp and legible exactly as in the reference; do not enlarge it or add text elsewhere; if no dose is specified do NOT invent one. There is NO schedule badge anywhere. Do NOT print 'Novecy' or any third-party/compounder branding. Clean premium clinical pharmacy, sharp focus, high detail, sRGB. 1126x1234.",
+    "cad": "CAD source of truth: config/cad/T7_hero.json (regenic Norwood-Ludwig template T7 — open cartridge-pen kit hero, most complex scene). Metafields swap per SKU; this config carries the T7 example SKU (BPC-157 cartridge pen)."
+  },
+  "reference": { "image": "reference/t7-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "gpt_image_2" }
+}

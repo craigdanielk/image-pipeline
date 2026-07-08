@@ -1,0 +1,21 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t10-hero",
+  "subject": {
+    "product_name": "GHK-Cu Serum Plus",
+    "size": "30ml"
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of an amber glass dropper bottle with a brushed-gold collar and black rubber bulb dropper cap. Match the attached reference image EXACTLY for bottle shape, amber glass, gold-and-black dropper cap, label shape and placement, the AVID-RA branding, materials and lighting — change ONLY the product name text. BACKGROUND seamless very-light warm grey, soft key top-left, bottle vertically centered, soft contact shadow. The white label keeps the AVID-RA molecule logo with 'AVID-RA' and 'COMPLEX AMINO RESEARCH' (do NOT change the brand), then the product name '{product_name}' in navy (largest, may wrap two lines), then a small grey line with '30ml' at left and 'Bottle' at right, then a small letter-spaced grey footer 'RESEARCH PURPOSES ONLY'. This product is AVID-RA brand, NOT Regenic|Lab; there is NO schedule badge and NO dose/strength number. TYPOGRAPHY DISCIPLINE: replicate reference sizes/spacing exactly, do not enlarge, do not invent any dose or strength. No 'Novecy' or other third-party branding. Clean premium research-grade, sharp focus, sRGB. Portrait 838x1340.",
+    "cad": "CAD source of truth: config/cad/T10_hero.json (regenic Norwood-Ludwig template T10 — AVID-RA amber dropper bottle serum). Sole SKU ghk-cu-serum; only the product name swaps."
+  },
+  "reference": { "image": "reference/t10-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "2:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "gpt_image_2" }
+}

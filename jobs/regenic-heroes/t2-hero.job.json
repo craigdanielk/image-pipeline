@@ -1,0 +1,24 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t2-hero",
+  "subject": {
+    "badge_clause": "a small navy outlined square schedule badge reading 'S4' at the top-left of the logo; then ",
+    "product_name": "Minoxidil + Biotin",
+    "dose_clause": "below the name the dose '2.5MG + 10MG' in Montserrat SemiBold navy #1b2846, rendered EXACTLY as given; ",
+    "form": "CAPSULES",
+    "brand": "Regenic|Lab"
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of a pharmaceutical capsule bottle. CONTAINER: cylindrical 60cc HDPE packer, matte white opaque body 70mm tall x 40mm diameter (diameter:height ~1:1.9), glossy royal-blue ribbed screw cap with tamper-evident ring (~24mm tall). CAMERA: straight-on front, eye-level with slight 5deg high angle, ~85mm equivalent, bottle vertically centered filling ~88% of frame height. LIGHTING: soft large key from top-left, gentle fill, low contrast, no harsh speculars; soft contact shadow plus faint cast to lower-right. BACKGROUND: seamless very-light warm grey #e8e8e7 with subtle floor reflection. LABEL direct-printed on the body, left-aligned on a shared left margin: {badge_clause}the 'Regenic|Lab' wordmark in navy with a cyan vertical divider bar and small cyan leaf accent; after a generous gap, the product name '{product_name}' in Montserrat SemiBold navy #1b2846 (largest element); {dose_clause}below that the form '{form}' in Montserrat Medium muted grey #5b687b with wide letter-spacing. PALETTE: navy #1b2846, cyan #00a1d6, grey #5b687b. TYPOGRAPHY DISCIPLINE (critical): replicate the reference image's text SIZE and SPACING exactly — the product name is modest, about one-eighth of the bottle width tall, NOT large; keep a generous gap (about 1.2x the logo height) between the Regenic|Lab logo and the product name; do NOT enlarge or stretch text to fill the label width — short or single-word names use the SAME modest size as long ones; leave ample empty white space below the form line. If a dose line is shown above, render it EXACTLY as given, preserving commas and UPPERCASE units (e.g. '50,000IU' must appear as '50,000IU', never '50000ui'); if NO dose line is specified above, do NOT invent or add any dose, number or unit anywhere on the label. STYLE: clean, premium, clinical pharmacy, sharp focus, high detail, sRGB. Match the attached reference image for bottle shape, materials, label placement and typography; change ONLY the badge text, product name, dose and form to the values above. Do NOT render 'Novecy' or any third-party/compounder branding. Portrait 874x1326.",
+    "cad": "CAD source of truth: config/cad/T2_hero.json (regenic Norwood-Ludwig template T2 — capsule-bottle hero). Geometry: cylindrical 60cc HDPE packer, 70mm x 40mm, royal-blue ribbed screw cap. Metafields swap per SKU; this config carries the T2 example SKU (Minoxidil + Biotin)."
+  },
+  "reference": { "image": "reference/t2-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "2:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}

@@ -28,6 +28,14 @@ _CAPABILITIES: dict[str, dict[str, dict[str, Any]]] = {
             "resolution": ["1k", "2k", "4k", "auto"],
             "negative_prompt": False,
         },
+        "gpt_image_2": {
+            "accepts_reference": True,
+            "batch_size": False,
+            "model_type": False,
+            "colors": False,
+            "resolution": ["1k", "2k"],
+            "negative_prompt": False,
+        },
     },
 }
 

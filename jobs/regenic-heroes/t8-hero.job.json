@@ -1,0 +1,21 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t8-hero",
+  "subject": {
+    "product_name": "Tirzepatide",
+    "dose_clause": "below it the dose '2.5MG' in Montserrat SemiBold navy, rendered EXACTLY as given, "
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of a single-use prefilled syringe in a clear blister pack. Match the attached reference image EXACTLY and reproduce the whole pack faithfully — change ONLY the printed text on the backing card. SCENE: a clear thermoformed plastic blister clamshell standing vertical, containing one prefilled syringe with amber/orange liquid, visible plunger and finger flange, laid diagonally, plus a printed paper backing card behind it. CAMERA: straight-on front, blister vertically centered ~88% of frame height, portrait. LIGHTING: soft key top-left with gentle realistic reflections on the clear plastic; seamless very-light grey background, soft contact shadow. The printed backing card is a soft off-white / very light warm grey (NOT a glaring pure bright white) — keep its brightness slightly muted. ON THE BACKING CARD, small neat navy #1b2846 text, left-aligned: the 'Regenic|Lab' wordmark with cyan accent, the product name '{product_name}' (Montserrat SemiBold, largest on the card), {dose_clause}and a small muted-grey 'SC · Single-use Syringe'. TYPOGRAPHY DISCIPLINE: keep the card text small, crisp and legible exactly as in the reference; do not enlarge or add text elsewhere; if no dose is specified do NOT invent one. There is NO schedule badge. Do NOT print 'Novecy' or any third-party/compounder branding. Clean premium clinical pharmacy, sharp focus, sRGB. Portrait 648x934.",
+    "cad": "CAD source of truth: config/cad/T8_hero.json (regenic Norwood-Ludwig template T8 — blister syringe hero). Metafields swap per SKU; this config carries the T8 example SKU (Tirzepatide 2.5MG single-use syringe)."
+  },
+  "reference": { "image": "reference/t8-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "2:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "gpt_image_2" }
+}

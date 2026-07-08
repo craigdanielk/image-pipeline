@@ -1,0 +1,23 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "joga-hairbands-product-hero",
+  "subject": {
+    "product_name": "JOGA hairband",
+    "brand": "JOGA"
+  },
+  "spec": {
+    "prompt_template": "Photorealistic studio product photograph of a royal-blue elastic athletic hairband: a continuous woven elastic loop, 25mm wide band, ~480mm circumference, matte finish, bilateral symmetry, with the white JOGA wordmark centered on the band face. Preserve exact band geometry, material and proportions from the reference image. Clean e-commerce product shot, sharp focus on the woven texture and the wordmark.",
+    "cad": "Product source of truth: knowledge/products/hairbands.json (product-spec-v2, immutable). Geometry: torus loop, royal_blue woven elastic, width 25mm, circumference 480mm. Brand asset joga-band-wordmark placed band_center. Constraints: preserve geometry, material, proportions."
+  },
+  "reference": { "image": "reference/flatlay.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "count": 1,
+    "background": "neutral studio grey, seamless, soft gradient",
+    "composition": "band laid flat, slight three-quarter angle, wordmark legible and unoccluded"
+  },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}
