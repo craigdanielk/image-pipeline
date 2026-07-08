@@ -77,6 +77,55 @@ class TestPromptCompiler(unittest.TestCase):
                 self.assertEqual(req["schema_version"], "execution-request-v1")
                 self.assertEqual(req["id"], job["id"])
 
+    def _edit(self, op, edit_id):
+        return {
+            "schema_version": spec_validator.EDIT_SCHEMA,
+            "id": edit_id,
+            "creative_spec_id": "usb-a-hero-creative",
+            "operation": op,
+            "parent_asset_id": "asset:path:anchor-1",
+            "constraints": [],
+            "exclusions": [],
+            "provenance": {"compiled_from": "test"},
+        }
+
+    def test_single_edit_spec_folds_operation_into_positive_prompt(self):
+        """compile() with exactly one edit_spec must produce a distinct
+        positive prompt per operation, so N chained per-op nodes actually
+        send the provider different instructions instead of duplicating
+        the same edit N times."""
+        product, creative, execution = self._fixture_triple()
+        a = prompt_compiler.compile(
+            product, creative, execution, edit_specs=[self._edit("replace_logo", "e-0")]
+        )
+        b = prompt_compiler.compile(
+            product, creative, execution, edit_specs=[self._edit("subject_swap", "e-1")]
+        )
+        self.assertNotEqual(a["positive"], b["positive"])
+        self.assertIn("replace the brand logo", a["positive"])
+        self.assertIn("swap the subject", b["positive"])
+
+    def test_merged_multi_edit_spec_path_unaffected_by_op_folding(self):
+        """The existing compile_job merged-call shape (0 or 2+ edit_specs)
+        must remain byte-identical to its pre-existing behavior — the new
+        per-op instruction folding only applies when len(edit_specs) == 1."""
+        product, creative, execution = self._fixture_triple()
+        edits = [self._edit("replace_logo", "e-0"), self._edit("subject_swap", "e-1")]
+
+        none_result = prompt_compiler.compile(product, creative, execution, edit_specs=None)
+        empty_result = prompt_compiler.compile(product, creative, execution, edit_specs=[])
+        self.assertEqual(none_result["positive"], empty_result["positive"])
+        for result in (none_result, empty_result):
+            for instruction in prompt_compiler._OP_INSTRUCTIONS.values():
+                self.assertNotIn(instruction, result["positive"])
+
+        merged = prompt_compiler.compile(product, creative, execution, edit_specs=edits)
+        for instruction in prompt_compiler._OP_INSTRUCTIONS.values():
+            self.assertNotIn(instruction, merged["positive"])
+        # Merged (2 edit_specs) positive text is identical to the 0-edit_specs
+        # case since neither path folds operation into the prompt.
+        self.assertEqual(merged["positive"], none_result["positive"])
+
     def test_example_fixtures_validate(self):
         for filename in (
             "product-spec-primikey-usba.json",

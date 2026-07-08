@@ -200,6 +200,68 @@ def compile_job(job: dict[str, Any], *, dry_run: bool = True) -> dict[str, Any]:
     return bundle
 
 
+def compile_job_multi_op(
+    job: dict[str, Any],
+    edit_specs: list[dict[str, Any]],
+    *,
+    dry_run: bool = True,
+) -> dict[str, Any]:
+    """Compile job-v1 + an explicit ordered EditSpec[] into a bundle carrying
+    N distinct per-op execution plans (op_execution_plans), one per edit_spec,
+    for graph_compiler to lower into a real chained multi-node graph.
+
+    Unlike compile_job (which folds all edit_specs into ONE merged prompt),
+    each edit_spec here gets its own independent prompt_compiler.compile() +
+    capability_resolver.resolve() call, so each resulting node in the graph
+    can be re-run in isolation with its own distinct compiled prompt.
+    """
+    jobspec.validate(job)
+
+    product = extract_product_spec_from_job(job)
+    creative = spec_compiler.derive_creative_from_job(job, product_spec_id=product["id"])
+    execution = spec_compiler.compile_execution_request(job, source_path=job.get("_source_path"))
+    execution["dry_run"] = dry_run
+    job_dir = job.get("_dir", ".")
+
+    op_execution_plans: list[dict[str, Any]] = []
+    for edit in edit_specs:
+        spec_validator.validate_edit_spec(edit)
+        provider_prompt = prompt_compiler.compile(product, creative, execution, edit_specs=[edit])
+        execution_plan = capability_resolver.resolve(provider_prompt, execution, job_dir=job_dir)
+        op_execution_plans.append({
+            "execution_plan": execution_plan,
+            "job_dir": job_dir,
+            "op": edit.get("operation", edit["id"]),
+        })
+
+    # Base bundle mirrors compile_job's non-graph fields; the LAST edit_spec's
+    # prompt/plan (or a plain execution-only compile when there are no ops)
+    # feeds the legacy single provider_prompt/execution_plan fields so any
+    # code still reading bundle["execution_plan"] directly keeps working.
+    if edit_specs:
+        base_provider_prompt = prompt_compiler.compile(product, creative, execution, edit_specs=edit_specs)
+    else:
+        base_provider_prompt = prompt_compiler.compile(product, creative, execution, edit_specs=None)
+    base_execution_plan = capability_resolver.resolve(base_provider_prompt, execution, job_dir=job_dir)
+
+    bundle: dict[str, Any] = {
+        "schema_version": ARTIFACTS_SCHEMA,
+        "job_id": job["id"],
+        "job_dir": job_dir,
+        "product_spec": product,
+        "creative_spec": creative,
+        "edit_specs": edit_specs,
+        "execution_request": execution,
+        "provider_prompt": base_provider_prompt,
+        "execution_plan": base_execution_plan,
+        "persist_context": _persist_context(job),
+        "compile_hash": base_provider_prompt.get("metadata", {}).get("content_hash"),
+        "op_execution_plans": op_execution_plans,
+    }
+    bundle["graph"] = __import__("graph_compiler").compile_execution_graph(bundle)
+    return bundle
+
+
 def compile_path_to_dir(
     path: str,
     compile_dir: str,

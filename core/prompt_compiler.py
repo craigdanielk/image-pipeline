@@ -15,6 +15,24 @@ import spec_validator
 
 _PLACEHOLDER_RE = re.compile(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}")
 
+# Human-readable per-operation instruction fragments, folded into the positive
+# prompt ONLY when compile() is called with exactly one edit_spec (the shape
+# job_compiler.compile_job_multi_op uses — one independent compile per op).
+# The pre-existing merged-call shape (edit_specs=None or 2+ edit_specs, as used
+# by compile_job) is intentionally left untouched to avoid changing its output.
+_OP_INSTRUCTIONS: dict[str, str] = {
+    "replace_logo": "Operation: replace the brand logo/mark region.",
+    "replace_child": "Operation: replace the depicted child/model.",
+    "remove_element": "Operation: remove the specified element.",
+    "insert_mark": "Operation: insert the specified mark/logo.",
+    "region_edit": "Operation: edit only the specified region.",
+    "subject_swap": "Operation: swap the subject while preserving product placement.",
+    "increase_spacing": "Operation: increase spacing as specified.",
+    "reposition_logo": "Operation: reposition the logo/mark.",
+    "remove_background": "Operation: remove the background.",
+    "change_colour": "Operation: change the colour as specified.",
+}
+
 
 class PromptCompilerError(ValueError):
     """Raised when compilation cannot produce a valid ProviderPrompt."""
@@ -90,6 +108,10 @@ def compile(
         tail.append(out["composition"])
     if out.get("background") and "{background}" not in tmpl:
         tail.append("Background: " + out["background"])
+    if edit_specs is not None and len(edit_specs) == 1:
+        op_instruction = _OP_INSTRUCTIONS.get(edit_specs[0].get("operation"))
+        if op_instruction:
+            tail.append(op_instruction)
     if tail:
         prompt = prompt.rstrip(". ") + ". " + ". ".join(tail) + "."
 
