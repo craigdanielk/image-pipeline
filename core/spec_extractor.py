@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import re
 from typing import Any
@@ -143,3 +144,85 @@ def extract_creative_from_cad(
     if prompt_template:
         spec_validator.validate_creative_spec(spec)
     return spec
+
+
+_EXTRACT_RULES = """You draft a product-spec-v2 JSON object (a deterministic ProductSpec, no prose prompts) \
+from reference photos of a physical product, for a creative-image compiler's Product Information \
+Management system. Use the Read tool to open each photo path given to you, then look at the images \
+and output ONLY a single JSON object shaped like this (fill every field; use a best-guess placeholder \
+only when truly unobservable — never omit a required field):
+
+{
+  "schema_version": "product-spec-v2",
+  "id": "<slug-from-name>",
+  "name": "<Product Name>",
+  "immutable": true,
+  "product": {
+    "geometry": {"description": "<what it is: shape, form factor>", "symmetry": "<bilateral|radial|none|...>", "envelope": "<short shape-primitive tag, e.g. torus_loop, rectangular_prism>"},
+    "materials": [{"id": "primary", "type": "<material type>", "color": "<dominant color>", "finish": "<matte|glossy|woven|...>", "texture": "<surface texture>"}],
+    "dimensions": {}
+  },
+  "brand": {"logos": []},
+  "constraints": {"preserve_geometry": true, "preserve_material": true, "preserve_proportions": true},
+  "editing": {"protected_regions": ["<parts of the product that must never change>"], "editable_regions": ["background", "scene"]}
+}
+
+Rules:
+- schema_version, id, name, product.geometry.description, constraints.*, editing.* are all required — never omit them.
+- id must be a lowercase slug: [a-z0-9][a-z0-9-]*.
+- Never invent brand names or logos you cannot actually see in the photos — leave brand.logos empty if unsure.
+- Output ONLY the JSON object. No markdown fences, no preamble, no explanation."""
+
+
+class SpecExtractError(RuntimeError):
+    pass
+
+
+async def extract_product_spec_from_photos(
+    photo_paths: list[str],
+    *,
+    name_hint: str | None = None,
+    notes: str | None = None,
+) -> dict[str, Any]:
+    """Vision-draft a product-spec-v2 dict from reference photos (LLM, not saved/validated)."""
+    try:
+        from claude_agent_sdk import ClaudeAgentOptions, query
+    except ImportError as exc:
+        raise SpecExtractError(
+            "claude-agent-sdk not installed — pip install -r ui/requirements.txt"
+        ) from exc
+
+    photos_block = "\n".join(f"- {p}" for p in photo_paths)
+    parts = [f"Reference photo file paths (use the Read tool to open each one):\n{photos_block}"]
+    if name_hint:
+        parts.append(f"Product name hint: {name_hint}")
+    if notes:
+        parts.append(f"Notes from the operator: {notes}")
+    user_msg = "\n\n".join(parts)
+
+    options = ClaudeAgentOptions(
+        system_prompt=_EXTRACT_RULES,
+        tools=["Read"],
+        max_turns=4,
+        permission_mode="bypassPermissions",
+    )
+
+    text_parts: list[str] = []
+    try:
+        async for message in query(prompt=user_msg, options=options):
+            for block in getattr(message, "content", []) or []:
+                text = getattr(block, "text", None)
+                if text:
+                    text_parts.append(text)
+    except Exception as exc:  # claude_agent_sdk raises its own exception hierarchy
+        raise SpecExtractError(f"Claude Agent SDK call failed: {exc}") from exc
+
+    raw = "".join(text_parts).strip()
+    raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw.strip())
+    try:
+        draft = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SpecExtractError(f"Model did not return valid JSON: {exc}\n{raw[:500]}") from exc
+    if not isinstance(draft, dict):
+        raise SpecExtractError("Model output must be a JSON object.")
+    return draft
