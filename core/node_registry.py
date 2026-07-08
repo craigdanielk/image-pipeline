@@ -391,6 +391,20 @@ def _build_registry() -> dict[str, NodeSpec]:
             ports_out={"results": PortSpec("results", "engine_results")},
             handler_class=EngineGenerateHandler,
         ),
+        "result.as_ref": NodeSpec(
+            node_type="result.as_ref",
+            description="Turn a prior engine.generate node's results into this chain link's ref output.",
+            ports_in={"results": PortSpec("results", "engine_results")},
+            ports_out={"refs": PortSpec("refs", "image_path")},
+            input_schema={
+                "$schema": "http://json-schema.org/draft-07/schema#",
+                "type": "object",
+                "required": ["results"],
+                "properties": {"results": _engine_results_schema()},
+            },
+            output_schema=_refs_schema(),
+            handler_class=None,
+        ),
         "output.persist": NodeSpec(
             node_type="output.persist",
             description="Persist engine results to local filesystem.",

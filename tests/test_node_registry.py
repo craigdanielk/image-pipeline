@@ -21,7 +21,7 @@ JOBS_DIR = os.path.join(os.path.dirname(__file__), "..", "jobs")
 class TestNodeRegistry(unittest.TestCase):
     def test_phase1_node_types_registered(self):
         types = node_registry.list_node_types()
-        self.assertEqual(len(types), 7)
+        self.assertEqual(len(types), 8)
         for ntype in node_registry.PHASE1_NODE_TYPES:
             self.assertIn(ntype, types)
 
