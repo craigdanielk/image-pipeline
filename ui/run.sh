@@ -7,22 +7,25 @@ APP="$ROOT/ui/app"
 
 pick_python() {
   for cmd in python3.12 python3.11 python3.10 python3; do
-    if command -v "$cmd" >/dev/null 2>&1; then
-      ver=$("$cmd" -c 'import sys; print(sys.version_info[:2])')
-      major=${ver%%,*}
-      minor=${ver##*, }
-      minor=${minor// /}
-      if [[ "$major" -eq 3 && "$minor" -ge 10 ]]; then
-        echo "$cmd"
-        return 0
-      fi
+    if command -v "$cmd" >/dev/null 2>&1 \
+      && "$cmd" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+      echo "$cmd"
+      return 0
     fi
   done
-  command -v python3
+  echo "ERROR: no Python >= 3.10 found (claude-agent-sdk requires 3.10+)" >&2
+  return 1
 }
 
 PY=$(pick_python)
 echo "Using $PY ($($PY --version))"
+
+# A venv built by an older interpreter stays old — rebuild if it's < 3.10
+if [[ -x "$VENV/bin/python" ]] \
+  && ! "$VENV/bin/python" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+  echo "Rebuilding ui/.venv (was $("$VENV/bin/python" --version 2>&1), need >= 3.10)"
+  rm -rf "$VENV"
+fi
 
 if command -v npm >/dev/null 2>&1 && [[ -f "$APP/package.json" ]]; then
   if [[ ! -d "$APP/node_modules" ]]; then
