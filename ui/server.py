@@ -12,17 +12,19 @@ Environment:
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
 import subprocess
 import sys
+import uuid
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import unquote
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -62,11 +64,39 @@ import artifact_registry  # noqa: E402
 import brief_drafter  # noqa: E402
 import graph_to_reactflow  # noqa: E402
 import knowledge_store  # noqa: E402
+import run_graph  # noqa: E402
 import spec_validator_v2  # noqa: E402
 import tenants  # noqa: E402
 import workspace_runs  # noqa: E402
 
 app = FastAPI(title="Creative Compiler UI", version="0.3.0")
+
+# In-process registry for POST /api/graph-runs — deliberately not backed by
+# graph_persistence's optional Supabase tracking (off by default locally, see
+# core/graph_persistence.py). Keyed by a locally-generated run id so the
+# live-status API works with zero external config. graph_persistence writes
+# still happen underneath (via run_graph_async's track/graph_run_id args)
+# when Supabase IS configured — this registry is the guaranteed-available
+# layer on top.
+_graph_runs: dict[str, dict[str, Any]] = {}
+
+
+def _graph_run_status_event(run_id: str, event: dict[str, Any]) -> None:
+    """on_status callback for run_graph_async — updates the snapshot and
+    fans the event out to any live SSE subscribers for this run."""
+    entry = _graph_runs.get(run_id)
+    if entry is None:
+        return
+    node_id = event.get("node_id")
+    if node_id is None:
+        entry["status"] = event.get("status", entry["status"])
+    else:
+        entry["nodes"][node_id] = {
+            "status": event.get("status"),
+            "node_type": event.get("node_type"),
+        }
+    for queue in entry["subscribers"]:
+        queue.put_nowait(event)
 
 
 def _allowed_roots() -> list[Path]:
@@ -1210,6 +1240,88 @@ def graph_reactflow(compile_dir: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="graph.json not found")
     graph = json.loads(graph_path.read_text(encoding="utf-8"))
     return graph_to_reactflow.graph_v1_to_reactflow(graph)
+
+
+class GraphRunRequest(BaseModel):
+    compile_dir: str
+    target_node_id: Optional[str] = None
+    dry_run: bool = True
+
+
+@app.post("/api/graph-runs")
+async def create_graph_run(req: GraphRunRequest) -> dict[str, Any]:
+    """Start a graph run as a background task — returns immediately.
+
+    Unlike /api/execute (blocks until the whole graph finishes), this
+    kicks off run_graph.run_graph_async and lets the caller watch progress
+    via GET /api/graph-runs/{id} (snapshot) or .../stream (live SSE)."""
+    base = _resolve_path(req.compile_dir)
+    graph_path = base / "graph.json"
+    if not graph_path.is_file():
+        raise HTTPException(status_code=404, detail="graph.json not found")
+    graph = json.loads(graph_path.read_text(encoding="utf-8"))
+
+    if req.target_node_id:
+        node_ids = {n["id"] for n in graph.get("nodes") or []}
+        if req.target_node_id not in node_ids:
+            raise HTTPException(
+                status_code=400,
+                detail=f"target_node_id not in graph: {req.target_node_id!r}",
+            )
+
+    run_id = str(uuid.uuid4())
+    _graph_runs[run_id] = {"status": "running", "nodes": {}, "subscribers": []}
+
+    async def _execute() -> None:
+        try:
+            await run_graph.run_graph_async(
+                graph,
+                compile_dir=req.compile_dir,
+                dry_run=req.dry_run,
+                target_node_id=req.target_node_id,
+                on_status=lambda event: _graph_run_status_event(run_id, event),
+            )
+        except Exception as exc:
+            _graph_run_status_event(run_id, {"node_id": None, "status": "failed", "error": str(exc)})
+
+    asyncio.create_task(_execute())
+    return {"graph_run_id": run_id}
+
+
+@app.get("/api/graph-runs/{run_id}")
+def get_graph_run(run_id: str) -> dict[str, Any]:
+    entry = _graph_runs.get(run_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="unknown graph_run_id")
+    return {"graph_run_id": run_id, "status": entry["status"], "nodes": entry["nodes"]}
+
+
+@app.get("/api/graph-runs/{run_id}/stream")
+async def stream_graph_run(run_id: str) -> StreamingResponse:
+    entry = _graph_runs.get(run_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="unknown graph_run_id")
+
+    queue: asyncio.Queue = asyncio.Queue()
+    entry["subscribers"].append(queue)
+
+    terminal_statuses = {"completed", "failed", "partial"}
+
+    async def _events():
+        try:
+            yield f"event: snapshot\ndata: {json.dumps({'status': entry['status'], 'nodes': entry['nodes']})}\n\n"
+            if entry["status"] in terminal_statuses:
+                return
+            while True:
+                event = await queue.get()
+                yield f"data: {json.dumps(event)}\n\n"
+                if event.get("node_id") is None and event.get("status") in terminal_statuses:
+                    return
+        finally:
+            if queue in entry["subscribers"]:
+                entry["subscribers"].remove(queue)
+
+    return StreamingResponse(_events(), media_type="text/event-stream")
 
 
 @app.get("/media")
