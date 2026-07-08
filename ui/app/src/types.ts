@@ -42,6 +42,7 @@ export type Artifact = {
   created_at: number;
   source: "job_run" | "sheet_import" | "manual";
   comment?: string;
+  drive_url?: string | null;
   deleted_at?: number | null;
   delete_reason?: string | null;
   approved_at?: number | null;

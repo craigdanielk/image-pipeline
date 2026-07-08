@@ -27,6 +27,7 @@ from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 ROOT = Path(__file__).resolve().parent.parent
 CORE = ROOT / "core"
@@ -327,7 +328,8 @@ class ApprovalRequest(BaseModel):
 
 
 class ArtifactCommentRequest(BaseModel):
-    comment: str = ""
+    comment: Optional[str] = None
+    drive_url: Optional[str] = None
 
 
 class BriefDraftRequest(BaseModel):
@@ -657,7 +659,9 @@ def patch_artifact_comment(
     artifact_id: str, req: ArtifactCommentRequest, tenant: Optional[str] = None
 ) -> dict[str, Any]:
     try:
-        row = artifact_registry.update_comment(ROOT, artifact_id, req.comment, _workspace_id(tenant))
+        row = artifact_registry.update_comment(
+            ROOT, artifact_id, req.comment, _workspace_id(tenant), drive_url=req.drive_url
+        )
         return {"ok": True, "artifact": row}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -1338,7 +1342,20 @@ def serve_media_legacy(file_path: str) -> FileResponse:
     return serve_media(path=file_path)
 
 
-app.mount("/", StaticFiles(directory=str(UI_STATIC), html=True), name="static")
+class SPAStaticFiles(StaticFiles):
+    """Serve the built SPA; unknown non-API paths fall back to index.html so a
+    hard refresh on a client-side route doesn't surface FastAPI's JSON 404."""
+
+    async def get_response(self, path: str, scope):  # type: ignore[override]
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code == 404:
+                return await super().get_response("index.html", scope)
+            raise
+
+
+app.mount("/", SPAStaticFiles(directory=str(UI_STATIC), html=True), name="static")
 
 
 def main() -> None:

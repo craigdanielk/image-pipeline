@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -366,14 +367,19 @@ def get_artifact(root: Path, artifact_id: str, workspace_id: str | None = None) 
 def update_comment(
     root: Path,
     artifact_id: str,
-    comment: str,
+    comment: str | None,
     workspace_id: str | None = None,
+    *,
+    drive_url: str | None = None,
 ) -> dict[str, Any]:
     data = load_registry(root, workspace_id)
     row = data["artifacts"].get(artifact_id)
     if not row:
         raise KeyError(artifact_id)
-    row["comment"] = comment.strip()
+    if comment is not None:
+        row["comment"] = comment.strip()
+    if drive_url is not None:
+        row["drive_url"] = drive_url.strip() or None
     row["updated_at"] = time.time()
     save_registry(root, data, workspace_id)
     return _enrich_row(row)
@@ -385,6 +391,7 @@ def soft_delete(
     *,
     reason: str | None = None,
     workspace_id: str | None = None,
+    remove_file: bool = True,
 ) -> dict[str, Any]:
     data = load_registry(root, workspace_id)
     row = data["artifacts"].get(artifact_id)
@@ -394,6 +401,28 @@ def soft_delete(
     row["approved_at"] = None
     if reason:
         row["delete_reason"] = reason.strip()
+    # Rejection removes the render from the product's out/ dir so rejected
+    # images never linger as deliverables. Moved (not unlinked) into a sibling
+    # _rejected/ dir: recoverable, thumbnail keeps resolving via /media, and
+    # the reason stays attached for regen prompts.
+    if remove_file:
+        p = Path(row.get("path") or "")
+        if p.is_file() and "out" in p.parts:
+            # climb to the out/ dir (file may sit in out/ or out/webp/), trash
+            # lands beside it — never inside it, or discovery re-scans the file
+            out_dir = p.parent
+            while out_dir.name != "out" and out_dir != out_dir.parent:
+                out_dir = out_dir.parent
+            trash = out_dir.parent / "_rejected"
+            trash.mkdir(parents=True, exist_ok=True)
+            dest = trash / p.name
+            n = 1
+            while dest.exists():
+                dest = trash / f"{p.stem}.{n}{p.suffix}"
+                n += 1
+            shutil.move(str(p), str(dest))
+            row["path"] = str(dest)
+            row["file_removed_at"] = time.time()
     save_registry(root, data, workspace_id)
     return _enrich_row(row)
 
