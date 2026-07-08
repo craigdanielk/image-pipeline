@@ -4,6 +4,7 @@ import { TenantProvider } from "./TenantContext";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import GlassShell from "./design/GlassShell";
 import AssetsPage from "./pages/AssetsPage";
+import BoardPage from "./pages/BoardPage";
 import CampaignNewPage from "./pages/CampaignNewPage";
 import CampaignsPage from "./pages/CampaignsPage";
 import Dashboard from "./pages/Dashboard";
@@ -43,7 +44,8 @@ export default function App() {
                   <Route path="/campaigns" element={<CampaignsPage />} />
                   <Route path="/campaigns/new" element={<CampaignNewPage />} />
                   <Route path="/assets" element={<AssetsPage />} />
-                  <Route path="/generate" element={<GeneratePage />} />
+                  <Route path="/generate" element={<BoardPage />} />
+                  <Route path="/generate-form" element={<GeneratePage />} />
                   <Route path="/runs" element={<RunsPage />} />
                   <Route path="/pipelines" element={<PipelinesPage />} />
                   <Route
