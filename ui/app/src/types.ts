@@ -106,3 +106,50 @@ export type ExecuteResult = {
   result?: Record<string, unknown>;
   outputs?: Output[];
 };
+
+export type Material = {
+  id: string;
+  type?: string;
+  color?: string;
+  finish?: string;
+  texture?: string;
+};
+
+export type Logo = {
+  id: string;
+  asset?: string;
+  placement: { region: string; anchor?: string; offset_x?: number; offset_y?: number };
+  scale?: number;
+  rotation?: number;
+  safe_zone?: string;
+};
+
+export type ProductReference = { id: string; role: string; asset: string };
+
+export type ProductSpecV2 = {
+  schema_version: "product-spec-v2";
+  id: string;
+  name: string;
+  immutable?: boolean;
+  product: {
+    geometry: { description: string; symmetry?: string; envelope?: string };
+    materials?: Material[];
+    dimensions?: Record<string, string | number>;
+  };
+  brand?: { logos?: Logo[] };
+  constraints: {
+    preserve_geometry: boolean;
+    preserve_material: boolean;
+    preserve_proportions: boolean;
+  };
+  editing: {
+    protected_regions: string[];
+    editable_regions: string[];
+  };
+  references?: ProductReference[];
+  source?: { knowledge_path?: string; content_hash?: string };
+};
+
+export type ProductExtractResponse = {
+  draft: Partial<ProductSpecV2> & { suggested_name?: string };
+};
