@@ -140,6 +140,9 @@ export default function BriefModal({
         }),
       });
       setJobPath(res.job.path);
+      // Cost-before-commit without the extra click: estimate immediately so
+      // Generate lights up on its own with the credit price attached.
+      void runExecute(true, res.job.path);
     } catch (e) {
       setSaveError(String(e));
     } finally {
@@ -147,8 +150,9 @@ export default function BriefModal({
     }
   };
 
-  const runExecute = async (dryRun: boolean) => {
-    if (!jobPath) return;
+  const runExecute = async (dryRun: boolean, pathOverride?: string) => {
+    const target = pathOverride ?? jobPath;
+    if (!target) return;
     const setLoading = dryRun ? setDryRunning : setGenerating;
     const setError = dryRun ? setDryRunError : setGenerateError;
     const setResult = dryRun ? setDryRunResult : setGenerateResult;
@@ -157,7 +161,7 @@ export default function BriefModal({
     try {
       const res = await api<ExecuteResult>("/api/execute", {
         method: "POST",
-        body: JSON.stringify({ job: jobPath, dry_run: dryRun }),
+        body: JSON.stringify({ job: target, dry_run: dryRun }),
       });
       setResult(res);
       if (!dryRun) onGenerated?.();
@@ -324,15 +328,23 @@ export default function BriefModal({
             </p>
             <div className="asset-card__actions">
               <button type="button" className="btn" onClick={() => runExecute(true)} disabled={dryRunning}>
-                {dryRunning ? "Estimating…" : "Dry run"}
+                {dryRunning ? "Estimating…" : "Re-estimate"}
               </button>
               <button
                 type="button"
                 className="btn btn--generate"
                 onClick={() => runExecute(false)}
-                disabled={!dryRunResult || generating}
+                disabled={!dryRunResult || generating || dryRunning}
+                title={!dryRunResult && !dryRunning ? "Cost estimate failed — hit Re-estimate" : undefined}
               >
-                {generating ? "Generating…" : "Generate"}
+                {generating
+                  ? "Generating…"
+                  : dryRunning
+                    ? "Generate (pricing…)"
+                    : (() => {
+                        const credits = (dryRunResult?.result as { credits?: number } | undefined)?.credits;
+                        return credits != null ? `Generate · ${credits} credits` : "Generate";
+                      })()}
               </button>
             </div>
             {dryRunError && <p className="brief-modal__error">{dryRunError}</p>}
