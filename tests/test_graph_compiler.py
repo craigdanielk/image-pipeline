@@ -12,8 +12,23 @@ import graph_compiler  # noqa: E402
 import graph_ir  # noqa: E402
 import job_compiler  # noqa: E402
 import jobspec  # noqa: E402
+import spec_compiler  # noqa: E402
+import spec_validator  # noqa: E402
 
 JOBS_DIR = os.path.join(os.path.dirname(__file__), "..", "jobs")
+
+
+def _starz_edit_spec(op, edit_id, creative_spec_id):
+    return {
+        "schema_version": spec_validator.EDIT_SCHEMA,
+        "id": edit_id,
+        "creative_spec_id": creative_spec_id,
+        "operation": op,
+        "parent_asset_id": "anchor-1",
+        "constraints": [],
+        "exclusions": [],
+        "provenance": {"compiled_from": "starz-kid-images"},
+    }
 
 
 class TestGraphCompiler(unittest.TestCase):
@@ -112,6 +127,46 @@ class TestGraphCompiler(unittest.TestCase):
         self.assertTrue(
             graph["metadata"]["compiled_from"].startswith("compile-artifacts-v1:")
         )
+
+    def test_compiles_starz_kid_images_sample_job_six_nodes(self):
+        """A starz-kid-images job-v1 with a two-op edit chain lowers to a
+        graph-v1 DAG of exactly six nodes: load, resolve_refs, two chained
+        engine.generate nodes joined by a result.as_ref link, and persist."""
+        path = os.path.join(JOBS_DIR, "starz-kid-images", "kid-hero.job.json")
+        job = jobspec.load(path)
+        job["_source_path"] = os.path.abspath(path)
+
+        product = job_compiler.extract_product_spec_from_job(job)
+        creative = spec_compiler.derive_creative_from_job(job, product_spec_id=product["id"])
+        edit_specs = [
+            _starz_edit_spec("replace_logo", "starz-kid-images-edit-0", creative["id"]),
+            _starz_edit_spec("subject_swap", "starz-kid-images-edit-1", creative["id"]),
+        ]
+        for e in edit_specs:
+            spec_validator.validate_edit_spec(e)
+
+        bundle = job_compiler.compile_job_multi_op(job, edit_specs, dry_run=True)
+        graph = graph_compiler.compile_execution_graph(bundle)
+
+        graph_ir.validate(graph)
+        self.assertEqual(graph["schema_version"], "graph-v1")
+        self.assertEqual(len(graph["nodes"]), 6)
+
+        node_ids = [n["id"] for n in graph["nodes"]]
+        self.assertEqual(
+            node_ids,
+            [
+                "load",
+                "resolve_refs",
+                "generate-0-replace_logo",
+                "ref-0-1",
+                "generate-1-subject_swap",
+                "persist",
+            ],
+        )
+        order = graph_ir.topological_sort(graph)
+        self.assertEqual(order[0], "load")
+        self.assertEqual(order[-1], "persist")
 
     def test_invalid_job_raises(self):
         with self.assertRaises(jobspec.JobSpecError):
