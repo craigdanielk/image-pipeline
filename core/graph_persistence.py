@@ -159,6 +159,30 @@ def record_node_run(
     _safe(_do)
 
 
+def list_node_runs(graph_run_id: str | None) -> list[dict[str, Any]]:
+    """Read-side snapshot: all graph_node_runs rows for a graph_run_id.
+
+    Mirrors the write-side query pattern in record_node_run. Lets a client
+    reconnecting mid-run resync per-node statuses before subscribing to a
+    live stream.
+    """
+    if not graph_run_id or not enabled():
+        return []
+
+    def _do():
+        return _rest(
+            "GET",
+            "graph_node_runs",
+            params=(
+                f"?graph_run_id=eq.{graph_run_id}"
+                f"&select=*&order=created_at.asc"
+            ),
+        )
+
+    rows = _safe(_do)
+    return rows if isinstance(rows, list) else []
+
+
 def lookup_compile_cache(
     tenant_id: str | None,
     content_hash: str,

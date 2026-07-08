@@ -178,6 +178,143 @@ def _topological_sort(
     return order
 
 
+class GraphFrontier:
+    """Live, mutable ready-set over a validated DAG.
+
+    Replaces drain-to-flat-list scheduling (topological_sort) with an
+    incremental frontier: callers dispatch every ready node concurrently,
+    then feed back complete()/fail() as results arrive.
+
+    Node states: pending -> dispatched -> completed | failed
+                 pending -> skipped   (transitive downstream of a failure)
+
+    The graph is assumed already validated (run through validate()); the
+    frontier only consumes node ids and edge endpoints.
+    """
+
+    PENDING = "pending"
+    DISPATCHED = "dispatched"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+    def __init__(self, graph: dict[str, Any]) -> None:
+        node_ids = [n["id"] for n in graph.get("nodes") or []]
+        self._order = list(node_ids)
+        self._adj: dict[str, list[str]] = {nid: [] for nid in node_ids}
+        self._indegree: dict[str, int] = {nid: 0 for nid in node_ids}
+        for edge in graph.get("edges") or []:
+            src = (edge.get("from") or {}).get("node")
+            dst = (edge.get("to") or {}).get("node")
+            if (
+                src
+                and dst
+                and src != dst
+                and src in self._adj
+                and dst in self._adj
+            ):
+                self._adj[src].append(dst)
+                self._indegree[dst] += 1
+        self._state: dict[str, str] = {nid: self.PENDING for nid in node_ids}
+
+    def ready(self) -> list[str]:
+        """All zero-indegree nodes not yet dispatched, in graph node order."""
+        return [
+            nid
+            for nid in self._order
+            if self._state[nid] == self.PENDING and self._indegree[nid] == 0
+        ]
+
+    def dispatch(self, node_id: str) -> None:
+        """Mark a ready node as in-flight so ready() stops returning it."""
+        if self._state.get(node_id) != self.PENDING:
+            raise GraphIRError(
+                f"cannot dispatch {node_id!r}: state={self._state.get(node_id)!r}"
+            )
+        if self._indegree[node_id] != 0:
+            raise GraphIRError(f"cannot dispatch {node_id!r}: upstream incomplete")
+        self._state[node_id] = self.DISPATCHED
+
+    def complete(self, node_id: str) -> None:
+        """Successful completion — unlock dependents."""
+        if self._state.get(node_id) != self.DISPATCHED:
+            raise GraphIRError(
+                f"cannot complete {node_id!r}: state={self._state.get(node_id)!r}"
+            )
+        self._state[node_id] = self.COMPLETED
+        for m in self._adj[node_id]:
+            self._indegree[m] -= 1
+
+    def fail(self, node_id: str) -> list[str]:
+        """Mark node failed; transitively skip every not-yet-completed
+        node reachable from it. Returns newly skipped node ids."""
+        if self._state.get(node_id) != self.DISPATCHED:
+            raise GraphIRError(
+                f"cannot fail {node_id!r}: state={self._state.get(node_id)!r}"
+            )
+        self._state[node_id] = self.FAILED
+        skipped: list[str] = []
+        stack = list(self._adj[node_id])
+        seen: set[str] = set()
+        while stack:
+            n = stack.pop()
+            if n in seen:
+                continue
+            seen.add(n)
+            if self._state[n] == self.PENDING:
+                self._state[n] = self.SKIPPED
+                skipped.append(n)
+            stack.extend(self._adj[n])
+        return skipped
+
+    def done(self) -> bool:
+        """True when no node is pending or in flight."""
+        return all(
+            s not in (self.PENDING, self.DISPATCHED) for s in self._state.values()
+        )
+
+    def states(self) -> dict[str, str]:
+        return dict(self._state)
+
+
+def slice_to_target(graph: dict[str, Any], target_node_id: str) -> dict[str, Any]:
+    """Restrict graph to target_node_id plus its ancestors (reverse-BFS).
+
+    Nodes outside the ancestor set are dropped from the returned copy —
+    not skipped, simply not part of the run. Raises GraphIRError if the
+    target is unknown.
+    """
+    node_ids = {n["id"] for n in graph.get("nodes") or []}
+    if target_node_id not in node_ids:
+        raise GraphIRError(f"target_node_id not in graph: {target_node_id!r}")
+
+    rev: dict[str, list[str]] = defaultdict(list)
+    for edge in graph.get("edges") or []:
+        src = (edge.get("from") or {}).get("node")
+        dst = (edge.get("to") or {}).get("node")
+        if src and dst and src != dst:
+            rev[dst].append(src)
+
+    keep = {target_node_id}
+    stack = [target_node_id]
+    while stack:
+        n = stack.pop()
+        for p in rev.get(n, []):
+            if p not in keep:
+                keep.add(p)
+                stack.append(p)
+
+    sliced = dict(graph)
+    sliced["nodes"] = [n for n in graph["nodes"] if n["id"] in keep]
+    sliced["edges"] = [
+        e
+        for e in graph.get("edges") or []
+        if (e.get("from") or {}).get("node") in keep
+        and (e.get("to") or {}).get("node") in keep
+    ]
+    return sliced
+
+
 def _types_compatible(src: str, dst: str) -> bool:
     return node_registry.types_compatible(src, dst)
 
