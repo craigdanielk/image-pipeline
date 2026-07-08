@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import ArtifactGallery from "../components/ArtifactGallery";
 import BriefModal from "../components/BriefModal";
 import ProductForm from "../components/ProductForm";
@@ -17,6 +17,7 @@ type ProductSource = "knowledge" | "jobs_only";
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<ProductSpecV2 | JobsOnlyProduct | null>(null);
   const [source, setSource] = useState<ProductSource | null>(null);
   const [draft, setDraft] = useState<ProductSpecV2 | null>(null);
@@ -46,6 +47,13 @@ export default function ProductDetailPage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, tenant]);
+
+  useEffect(() => {
+    if ((location.state as { warning?: string } | null)?.warning) {
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onUpload = async (file: File) => {
     if (!slug) return;
