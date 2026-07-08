@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import ArtifactGallery from "../components/ArtifactGallery";
 import BriefModal from "../components/BriefModal";
 import ProductForm from "../components/ProductForm";
@@ -16,13 +16,16 @@ type ProductSource = "knowledge" | "jobs_only";
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  const location = useLocation();
   const [product, setProduct] = useState<ProductSpecV2 | JobsOnlyProduct | null>(null);
   const [source, setSource] = useState<ProductSource | null>(null);
   const [draft, setDraft] = useState<ProductSpecV2 | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(
+    () => (location.state as { warning?: string } | null)?.warning || ""
+  );
   const [showBrief, setShowBrief] = useState(false);
   const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
   const { tenant } = useTenant();

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import GlassCard from "../design/GlassCard";
 import ProductForm from "../components/ProductForm";
-import { api, extractProductFromPhotos, uploadFile } from "../api";
+import { api, extractProductFromPhotos } from "../api";
 import { emptyProductSpec } from "../lib/emptyProductSpec";
 import { useTenant, withTenant } from "../TenantContext";
 import type { ProductSpecV2 } from "../types";
@@ -160,10 +160,31 @@ function FromPhotosFlow() {
         method: "PUT",
         body: JSON.stringify(draft),
       });
-      for (const photo of photos) {
-        await uploadFile(draft.id, photo).catch(() => undefined);
+      const failures: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        try {
+          const form = new FormData();
+          form.append("file", photo);
+          const uploadParams = withTenant(
+            new URLSearchParams({ ref_id: `ref-${Date.now()}-${i}`, role: "product_ref" }),
+            tenant
+          );
+          const res = await fetch(`/api/knowledge/products/${draft.id}/refs?${uploadParams}`, {
+            method: "POST",
+            body: form,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || res.statusText);
+        } catch (e) {
+          failures.push(`${photo.name}: ${String(e)}`);
+        }
       }
-      navigate(`/products/${draft.id}`);
+      const warning =
+        failures.length > 0
+          ? `Product created, but ${failures.length} photo(s) failed to upload as references: ${failures.join("; ")}`
+          : undefined;
+      navigate(`/products/${draft.id}`, warning ? { state: { warning } } : undefined);
     } catch (e) {
       setSaveError(String(e));
     } finally {
