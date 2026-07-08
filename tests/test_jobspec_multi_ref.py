@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "core"))
@@ -23,12 +24,21 @@ class TestMultiReference(unittest.TestCase):
         self.assertEqual(len(job["reference"]), 3)
 
     def test_reference_local_resolves_list(self):
-        job = jobspec.load(os.path.join(JOBS_DIR, "_example-multi-ref.job.json"))
-        refs = reference_local.resolve(job["reference"], job["_dir"])
-        self.assertIsInstance(refs, list)
-        self.assertEqual(len(refs), 3)
-        for path in refs:
-            self.assertTrue(os.path.exists(path), path)
+        # Self-contained: the example job's plate PNGs live under a gitignored
+        # reference/ dir, so a fresh clone/worktree has no binary assets.
+        # Exercise list resolution against temp fixtures instead.
+        with tempfile.TemporaryDirectory() as job_dir:
+            names = ["plate-1.png", "plate-2.png", "plate-3.png"]
+            for name in names:
+                with open(os.path.join(job_dir, name), "wb") as f:
+                    f.write(b"\x89PNG stub")
+            refs = reference_local.resolve(
+                [names[0], {"image": names[1]}, names[2]], job_dir
+            )
+            self.assertIsInstance(refs, list)
+            self.assertEqual(len(refs), 3)
+            for path in refs:
+                self.assertTrue(os.path.exists(path), path)
 
     def test_graph_compiler_lowers_multi_ref(self):
         path = os.path.join(JOBS_DIR, "_example-multi-ref.job.json")
