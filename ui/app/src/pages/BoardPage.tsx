@@ -28,13 +28,38 @@ type CampaignDetail = Campaign & {
   campaign?: { mood?: string; audience?: string; style?: string };
 };
 
+/** The reference photo the ProductSpec's geometry was actually derived from — prefer an
+ * explicit product_ref/flatlay/cad-labeled role, else fall back to the first reference. */
+function cadReferenceOf(spec: ProductSpecV2 | null | undefined): { asset: string; role: string } | null {
+  const refs = spec?.references || [];
+  if (refs.length === 0) return null;
+  const preferred = refs.find((r) => /product_ref|flatlay|cad/i.test(r.role || ""));
+  return preferred || refs[0];
+}
+
+function mediaUrl(assetPath: string): string {
+  return `/media?path=${encodeURIComponent(assetPath)}`;
+}
+
 function ProductNode({ data }: NodeProps) {
-  const d = data as { product?: Product; onOpen: () => void };
+  const d = data as { product?: Product; productDetail?: ProductSpecV2 | null; onOpen: () => void };
   const p = d.product;
+  const cadRef = cadReferenceOf(d.productDetail);
+  const [imgFailed, setImgFailed] = useState(false);
+  useEffect(() => setImgFailed(false), [cadRef?.asset]);
   return (
     <div className="board-node board-node--product" onClick={d.onOpen}>
       <Handle type="source" position={Position.Right} />
-      <div className="board-node__kicker">PRODUCT</div>
+      <div className="board-node__image">
+        {cadRef && !imgFailed ? (
+          <img src={mediaUrl(cadRef.asset)} alt={`${p?.name || "product"} — CAD source`} onError={() => setImgFailed(true)} />
+        ) : (
+          <span className="board-node__image-empty">
+            {!p ? "" : cadRef ? "source file missing on disk" : "no source image on file"}
+          </span>
+        )}
+      </div>
+      <div className="board-node__kicker">PRODUCT · CAD SOURCE</div>
       <div className="board-node__title">{p?.name || "Select a product…"}</div>
       <div className="board-node__meta">
         {p?.geometry_description ? p.geometry_description.slice(0, 64) + (p.geometry_description.length > 64 ? "…" : "") : "no geometry set"}
@@ -148,6 +173,10 @@ export default function BoardPage() {
   const [inspector, setInspector] = useState<{ kind: "product" | "campaign"; data: unknown } | null>(null);
   const [inspectorLoading, setInspectorLoading] = useState(false);
 
+  // Fetched eagerly (not just on inspector-open) so the Product node can always show
+  // its CAD source image/reference the moment a product is selected on the board.
+  const [productDetail, setProductDetail] = useState<ProductSpecV2 | null>(null);
+
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
@@ -165,18 +194,33 @@ export default function BoardPage() {
     });
   }, []);
 
-  const openProductInspector = async () => {
+  useEffect(() => {
+    setProductDetail(null);
     if (!productSlug) return;
-    setInspectorLoading(true);
-    setInspector({ kind: "product", data: null });
-    try {
-      const params = withTenant(new URLSearchParams(), tenant);
-      const d = await api<{ product: ProductSpecV2 }>(`/api/products/${productSlug}?${params}`);
-      setInspector({ kind: "product", data: d.product });
-    } finally {
-      setInspectorLoading(false);
-    }
+    let cancelled = false;
+    const params = withTenant(new URLSearchParams(), tenant);
+    api<{ product: ProductSpecV2; source: string }>(`/api/products/${productSlug}?${params}`)
+      .then((d) => {
+        if (!cancelled && d.source === "knowledge") setProductDetail(d.product);
+      })
+      .catch(() => {
+        if (!cancelled) setProductDetail(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productSlug, tenant]);
+
+  const openProductInspector = () => {
+    if (!productSlug) return;
+    setInspector({ kind: "product", data: productDetail });
   };
+
+  // Keep an already-open product inspector in sync once the eager fetch resolves
+  // (covers the case where the node was clicked before productDetail arrived).
+  useEffect(() => {
+    setInspector((prev) => (prev?.kind === "product" ? { kind: "product", data: productDetail } : prev));
+  }, [productDetail]);
 
   const openCampaignInspector = async () => {
     if (!campaignId) return;
@@ -280,7 +324,7 @@ export default function BoardPage() {
           id: "product",
           type: "productNode",
           position: posOf("product", { x: 0, y: 0 }),
-          data: { product, onOpen: openProductInspector },
+          data: { product, productDetail, onOpen: openProductInspector },
         },
         {
           id: "campaign",
@@ -307,7 +351,7 @@ export default function BoardPage() {
       ];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product, campaign, activeOps, customOpLabels, operations, outputs, credits, status, loading, canRun]);
+  }, [product, productDetail, campaign, activeOps, customOpLabels, operations, outputs, credits, status, loading, canRun]);
 
   useEffect(() => {
     const chain = ["product", ...activeOps.map((o) => `op-${o}`), "output"];
