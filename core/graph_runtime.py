@@ -20,6 +20,7 @@ NODE_TYPES = (
     "reference.resolve",
     "engine.generate",
     "output.persist",
+    "result.as_ref",
 )
 
 
@@ -40,6 +41,7 @@ def execute_node(
         "reference.resolve": _exec_reference_resolve,
         "engine.generate": _exec_engine_generate,
         "output.persist": _exec_output_persist,
+        "result.as_ref": _exec_result_as_ref,
     }
     if ntype not in handlers:
         raise GraphRuntimeError(f"Unknown node type {ntype!r}.")
@@ -108,11 +110,14 @@ def _exec_engine_generate(
     params: dict[str, Any],
     ctx: dict[str, Any],
 ) -> dict[str, Any]:
-    del params
-    artifacts = inputs.get("artifacts") or {}
-    plan = artifacts.get("execution_plan")
+    node_plan = params.get("execution_plan")
+    if isinstance(node_plan, dict):
+        plan = node_plan
+    else:
+        artifacts = inputs.get("artifacts") or {}
+        plan = artifacts.get("execution_plan")
     if not isinstance(plan, dict):
-        raise GraphRuntimeError("engine.generate requires execution_plan in artifacts.")
+        raise GraphRuntimeError("engine.generate requires execution_plan in node params or artifacts.")
 
     prompt_block = plan.get("prompt") or {}
     prompt = prompt_block.get("positive")
@@ -120,7 +125,11 @@ def _exec_engine_generate(
         raise GraphRuntimeError("engine.generate requires compiled positive prompt.")
 
     refs = inputs.get("refs")
-    job_dir = artifacts.get("job_dir", ".")
+    artifacts = inputs.get("artifacts") or {}
+    if isinstance(node_plan, dict):
+        job_dir = params.get("job_dir", ".")
+    else:
+        job_dir = artifacts.get("job_dir", ".")
     engine_adapter = adapters.get_engine(plan["provider"])
 
     dry_run = bool(ctx.get("dry_run", True))
@@ -157,6 +166,22 @@ def _exec_output_persist(
     adapter_name = params.get("adapter", "local")
     saved = adapters.get_output(adapter_name).persist(results, persist_ctx, out_dir)
     return {"files": saved}
+
+
+def _exec_result_as_ref(
+    inputs: dict[str, Any],
+    params: dict[str, Any],
+    ctx: dict[str, Any],
+) -> dict[str, Any]:
+    """Turn a prior engine.generate node's results into this node's ref input —
+    the chain-link between two Operation nodes (op[i]'s output image becomes
+    op[i+1]'s reference)."""
+    del params, ctx
+    results = inputs.get("results") or []
+    if not results:
+        return {"refs": None}
+    first = results[0]
+    return {"refs": first.get("result_url")}
 
 
 def input_hash(payload: Any) -> str:
