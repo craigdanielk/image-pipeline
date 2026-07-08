@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Background,
   Controls,
@@ -86,16 +86,34 @@ function CampaignNode({ data }: NodeProps) {
 }
 
 function OperationNode({ data }: NodeProps) {
-  const d = data as { label: string; onRemove: () => void };
+  const d = data as {
+    label: string;
+    onRemove: () => void;
+    onRerun: () => void;
+    running: boolean;
+    runStatus: string;
+    canRerun: boolean;
+  };
   return (
     <div className="board-node board-node--op">
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
       <div className="board-node__kicker">OPERATION</div>
       <div className="board-node__title">{d.label}</div>
-      <button type="button" className="board-node__remove nodrag" onClick={d.onRemove}>
-        ✕ remove
-      </button>
+      {d.runStatus && <div className="board-node__status">{d.runStatus}</div>}
+      <div className="board-node__op-actions">
+        <button
+          type="button"
+          className="board-node__rerun nodrag"
+          disabled={d.running || !d.canRerun}
+          onClick={d.onRerun}
+        >
+          {d.running ? "Running…" : "↻ Re-run"}
+        </button>
+        <button type="button" className="board-node__remove nodrag" onClick={d.onRemove}>
+          ✕ remove
+        </button>
+      </div>
     </div>
   );
 }
@@ -180,6 +198,16 @@ export default function BoardPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
+  // Real per-node compile + re-run wiring (Task 6). `compileDir` is refreshed
+  // by the debounced effect below whenever the board's selection changes; each
+  // Operation node re-runs itself against that compile via /api/graph-runs,
+  // scoped with target_node_id so only that node (+ its real ancestors) execute.
+  const [compileDir, setCompileDir] = useState<string | null>(null);
+  const [compileError, setCompileError] = useState("");
+  const [opRunning, setOpRunning] = useState<Record<string, boolean>>({});
+  const [opRunStatus, setOpRunStatus] = useState<Record<string, string>>({});
+  const activeStreamsRef = useRef<Set<EventSource>>(new Set());
+
   useEffect(() => {
     Promise.all([
       api<{ products: Product[] }>("/api/products"),
@@ -255,6 +283,18 @@ export default function BoardPage() {
       delete next[opId];
       return next;
     });
+    setOpRunning((prev) => {
+      if (!(opId in prev)) return prev;
+      const next = { ...prev };
+      delete next[opId];
+      return next;
+    });
+    setOpRunStatus((prev) => {
+      if (!(opId in prev)) return prev;
+      const next = { ...prev };
+      delete next[opId];
+      return next;
+    });
   };
   const addCustomOp = () => {
     const label = customOpDraft.trim();
@@ -299,6 +339,75 @@ export default function BoardPage() {
     }
   };
 
+  // Debounced compile-on-change: whenever product/campaign/operations/outputs
+  // settle for 500ms, recompile the board's real graph-v1 chain so per-node
+  // re-run has a fresh compile_dir + real node ids (`generate-{i}-{opId}`) to
+  // target. Cheap no-op guard: nothing to compile without product+campaign+
+  // at least one output type selected.
+  useEffect(() => {
+    if (!productSlug || !campaignId || outputs.size === 0) return;
+    const handle = setTimeout(() => {
+      api<{ compile_dir: string; graph: { nodes: unknown[]; edges: unknown[] } }>("/api/board/compile", {
+        method: "POST",
+        body: JSON.stringify({
+          product_slug: productSlug,
+          campaign_id: campaignId,
+          output_types: [...outputs],
+          operations: activeOps.map((id) => ({ op: id })),
+        }),
+      })
+        .then((d) => {
+          setCompileDir(d.compile_dir);
+          setCompileError("");
+        })
+        .catch((e) => setCompileError(String(e)));
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [productSlug, campaignId, activeOps, outputs]);
+
+  // Close every open SSE connection on unmount so re-runs from a previous
+  // mount/compile never leak a socket or keep firing state updates.
+  useEffect(() => {
+    return () => {
+      activeStreamsRef.current.forEach((es) => es.close());
+      activeStreamsRef.current.clear();
+    };
+  }, []);
+
+  const runNode = (opId: string, graphNodeId: string) => {
+    if (!compileDir) return;
+    setOpRunning((prev) => ({ ...prev, [opId]: true }));
+    setOpRunStatus((prev) => ({ ...prev, [opId]: "Running…" }));
+    api<{ graph_run_id: string }>("/api/graph-runs", {
+      method: "POST",
+      body: JSON.stringify({ compile_dir: compileDir, target_node_id: graphNodeId, dry_run: false }),
+    })
+      .then(({ graph_run_id }) => {
+        const es = new EventSource(`/api/graph-runs/${graph_run_id}/stream`);
+        activeStreamsRef.current.add(es);
+        const finish = (status: string) => {
+          setOpRunning((prev) => ({ ...prev, [opId]: false }));
+          setOpRunStatus((prev) => ({ ...prev, [opId]: status }));
+          activeStreamsRef.current.delete(es);
+          es.close();
+        };
+        es.onmessage = (evt) => {
+          const payload = JSON.parse(evt.data);
+          // Node-scoped runs (target_node_id set) still emit one status event
+          // per real ancestor as they execute in order — only the overall-run
+          // event (node_id === null) or an event for *this* node marks done;
+          // an ancestor's own "completed" isn't this node finishing.
+          if (!["completed", "failed", "partial"].includes(payload.status)) return;
+          if (payload.node_id === null || payload.node_id === graphNodeId) finish(payload.status);
+        };
+        es.onerror = () => finish("failed");
+      })
+      .catch((e) => {
+        setOpRunning((prev) => ({ ...prev, [opId]: false }));
+        setOpRunStatus((prev) => ({ ...prev, [opId]: String(e) }));
+      });
+  };
+
   const product = products.find((p) => p.slug === productSlug);
   const campaign = campaigns.find((c) => c.id === campaignId);
 
@@ -315,7 +424,14 @@ export default function BoardPage() {
         id: `op-${opId}`,
         type: "operationNode",
         position: posOf(`op-${opId}`, { x: 340, y: 40 + i * 110 }),
-        data: { label: opLabel(opId), onRemove: () => removeOp(opId) },
+        data: {
+          label: opLabel(opId),
+          onRemove: () => removeOp(opId),
+          onRerun: () => runNode(opId, `generate-${i}-${opId}`),
+          running: !!opRunning[opId],
+          runStatus: opRunStatus[opId] || "",
+          canRerun: !!compileDir,
+        },
       }));
       const outputX = activeOps.length ? 660 : 340;
 
@@ -351,7 +467,22 @@ export default function BoardPage() {
       ];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product, productDetail, campaign, activeOps, customOpLabels, operations, outputs, credits, status, loading, canRun]);
+  }, [
+    product,
+    productDetail,
+    campaign,
+    activeOps,
+    customOpLabels,
+    operations,
+    outputs,
+    credits,
+    status,
+    loading,
+    canRun,
+    compileDir,
+    opRunning,
+    opRunStatus,
+  ]);
 
   useEffect(() => {
     const chain = ["product", ...activeOps.map((o) => `op-${o}`), "output"];
@@ -417,6 +548,7 @@ export default function BoardPage() {
             </button>
           </div>
         </div>
+        {compileError && <div className="board-toolbar__compile-error">{compileError}</div>}
       </div>
 
       <div className="board-canvas">

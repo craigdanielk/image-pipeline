@@ -380,6 +380,36 @@
   padding: 0;
 }
 
+.board-node__op-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.board-node__rerun {
+  background: transparent;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+}
+
+.board-node__rerun:disabled {
+  color: var(--color-text-tertiary);
+  border-color: var(--color-border-subtle);
+  cursor: not-allowed;
+}
+
+.board-toolbar__compile-error {
+  width: 100%;
+  font-size: 0.75rem;
+  color: var(--color-status-error);
+  margin-top: 0.4rem;
+}
+
 .board-node__chip-row {
   display: flex;
   flex-wrap: wrap;

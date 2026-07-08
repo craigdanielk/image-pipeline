@@ -1394,8 +1394,15 @@ async def create_graph_run(req: GraphRunRequest) -> dict[str, Any]:
 
     async def _execute() -> None:
         try:
+            # run_graph_async executes from a *runtime* bundle (resolved refs,
+            # provider prompts, etc.), not the bare graph.json — build it here
+            # the same way run_graph.run_compile_dir does for the CLI/`/api/execute`
+            # path. Without this, every call fails immediately with
+            # "runtime_bundle is required — compile before execute."
+            runtime_bundle = compile_bundle.load_runtime_bundle(req.compile_dir)
             await run_graph.run_graph_async(
                 graph,
+                runtime_bundle=runtime_bundle,
                 compile_dir=req.compile_dir,
                 dry_run=req.dry_run,
                 target_node_id=req.target_node_id,
