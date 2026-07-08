@@ -2,31 +2,26 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import ArtifactGallery from "../components/ArtifactGallery";
 import BriefModal from "../components/BriefModal";
+import ProductForm from "../components/ProductForm";
 import GlassCard from "../design/GlassCard";
 import { api } from "../api";
 import { useTenant, withTenant } from "../TenantContext";
+import type { ProductSpecV2 } from "../types";
 
 type Shot = { id: string; label: string; path: string; dir: string };
 
-type ProductSpec = {
-  id: string;
-  name: string;
-  shots?: Shot[];
-  product?: {
-    geometry?: { description?: string };
-    materials?: { id: string; color?: string; type?: string }[];
-  };
-  references?: { id: string; role: string; asset: string }[];
-  brand?: { logos?: unknown[] };
-};
+type JobsOnlyProduct = { id: string; name: string; shots?: Shot[] };
 
 type ProductSource = "knowledge" | "jobs_only";
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [product, setProduct] = useState<ProductSpec | null>(null);
+  const [product, setProduct] = useState<ProductSpecV2 | JobsOnlyProduct | null>(null);
   const [source, setSource] = useState<ProductSource | null>(null);
+  const [draft, setDraft] = useState<ProductSpecV2 | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
   const [status, setStatus] = useState("");
   const [showBrief, setShowBrief] = useState(false);
   const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
@@ -35,16 +30,18 @@ export default function ProductDetailPage() {
   const load = () => {
     if (!slug) return;
     const params = withTenant(new URLSearchParams(), tenant);
-    api<{ product: ProductSpec; source: ProductSource }>(`/api/products/${slug}?${params}`)
+    api<{ product: ProductSpecV2 | JobsOnlyProduct; source: ProductSource }>(`/api/products/${slug}?${params}`)
       .then((d) => {
         setProduct(d.product);
         setSource(d.source);
+        if (d.source === "knowledge") setDraft(d.product as ProductSpecV2);
       })
       .catch((e) => setStatus(String(e)));
   };
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, tenant]);
 
   const onUpload = async (file: File) => {
@@ -73,13 +70,31 @@ export default function ProductDetailPage() {
     }
   };
 
+  const onSave = async () => {
+    if (!draft || !slug) return;
+    setSaving(true);
+    setSaveError("");
+    try {
+      const params = withTenant(new URLSearchParams(), tenant);
+      await api(`/api/knowledge/products/${slug}?${params}`, {
+        method: "PUT",
+        body: JSON.stringify(draft),
+      });
+      setStatus("Saved.");
+      load();
+    } catch (e) {
+      setSaveError(String(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!product) {
     return <GlassCard className="stub-note">{status || "Loading…"}</GlassCard>;
   }
 
-  const materials = product.product?.materials || [];
-  const refs = product.references || [];
   const isKnowledge = source === "knowledge";
+  const refs = isKnowledge ? (product as ProductSpecV2).references || [] : [];
 
   return (
     <div>
@@ -88,26 +103,21 @@ export default function ProductDetailPage() {
       </Link>
       <h1 className="page-title">{product.name}</h1>
       <p className="page-subtitle">
-        {isKnowledge ? `ProductSpec · ${product.id}` : `${product.shots?.length ?? 0} job(s) on disk · ${product.id}`}
+        {isKnowledge
+          ? `ProductSpec · ${product.id}`
+          : `${(product as JobsOnlyProduct).shots?.length ?? 0} job(s) on disk · ${(product as JobsOnlyProduct).id}`}
       </p>
 
-      {isKnowledge ? (
+      {isKnowledge && draft ? (
         <div className="page-grid product-detail-grid" style={{ gap: "1rem" }}>
           <GlassCard className="form-panel">
-            <h2 className="dashboard-panel__title">Geometry</h2>
-            <p style={{ margin: 0, fontSize: "0.88rem", lineHeight: 1.5 }}>
-              {product.product?.geometry?.description}
-            </p>
-            <h2 className="dashboard-panel__title" style={{ marginTop: "1rem" }}>
-              Materials
-            </h2>
-            <ul className="explorer-list">
-              {materials.map((m) => (
-                <li key={m.id}>
-                  {m.id}: {m.type} · {m.color}
-                </li>
-              ))}
-            </ul>
+            <ProductForm value={draft} onChange={setDraft} disabledId />
+            {saveError && <p className="form-error">{saveError}</p>}
+            <div className="form-actions">
+              <button type="button" className="btn btn--primary-solid" onClick={onSave} disabled={saving}>
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
           </GlassCard>
 
           <GlassCard className="form-panel">
@@ -151,9 +161,9 @@ export default function ProductDetailPage() {
             No knowledge ProductSpec for this product yet — it exists as job files on disk only.
             Geometry, materials, and reference uploads need a ProductSpec first.
           </p>
-          {product.shots && product.shots.length > 0 && (
+          {(product as JobsOnlyProduct).shots && (product as JobsOnlyProduct).shots!.length > 0 && (
             <ul className="explorer-list" style={{ marginTop: "0.75rem" }}>
-              {product.shots.map((s) => (
+              {(product as JobsOnlyProduct).shots!.map((s) => (
                 <li key={s.path}>{s.label}</li>
               ))}
             </ul>
