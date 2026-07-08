@@ -1289,7 +1289,7 @@ class BoardCompileRequest(BaseModel):
     campaign_id: str
     output_types: list[str] = Field(..., min_length=1)
     operations: list[BoardOperationRequest] = Field(default_factory=list)
-    tenant: Optional[str] = None
+    tenant: Optional[str] = Field(None, pattern=r"^[a-z0-9][a-z0-9-]*$")
 
 
 @app.post("/api/board/compile")

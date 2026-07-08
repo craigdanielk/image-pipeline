@@ -63,6 +63,19 @@ class TestBoardCompile(unittest.TestCase):
         )
         self.assertEqual(res.status_code, 404)
 
+    def test_compile_rejects_path_traversal_tenant(self):
+        res = self.client.post(
+            "/api/board/compile",
+            json={
+                "product_slug": "hairbands",
+                "campaign_id": "starz-kid-hairbands",
+                "output_types": ["hero"],
+                "operations": [],
+                "tenant": "../../etc",
+            },
+        )
+        self.assertEqual(res.status_code, 422, res.text)
+
 
 if __name__ == "__main__":
     unittest.main()

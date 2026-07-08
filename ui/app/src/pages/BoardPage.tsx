@@ -93,7 +93,11 @@ function OperationNode({ data }: NodeProps) {
     running: boolean;
     runStatus: string;
     canRerun: boolean;
+    isCustom?: boolean;
   };
+  const rerunTitle = d.isCustom
+    ? "Custom operations aren't recognized graph ops, so they're skipped when compiling the board and can't be re-run individually."
+    : undefined;
   return (
     <div className="board-node board-node--op">
       <Handle type="target" position={Position.Left} />
@@ -101,12 +105,16 @@ function OperationNode({ data }: NodeProps) {
       <div className="board-node__kicker">OPERATION</div>
       <div className="board-node__title">{d.label}</div>
       {d.runStatus && <div className="board-node__status">{d.runStatus}</div>}
+      {d.isCustom && (
+        <div className="board-node__status">Custom op — excluded from compile, can't be re-run here.</div>
+      )}
       <div className="board-node__op-actions">
         <button
           type="button"
           className="board-node__rerun nodrag"
           disabled={d.running || !d.canRerun}
           onClick={d.onRerun}
+          title={rerunTitle}
         >
           {d.running ? "Running…" : "↻ Re-run"}
         </button>
@@ -353,7 +361,7 @@ export default function BoardPage() {
           product_slug: productSlug,
           campaign_id: campaignId,
           output_types: [...outputs],
-          operations: activeOps.map((id) => ({ op: id })),
+          operations: activeOps.filter((id) => !id.startsWith("custom-")).map((id) => ({ op: id })),
         }),
       })
         .then((d) => {
@@ -420,19 +428,23 @@ export default function BoardPage() {
       const posOf = (id: string, fallback: { x: number; y: number }) =>
         prev.find((n) => n.id === id)?.position ?? fallback;
 
-      const opNodes: Node[] = activeOps.map((opId, i) => ({
-        id: `op-${opId}`,
-        type: "operationNode",
-        position: posOf(`op-${opId}`, { x: 340, y: 40 + i * 110 }),
-        data: {
-          label: opLabel(opId),
-          onRemove: () => removeOp(opId),
-          onRerun: () => runNode(opId, `generate-${i}-${opId}`),
-          running: !!opRunning[opId],
-          runStatus: opRunStatus[opId] || "",
-          canRerun: !!compileDir,
-        },
-      }));
+      const opNodes: Node[] = activeOps.map((opId, i) => {
+        const isCustom = opId.startsWith("custom-");
+        return {
+          id: `op-${opId}`,
+          type: "operationNode",
+          position: posOf(`op-${opId}`, { x: 340, y: 40 + i * 110 }),
+          data: {
+            label: opLabel(opId),
+            onRemove: () => removeOp(opId),
+            onRerun: () => runNode(opId, `generate-${i}-${opId}`),
+            running: !!opRunning[opId],
+            runStatus: opRunStatus[opId] || "",
+            canRerun: !isCustom && !!compileDir,
+            isCustom,
+          },
+        };
+      });
       const outputX = activeOps.length ? 660 : 340;
 
       return [
