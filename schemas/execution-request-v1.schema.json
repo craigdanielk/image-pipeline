@@ -74,14 +74,9 @@
     "parent_run_id": { "type": ["string", "null"] },
     "provenance": {
       "type": "object",
-      "description": "Where this request was lowered from. 'spec-v2' marks the edit-spec-v2 lane; its fixtures stay in schemas/examples because they validate against this schema (chosen over relocating the fixture — tests reference it by path).",
       "properties": {
-        "compiled_from": { "type": "string", "enum": ["job-v1", "api", "graph-node", "spec-v2"] },
-        "source_job_path": { "type": "string" },
-        "source": {
-          "type": "string",
-          "description": "Path or identifier of the originating spec artifact (e.g. an edit-spec-v2 file)."
-        }
+        "compiled_from": { "type": "string", "enum": ["job-v1", "api", "graph-node"] },
+        "source_job_path": { "type": "string" }
       },
       "additionalProperties": false
     }

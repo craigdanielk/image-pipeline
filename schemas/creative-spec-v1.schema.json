@@ -12,10 +12,7 @@
     "product_spec_id": { "type": "string" },
     "campaign_id": { "type": "string" },
     "prompt_template": { "type": "string" },
-    "negative_template": {
-      "type": ["string", "null"],
-      "description": "Optional negative prompt template. null is equivalent to absent — prompt_compiler treats any falsy value as 'no negative template'."
-    },
+    "negative_template": { "type": "string" },
     "default_subject": {
       "type": "object",
       "additionalProperties": { "type": ["string", "number", "boolean"] }
