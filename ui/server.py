@@ -18,12 +18,13 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import unquote
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -66,6 +67,7 @@ import brief_drafter  # noqa: E402
 import graph_to_reactflow  # noqa: E402
 import knowledge_store  # noqa: E402
 import run_graph  # noqa: E402
+import spec_extractor  # noqa: E402
 import spec_validator_v2  # noqa: E402
 import tenants  # noqa: E402
 import workspace_runs  # noqa: E402
@@ -570,6 +572,34 @@ async def knowledge_upload_product_ref(
         "asset": asset_path,
         "ref_id": ref_id,
     }
+
+
+@app.post("/api/knowledge/products/extract")
+async def knowledge_extract_product(
+    name: str = Form(""),
+    notes: str = Form(""),
+    photos: list[UploadFile] = File(...),
+) -> dict[str, Any]:
+    if not photos:
+        raise HTTPException(status_code=400, detail="at least one photo is required")
+    with tempfile.TemporaryDirectory(prefix="pim-extract-") as tmp:
+        photo_paths: list[str] = []
+        for i, photo in enumerate(photos):
+            if not photo.filename:
+                continue
+            safe = re.sub(r"[^a-zA-Z0-9._-]+", "-", photo.filename).strip("-") or f"photo-{i}.png"
+            dest = Path(tmp) / f"{i:02d}-{safe}"
+            dest.write_bytes(await photo.read())
+            photo_paths.append(str(dest))
+        if not photo_paths:
+            raise HTTPException(status_code=400, detail="no valid photo files uploaded")
+        try:
+            draft = await spec_extractor.extract_product_spec_from_photos(
+                photo_paths, name_hint=name or None, notes=notes or None
+            )
+        except spec_extractor.SpecExtractError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"draft": draft}
 
 
 @app.get("/api/knowledge/campaigns")
