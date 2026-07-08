@@ -30,3 +30,20 @@ export async function uploadFile(
   }
   return data as { path: string; url: string; filename: string };
 }
+
+export async function extractProductFromPhotos(
+  photos: File[],
+  name: string,
+  notes: string
+): Promise<{ draft: Record<string, unknown> }> {
+  const form = new FormData();
+  form.append("name", name);
+  form.append("notes", notes);
+  photos.forEach((f) => form.append("photos", f));
+  const res = await fetch("/api/knowledge/products/extract", { method: "POST", body: form });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error((data as { detail?: string }).detail || res.statusText);
+  }
+  return data as { draft: Record<string, unknown> };
+}
