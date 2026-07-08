@@ -16,10 +16,13 @@ import spec_validator
 _PLACEHOLDER_RE = re.compile(r"\{[a-zA-Z_][a-zA-Z0-9_]*\}")
 
 # Human-readable per-operation instruction fragments, folded into the positive
-# prompt ONLY when compile() is called with exactly one edit_spec (the shape
-# job_compiler.compile_job_multi_op uses — one independent compile per op).
-# The pre-existing merged-call shape (edit_specs=None or 2+ edit_specs, as used
-# by compile_job) is intentionally left untouched to avoid changing its output.
+# prompt ONLY when compile() is called with fold_operation_into_prompt=True AND
+# exactly one edit_spec (the shape job_compiler.compile_job_multi_op uses — one
+# independent compile per op, which explicitly opts in to this flag).
+# The pre-existing compile_job path never passes this flag, so its output is
+# untouched regardless of how many edit_specs it is called with — note that
+# job_compiler.derive_edit_specs_from_job always returns [] or exactly one
+# synthesized edit spec, so length alone can never distinguish the two paths.
 _OP_INSTRUCTIONS: dict[str, str] = {
     "replace_logo": "Operation: replace the brand logo/mark region.",
     "replace_child": "Operation: replace the depicted child/model.",
@@ -83,6 +86,7 @@ def compile(
     execution_request: dict[str, Any],
     *,
     edit_specs: list[dict[str, Any]] | None = None,
+    fold_operation_into_prompt: bool = False,
 ) -> dict[str, Any]:
     """Compile ProductSpec + CreativeSpec + EditSpec[] + ExecutionRequest → ProviderPrompt."""
     spec_validator.validate_product_spec(product_spec)
@@ -108,7 +112,7 @@ def compile(
         tail.append(out["composition"])
     if out.get("background") and "{background}" not in tmpl:
         tail.append("Background: " + out["background"])
-    if edit_specs is not None and len(edit_specs) == 1:
+    if fold_operation_into_prompt and edit_specs is not None and len(edit_specs) == 1:
         op_instruction = _OP_INSTRUCTIONS.get(edit_specs[0].get("operation"))
         if op_instruction:
             tail.append(op_instruction)

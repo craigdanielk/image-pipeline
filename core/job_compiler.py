@@ -226,7 +226,9 @@ def compile_job_multi_op(
     op_execution_plans: list[dict[str, Any]] = []
     for edit in edit_specs:
         spec_validator.validate_edit_spec(edit)
-        provider_prompt = prompt_compiler.compile(product, creative, execution, edit_specs=[edit])
+        provider_prompt = prompt_compiler.compile(
+            product, creative, execution, edit_specs=[edit], fold_operation_into_prompt=True
+        )
         execution_plan = capability_resolver.resolve(provider_prompt, execution, job_dir=job_dir)
         op_execution_plans.append({
             "execution_plan": execution_plan,

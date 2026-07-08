@@ -44,6 +44,25 @@ class TestJobCompiler(unittest.TestCase):
         spec_validator.validate_edit_spec(artifacts["edit_specs"][0])
         self.assertIn("no swoosh", artifacts["provider_prompt"]["negative"] or "")
 
+    def test_compile_job_never_folds_operation_instruction(self):
+        """Regression test: compile_job (the original, unmodified path) must
+        NEVER append an operation-derived instruction to the positive prompt,
+        even though derive_edit_specs_from_job always yields exactly one
+        synthesized edit_spec for surgical/parent-run jobs — the same shape
+        prompt_compiler.compile() sees from the new compile_job_multi_op path.
+        Only an explicit fold_operation_into_prompt=True opt-in (used solely
+        by compile_job_multi_op) may add "Operation: ..." text.
+        """
+        for job_path in (
+            os.path.join(JOBS_DIR, "joga-hairbands", "edit-subject-swap.job.json"),
+            os.path.join(JOBS_DIR, "joga-hairbands", "edit-remove-element.job.json"),
+        ):
+            with self.subTest(job_path=job_path):
+                artifacts = job_compiler.compile_path(job_path, dry_run=True)
+                self.assertEqual(len(artifacts["edit_specs"]), 1)
+                positive = artifacts["provider_prompt"]["positive"]
+                self.assertNotIn("Operation:", positive)
+
 
 if __name__ == "__main__":
     unittest.main()

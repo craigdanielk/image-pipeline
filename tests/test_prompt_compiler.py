@@ -96,10 +96,14 @@ class TestPromptCompiler(unittest.TestCase):
         the same edit N times."""
         product, creative, execution = self._fixture_triple()
         a = prompt_compiler.compile(
-            product, creative, execution, edit_specs=[self._edit("replace_logo", "e-0")]
+            product, creative, execution,
+            edit_specs=[self._edit("replace_logo", "e-0")],
+            fold_operation_into_prompt=True,
         )
         b = prompt_compiler.compile(
-            product, creative, execution, edit_specs=[self._edit("subject_swap", "e-1")]
+            product, creative, execution,
+            edit_specs=[self._edit("subject_swap", "e-1")],
+            fold_operation_into_prompt=True,
         )
         self.assertNotEqual(a["positive"], b["positive"])
         self.assertIn("replace the brand logo", a["positive"])
