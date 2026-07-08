@@ -64,7 +64,9 @@ _load_env_file(UI_DIR / ".env")
 
 import artifact_registry  # noqa: E402
 import brief_drafter  # noqa: E402
+import compile_bundle  # noqa: E402
 import graph_to_reactflow  # noqa: E402
+import job_compiler  # noqa: E402
 import knowledge_store  # noqa: E402
 import run_graph  # noqa: E402
 import spec_extractor  # noqa: E402
@@ -1274,6 +1276,90 @@ def graph_reactflow(compile_dir: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="graph.json not found")
     graph = json.loads(graph_path.read_text(encoding="utf-8"))
     return graph_to_reactflow.graph_v1_to_reactflow(graph)
+
+
+class BoardOperationRequest(BaseModel):
+    op: str
+    target: Optional[str] = None
+    asset: Optional[str] = None
+
+
+class BoardCompileRequest(BaseModel):
+    product_slug: str = Field(..., pattern=r"^[a-z0-9][a-z0-9-]*$")
+    campaign_id: str
+    output_types: list[str] = Field(..., min_length=1)
+    operations: list[BoardOperationRequest] = Field(default_factory=list)
+    tenant: Optional[str] = None
+
+
+@app.post("/api/board/compile")
+def compile_board(req: BoardCompileRequest) -> dict[str, Any]:
+    """Compile the Board's current product+campaign+operations selection into
+    a real multi-node graph-v1 chain, written to a fresh compile_dir. The
+    returned compile_dir is what POST /api/graph-runs (existing, unmodified)
+    runs/re-runs against, including target_node_id-scoped re-run."""
+    store = _knowledge(req.tenant)
+    try:
+        product_spec = store.get_product(req.product_slug)
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    try:
+        campaign_spec = store.get_campaign(req.campaign_id)
+    except knowledge_store.KnowledgeError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    for op_req in req.operations:
+        if op_req.op not in spec_validator_v2._VALID_OPS:
+            raise HTTPException(status_code=400, detail=f"unknown operation: {op_req.op!r}")
+
+    scene = campaign_spec.get("scene") or {}
+    job = {
+        "schema_version": "job-v1",
+        "id": f"board-{req.product_slug}-{uuid.uuid4().hex[:8]}",
+        "_dir": str(ROOT),
+        "spec": {
+            "prompt_template": "{cad}. {composition}. {background}.",
+            "cad": product_spec.get("product", {}).get("geometry", {}).get("description", ""),
+        },
+        "engine": {"name": "higgsfield", "model": "nano_banana_2"},
+        "output": {
+            "imgtype": req.output_types[0],
+            "dir": "out",
+            "count": 1,
+            "composition": scene.get("composition", ""),
+            "background": scene.get("background", ""),
+        },
+    }
+
+    edit_specs = []
+    for i, op_req in enumerate(req.operations):
+        # v1 shape (core/spec_validator.py:75-85, EDIT_SCHEMA = "edit-spec-v1") —
+        # this is the schema job_compiler.compile_job_multi_op (Task 4) validates
+        # against via spec_validator.validate_edit_spec, NOT the newer edit-spec-v2
+        # (core/spec_validator_v2.py) used by the knowledge-store CRUD path.
+        # Required fields confirmed live: schema_version, id (slug), operation,
+        # parent_asset_id. target/asset are carried as extra metadata for the
+        # Operation node's own params, not validated by v1's schema check.
+        edit = {
+            "schema_version": "edit-spec-v1",
+            "id": f"{job['id']}-edit-{i}",
+            "operation": op_req.op,
+            "parent_asset_id": f"{job['id']}-anchor",
+            "target": op_req.target,
+            "asset": op_req.asset,
+            "constraints": [],
+            "exclusions": [],
+            "provenance": {"compiled_from": "board-ui"},
+        }
+        edit_specs.append(edit)
+
+    bundle = job_compiler.compile_job_multi_op(job, edit_specs, dry_run=True)
+
+    compile_dir = str(_allowed_roots()[0] / "workspace" / _workspace_id(req.tenant) / "board-compiles" / job["id"])
+    compile_bundle.write_compile_dir(compile_dir, bundle, source={"kind": "board-ui", "path": None})
+
+    graph = bundle["graph"]
+    return {"compile_dir": compile_dir, "graph": graph_to_reactflow.graph_v1_to_reactflow(graph)}
 
 
 class GraphRunRequest(BaseModel):
