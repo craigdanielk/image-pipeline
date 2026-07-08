@@ -118,16 +118,33 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded]);
 
+  // Update one row in place from an API response — never reload the whole
+  // gallery for a single action (a full load() flips `loading` and unmounts
+  // the list, which resets the page scroll to the top).
+  const applyRow = useCallback(
+    (row: Artifact) => {
+      const matchesFilter = filter === "all" || row.status === filter;
+      setArtifacts((prev) => {
+        if (!matchesFilter) {
+          setTotal((t) => Math.max(0, t - 1));
+          return prev.filter((a) => a.id !== row.id);
+        }
+        return prev.map((a) => (a.id === row.id ? row : a));
+      });
+    },
+    [filter]
+  );
+
   const saveComment = async (id: string) => {
     setStatus("");
     try {
       const params = withTenant(new URLSearchParams(), tenant);
-      await api(`/api/artifacts/${id}?${params}`, {
+      const data = await api<{ artifact: Artifact }>(`/api/artifacts/${id}?${params}`, {
         method: "PATCH",
         body: JSON.stringify({ comment: draftComments[id] || "" }),
       });
+      if (data.artifact) applyRow(data.artifact);
       setStatus("Comment saved");
-      load();
     } catch (e) {
       setStatus(String(e));
     }
@@ -137,8 +154,8 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
     setStatus("");
     try {
       const params = withTenant(new URLSearchParams(), tenant);
-      await api(`/api/artifacts/${artifact.id}/approve?${params}`, { method: "POST" });
-      load();
+      const data = await api<{ artifact: Artifact }>(`/api/artifacts/${artifact.id}/approve?${params}`, { method: "POST" });
+      if (data.artifact) applyRow(data.artifact);
     } catch (e) {
       setStatus(String(e));
     }
@@ -148,8 +165,8 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
     setStatus("");
     try {
       const params = withTenant(new URLSearchParams(), tenant);
-      await api(`/api/artifacts/${artifact.id}/restore?${params}`, { method: "POST" });
-      load();
+      const data = await api<{ artifact: Artifact }>(`/api/artifacts/${artifact.id}/restore?${params}`, { method: "POST" });
+      if (data.artifact) applyRow(data.artifact);
     } catch (e) {
       setStatus(String(e));
     }
@@ -162,11 +179,11 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
       const params = withTenant(new URLSearchParams(), tenant);
       if (rejectReason.trim()) params.set("reason", rejectReason.trim());
       const qs = params.toString();
-      await api(`/api/artifacts/${rejectTarget.id}${qs ? `?${qs}` : ""}`, { method: "DELETE" });
+      const data = await api<{ artifact: Artifact }>(`/api/artifacts/${rejectTarget.id}${qs ? `?${qs}` : ""}`, { method: "DELETE" });
       if (expanded?.id === rejectTarget.id) setExpanded(null);
       setRejectTarget(null);
       setRejectReason("");
-      load();
+      if (data.artifact) applyRow(data.artifact);
     } catch (e) {
       setStatus(String(e));
     }
@@ -290,6 +307,17 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
                       <button type="button" className="btn btn--sm" onClick={() => setRegenTarget(a)}>
                         Regenerate…
                       </button>
+                      {a.drive_url && (
+                        <a
+                          className="btn btn--sm"
+                          href={a.drive_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Open the uploaded copy on Google Drive"
+                        >
+                          Drive ↗
+                        </a>
+                      )}
                     </div>
                   </GlassCard>
                 ))}
