@@ -436,11 +436,37 @@ def _shot_thumb(job_path_field: str) -> str | None:
     return None
 
 
+def _product_thumb_fallback(slug: str, tenant: str | None, product_dir: str | None) -> str | None:
+    """Thumb of last resort for shots whose spec names no (existing) image:
+    the operator-designated canonical image, else a product-looking ref."""
+    canon = _load_canonical_images(tenant).get(slug)
+    if canon and Path(canon).is_file():
+        return canon
+    if product_dir:
+        for dirname in ("reference", "refs"):
+            ref_dir = Path(product_dir) / dirname
+            if not ref_dir.is_dir():
+                continue
+            imgs = [p for p in sorted(ref_dir.rglob("*")) if p.suffix.lower() in _IMG_EXTS and p.is_file()]
+            preferred = next((p for p in imgs if re.search(r"product|flatlay|cad|main", p.name, re.I)), None)
+            pick = preferred or (imgs[0] if imgs else None)
+            if pick:
+                return str(pick)
+    return None
+
+
 def _shots_for_product(slug: str, tenant: str | None = None) -> list[dict[str, Any]]:
     shots: list[dict[str, Any]] = []
+    fallback: str | None = None
+    fallback_dir: str | None = None
     for job in _glob_jobs(tenant):
         if job["product"] == slug:
             thumb = _shot_thumb(job["path"])
+            if not thumb:
+                if fallback_dir != job["dir"]:
+                    fallback = _product_thumb_fallback(slug, tenant, job["dir"])
+                    fallback_dir = job["dir"]
+                thumb = fallback
             shots.append(
                 {
                     "id": job["id"],
@@ -1017,6 +1043,13 @@ def create_job(req: CreateJobRequest, tenant: Optional[str] = None) -> dict[str,
     reference: Any = defaults.get("reference")
     if req.reference_paths:
         reference = req.reference_paths[0] if len(req.reference_paths) == 1 else req.reference_paths
+    if reference is None:
+        # No reference at all = ungrounded text-to-image, and a shot card with
+        # no thumbnail. Default to the operator-designated canonical product
+        # image so drafted edit jobs stay grounded in the product's truth.
+        canon = _load_canonical_images(tenant).get(req.product_slug)
+        if canon and Path(canon).is_file():
+            reference = canon
 
     schema_rel = "../../core/job.schema.json"
     try:
