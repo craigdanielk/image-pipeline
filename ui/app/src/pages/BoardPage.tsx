@@ -12,7 +12,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { api } from "../api";
+import { api, uploadFile } from "../api";
 import { useTenant, withTenant } from "../TenantContext";
 import type { Campaign, Operation, Product, ProductSpecV2 } from "../types";
 
@@ -387,6 +387,110 @@ export default function BoardPage() {
       setShotStatus(d.prompt ? "Compiled — prompt on the rail below" : "Compiled");
     } catch (e) {
       setShotStatus(String(e));
+    }
+  };
+
+  // Greenfield: brand-new product from photos. Upload → vision CAD extraction
+  // → confirm the drafted spec → save → it becomes the PRODUCT (CAD) node.
+  const [newProductOpen, setNewProductOpen] = useState(false);
+  const [npName, setNpName] = useState("");
+  const [npNotes, setNpNotes] = useState("");
+  const [npFiles, setNpFiles] = useState<File[]>([]);
+  const [npDraft, setNpDraft] = useState<Record<string, unknown> | null>(null);
+  const [npBusy, setNpBusy] = useState(false);
+  const [npStatus, setNpStatus] = useState("");
+
+  const npGeometry = (): string => {
+    const d = npDraft as { geometry_description?: string; product?: { geometry?: { description?: string } } } | null;
+    return d?.geometry_description || d?.product?.geometry?.description || "";
+  };
+
+  const extractCad = async () => {
+    if (!npFiles.length) return;
+    setNpBusy(true);
+    setNpStatus("Extracting CAD spec from photos (vision model — ~30s)…");
+    try {
+      const form = new FormData();
+      form.append("name", npName);
+      form.append("notes", npNotes);
+      for (const f of npFiles) form.append("photos", f);
+      const res = await fetch("/api/knowledge/products/extract", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      setNpDraft(data.draft || null);
+      setNpStatus("Draft ready — confirm the geometry below, then save.");
+    } catch (e) {
+      setNpStatus(String(e));
+    } finally {
+      setNpBusy(false);
+    }
+  };
+
+  const saveNewProduct = async () => {
+    const geometry = npGeometry();
+    const name = npName || String((npDraft as { name?: string } | null)?.name || "");
+    if (!name || !geometry) {
+      setNpStatus("Need a name and extracted geometry before saving.");
+      return;
+    }
+    setNpBusy(true);
+    setNpStatus("Saving product…");
+    try {
+      const params = withTenant(new URLSearchParams(), tenant);
+      const d = await api<{ product: { id: string } }>(`/api/knowledge/products?${params}`, {
+        method: "POST",
+        body: JSON.stringify({ name, geometry_description: geometry }),
+      });
+      const slug = d.product.id;
+      for (const f of npFiles) {
+        try {
+          await uploadFile(slug, f);
+        } catch {
+          /* refs upload is best-effort; spec already saved */
+        }
+      }
+      const p = await api<{ products: Product[] }>(`/api/products?${params}`);
+      setProducts(p.products || []);
+      setProductSlug(slug);
+      setNewProductOpen(false);
+      setNpName(""); setNpNotes(""); setNpFiles([]); setNpDraft(null); setNpStatus("");
+    } catch (e) {
+      setNpStatus(String(e));
+    } finally {
+      setNpBusy(false);
+    }
+  };
+
+  // New campaign — the style/scene target, confirmed by the operator before use.
+  const [newCampaignOpen, setNewCampaignOpen] = useState(false);
+  const [ncLabel, setNcLabel] = useState("");
+  const [ncScene, setNcScene] = useState("");
+  const [ncMood, setNcMood] = useState("studio");
+  const [ncStatus, setNcStatus] = useState("");
+
+  const saveNewCampaign = async () => {
+    if (!productSlug || !ncLabel || !ncScene) {
+      setNcStatus("Pick a product first, then give the campaign a label and scene description.");
+      return;
+    }
+    try {
+      const params = withTenant(new URLSearchParams(), tenant);
+      const d = await api<{ campaign: { id: string } }>(`/api/knowledge/campaigns?${params}`, {
+        method: "POST",
+        body: JSON.stringify({
+          product_spec_id: productSlug,
+          label: ncLabel,
+          scene_description: ncScene,
+          mood: ncMood,
+        }),
+      });
+      const c = await api<{ campaigns: Campaign[] }>(`/api/campaigns?${params}`);
+      setCampaigns(c.campaigns || []);
+      setCampaignId(d.campaign.id);
+      setNewCampaignOpen(false);
+      setNcLabel(""); setNcScene(""); setNcStatus("");
+    } catch (e) {
+      setNcStatus(String(e));
     }
   };
 
@@ -940,6 +1044,12 @@ export default function BoardPage() {
       </div>
 
       <div className="board-actions-row">
+        <button type="button" className="btn btn--sm" onClick={() => setNewProductOpen(true)}>
+          + New product from photos
+        </button>
+        <button type="button" className="btn btn--sm" onClick={() => setNewCampaignOpen(true)}>
+          + New campaign
+        </button>
         <button type="button" className="btn btn--sm" onClick={openArtifactPicker}>
           + Reuse approved output
         </button>
@@ -994,6 +1104,82 @@ export default function BoardPage() {
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>
+
+      {newProductOpen && (
+        <div className="artifact-modal" role="dialog" aria-modal="true" aria-label="New product from photos" onClick={() => setNewProductOpen(false)}>
+          <div className="artifact-modal__inner artifact-modal__inner--wide" onClick={(e) => e.stopPropagation()}>
+            <strong>New product — extract CAD spec from photos</strong>
+            <p className="page-subtitle" style={{ margin: "0.4rem 0 0.8rem" }}>
+              Upload product photos (flatlay, packshot, screenshot). The vision extractor drafts the geometry spec; you
+              confirm it before it becomes the CAD source node.
+            </p>
+            <label className="field-label">Product name</label>
+            <input className="field-input" value={npName} onChange={(e) => setNpName(e.target.value)} placeholder="e.g. Starz Training Mat" />
+            <label className="field-label" style={{ marginTop: "0.5rem" }}>Notes for the extractor (optional)</label>
+            <textarea className="field-input" rows={2} value={npNotes} onChange={(e) => setNpNotes(e.target.value)} placeholder="anything the photos don't show — size, materials, branding rules…" />
+            <label className="field-label" style={{ marginTop: "0.5rem" }}>Photos</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => setNpFiles(Array.from(e.target.files || []))}
+            />
+            {npFiles.length > 0 && <p className="page-subtitle">{npFiles.length} photo{npFiles.length === 1 ? "" : "s"} selected</p>}
+            {npDraft && (
+              <>
+                <h3 className="board-inspector__section">Drafted geometry — confirm or edit</h3>
+                <textarea
+                  className="field-input"
+                  rows={5}
+                  value={npGeometry()}
+                  onChange={(e) =>
+                    setNpDraft((prev) => ({ ...(prev || {}), geometry_description: e.target.value }))
+                  }
+                />
+              </>
+            )}
+            {npStatus && <p className="page-subtitle" role="status">{npStatus}</p>}
+            <div className="asset-card__actions" style={{ marginTop: "0.75rem" }}>
+              <button type="button" className="btn btn--sm" onClick={() => setNewProductOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn--sm" disabled={npBusy || !npFiles.length} onClick={extractCad}>
+                {npBusy ? "Working…" : "Extract CAD spec"}
+              </button>
+              <button type="button" className="btn btn--sm btn--primary-solid" disabled={npBusy || !npDraft} onClick={saveNewProduct}>
+                Save product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {newCampaignOpen && (
+        <div className="artifact-modal" role="dialog" aria-modal="true" aria-label="New campaign" onClick={() => setNewCampaignOpen(false)}>
+          <div className="artifact-modal__inner" onClick={(e) => e.stopPropagation()}>
+            <strong>New campaign — the style/scene target</strong>
+            <p className="page-subtitle" style={{ margin: "0.4rem 0 0.8rem" }}>
+              Describe what the final image should look like. This is the confirmation step: the generator only sees
+              what you write here.
+            </p>
+            <label className="field-label">Label</label>
+            <input className="field-input" value={ncLabel} onChange={(e) => setNcLabel(e.target.value)} placeholder="e.g. Starz Kid — turf action" />
+            <label className="field-label" style={{ marginTop: "0.5rem" }}>Scene description</label>
+            <textarea className="field-input" rows={4} value={ncScene} onChange={(e) => setNcScene(e.target.value)} placeholder="who's in the shot, setting, lighting, mood — e.g. young athlete wearing the product, studio lifestyle, product clearly visible" />
+            <label className="field-label" style={{ marginTop: "0.5rem" }}>Mood</label>
+            <input className="field-input" value={ncMood} onChange={(e) => setNcMood(e.target.value)} />
+            {ncStatus && <p className="page-subtitle" role="status">{ncStatus}</p>}
+            <div className="asset-card__actions" style={{ marginTop: "0.75rem" }}>
+              <button type="button" className="btn btn--sm" onClick={() => setNewCampaignOpen(false)}>
+                Cancel
+              </button>
+              <button type="button" className="btn btn--sm btn--primary-solid" onClick={saveNewCampaign}>
+                Save campaign
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pickerOpen && (
         <div className="artifact-modal" role="dialog" aria-modal="true" aria-label="Reuse approved output" onClick={() => setPickerOpen(false)}>
