@@ -400,39 +400,6 @@ def _workspace_id(tenant: str | None = None) -> str:
     return "default"
 
 
-def _require_workspace_id(tenant: str | None = None) -> str:
-    """Fail-closed workspace resolver for WRITE endpoints.
-
-    Returns a concrete, intended workspace id or raises HTTP 400. Unlike
-    ``_workspace_id`` (permissive, used by reads), this NEVER falls back to the
-    phantom "default" scope. A write with no resolvable tenant context must fail
-    loudly at the API boundary rather than silently landing review state
-    (comments, approvals, rejections) in a workspace nobody looks at.
-
-    Resolution order (each is an *explicit* intent, not a guess):
-      1. explicit ?tenant / body tenant param
-      2. IMAGE_PIPELINE_WORKSPACE_ID env (single-tenant deploy pin)
-      3. exactly one configured tenant → that tenant IS the workspace
-    Anything else (zero or multiple tenants, no param) → 400.
-    """
-    if tenant and tenant.strip():
-        return tenant.strip()
-    env = os.environ.get("IMAGE_PIPELINE_WORKSPACE_ID", "").strip()
-    if env:
-        return env
-    known = tenants.load_tenants(ROOT)
-    if len(known) == 1:
-        return known[0]["slug"]
-    raise HTTPException(
-        status_code=400,
-        detail=(
-            "tenant scope required for write: pass ?tenant=<slug> (or set "
-            "IMAGE_PIPELINE_WORKSPACE_ID). Refusing to write into the phantom "
-            "'default' workspace — this would silently orphan the change."
-        ),
-    )
-
-
 def _shots_for_product(slug: str, tenant: str | None = None) -> list[dict[str, Any]]:
     shots: list[dict[str, Any]] = []
     for job in _glob_jobs(tenant):
@@ -587,7 +554,6 @@ def knowledge_get_product(slug: str, tenant: Optional[str] = None) -> dict[str, 
 
 @app.post("/api/knowledge/products")
 def knowledge_create_product(req: CreateProductRequest, tenant: Optional[str] = None) -> dict[str, Any]:
-    _require_workspace_id(tenant)
     try:
         row = _knowledge(tenant).create_product(req.model_dump())
         return {"ok": True, "product": row}
@@ -597,7 +563,6 @@ def knowledge_create_product(req: CreateProductRequest, tenant: Optional[str] = 
 
 @app.put("/api/knowledge/products/{slug}")
 def knowledge_update_product(slug: str, body: dict[str, Any], tenant: Optional[str] = None) -> dict[str, Any]:
-    _require_workspace_id(tenant)
     try:
         if body.get("id") and body["id"] != slug:
             raise HTTPException(status_code=400, detail="id mismatch")
@@ -618,7 +583,6 @@ async def knowledge_upload_product_ref(
     tenant: Optional[str] = None,
     file: UploadFile = File(...),
 ) -> dict[str, Any]:
-    _require_workspace_id(tenant)
     if not file.filename:
         raise HTTPException(status_code=400, detail="missing filename")
     store = _knowledge(tenant)
@@ -692,7 +656,6 @@ def knowledge_get_campaign(campaign_id: str, tenant: Optional[str] = None) -> di
 
 @app.post("/api/knowledge/campaigns")
 def knowledge_create_campaign(req: CreateCampaignRequest, tenant: Optional[str] = None) -> dict[str, Any]:
-    _require_workspace_id(tenant)
     try:
         row = _knowledge(tenant).create_campaign(req.model_dump())
         return {"ok": True, "campaign": row}
@@ -715,10 +678,8 @@ def get_run_registry(run_id: str) -> dict[str, Any]:
 
 
 @app.patch("/api/assets/approval")
-def patch_asset_approval(
-    req: ApprovalRequest, path: str = Query(...), tenant: Optional[str] = None
-) -> dict[str, Any]:
-    workspace_runs.set_approval(ROOT, path, req.status, _require_workspace_id(tenant))
+def patch_asset_approval(req: ApprovalRequest, path: str = Query(...)) -> dict[str, Any]:
+    workspace_runs.set_approval(ROOT, path, req.status, _workspace_id())
     return {"ok": True, "path": path, "status": req.status}
 
 
@@ -757,7 +718,7 @@ def list_artifacts_api(
 @app.post("/api/artifacts/sync")
 def sync_artifacts_api(product_slug: Optional[str] = None, tenant: Optional[str] = None) -> dict[str, Any]:
     stats = artifact_registry.sync_registry(
-        ROOT, _primary_jobs_dir(tenant), _require_workspace_id(tenant), product_slug=product_slug
+        ROOT, _primary_jobs_dir(tenant), _workspace_id(tenant), product_slug=product_slug
     )
     return {"ok": True, **stats}
 
@@ -768,7 +729,7 @@ def patch_artifact_comment(
 ) -> dict[str, Any]:
     try:
         row = artifact_registry.update_comment(
-            ROOT, artifact_id, req.comment, _require_workspace_id(tenant), drive_url=req.drive_url
+            ROOT, artifact_id, req.comment, _workspace_id(tenant), drive_url=req.drive_url
         )
         return {"ok": True, "artifact": row}
     except KeyError as exc:
@@ -783,7 +744,7 @@ def delete_artifact(
 ) -> dict[str, Any]:
     try:
         row = artifact_registry.soft_delete(
-            ROOT, artifact_id, reason=reason, workspace_id=_require_workspace_id(tenant)
+            ROOT, artifact_id, reason=reason, workspace_id=_workspace_id(tenant)
         )
         return {"ok": True, "artifact": row}
     except KeyError as exc:
@@ -793,7 +754,7 @@ def delete_artifact(
 @app.post("/api/artifacts/{artifact_id}/approve")
 def approve_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
     try:
-        row = artifact_registry.approve_artifact(ROOT, artifact_id, workspace_id=_require_workspace_id(tenant))
+        row = artifact_registry.approve_artifact(ROOT, artifact_id, workspace_id=_workspace_id(tenant))
         return {"ok": True, "artifact": row}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -802,7 +763,7 @@ def approve_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict
 @app.post("/api/artifacts/{artifact_id}/restore")
 def restore_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
     try:
-        row = artifact_registry.restore_artifact(ROOT, artifact_id, workspace_id=_require_workspace_id(tenant))
+        row = artifact_registry.restore_artifact(ROOT, artifact_id, workspace_id=_workspace_id(tenant))
         return {"ok": True, "artifact": row}
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

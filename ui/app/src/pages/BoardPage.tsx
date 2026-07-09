@@ -207,6 +207,7 @@ function RuntimeNode({ data }: NodeProps) {
     unlocked: boolean;
     waitingOn: string[];
     runStatus?: string;
+    promptPreview?: string;
     onOpen: () => void;
   };
   return (
@@ -224,8 +225,58 @@ function RuntimeNode({ data }: NodeProps) {
       {!d.unlocked && d.waitingOn.length > 0 && (
         <div className="board-node__status">waiting on: {d.waitingOn.join(", ")}</div>
       )}
+      {d.promptPreview && (
+        <div className="board-node__prompt" title="Compiled prompt — click node for full text">
+          “{d.promptPreview}”
+        </div>
+      )}
       {d.runStatus && <div className="board-node__status">{d.runStatus}</div>}
       <div className="board-node__foot">click to inspect</div>
+    </div>
+  );
+}
+
+type Shot = { id: string; label: string; path: string };
+
+function ShotNode({ data }: NodeProps) {
+  const d = data as {
+    shots: Shot[];
+    selectedShotId: string | null;
+    onSelect: (s: Shot) => void;
+    compiled: boolean;
+    busy: boolean;
+    status: string;
+    onRun: () => void;
+  };
+  return (
+    <div className="board-node board-node--shot">
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
+      <div className="board-node__kicker">SHOT · WHICH IMAGE TO MAKE</div>
+      {d.shots.length === 0 ? (
+        <div className="board-node__meta">no authored shots for this product yet</div>
+      ) : (
+        <div className="board-node__chip-row nodrag">
+          {d.shots.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={`chip chip--sm ${d.selectedShotId === s.id ? "chip--on" : ""}`}
+              onClick={() => d.onSelect(s)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {d.status && <div className="board-node__status">{d.status}</div>}
+      {d.compiled && (
+        <div className="board-node__actions nodrag">
+          <button type="button" className="btn btn--sm btn--primary-solid" disabled={d.busy} onClick={d.onRun}>
+            {d.busy ? "Running…" : "Run this shot"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -261,6 +312,7 @@ const nodeTypes = {
   outputNode: OutputNode,
   runtimeNode: RuntimeNode,
   artifactNode: ArtifactNode,
+  shotNode: ShotNode,
 };
 
 export default function BoardPage() {
@@ -313,6 +365,48 @@ export default function BoardPage() {
   useEffect(() => {
     if (!showHelp) localStorage.setItem("board-help-seen", "1");
   }, [showHelp]);
+
+  // SHOT — the authored composition to produce (the product's .job.json specs).
+  // Selecting one compiles it (dry-run) so the real prompt lands on the rail;
+  // Run executes the compiled graph.
+  const [selectedShot, setSelectedShot] = useState<Shot | null>(null);
+  const [shotCompile, setShotCompile] = useState<{ compile_dir: string; prompt: string } | null>(null);
+  const [shotBusy, setShotBusy] = useState(false);
+  const [shotStatus, setShotStatus] = useState("");
+
+  const selectShot = async (s: Shot) => {
+    setSelectedShot(s);
+    setShotCompile(null);
+    setShotStatus("Compiling…");
+    try {
+      const d = await api<{ compile_dir: string; prompt: string }>("/api/compile", {
+        method: "POST",
+        body: JSON.stringify({ job: s.path, dry_run: true }),
+      });
+      setShotCompile({ compile_dir: d.compile_dir, prompt: d.prompt || "" });
+      setShotStatus(d.prompt ? "Compiled — prompt on the rail below" : "Compiled");
+    } catch (e) {
+      setShotStatus(String(e));
+    }
+  };
+
+  const runShot = async () => {
+    if (!shotCompile) return;
+    setShotBusy(true);
+    setShotStatus("Generating…");
+    try {
+      const d = await api<{ outputs?: unknown[]; result?: unknown }>("/api/execute", {
+        method: "POST",
+        body: JSON.stringify({ compile_dir: shotCompile.compile_dir, dry_run: false }),
+      });
+      const n = (d.outputs || []).length;
+      setShotStatus(n ? `Done — ${n} output${n === 1 ? "" : "s"} in Assets` : "Run finished — check Runs/Assets");
+    } catch (e) {
+      setShotStatus(String(e));
+    } finally {
+      setShotBusy(false);
+    }
+  };
   // Some products have reference photos on disk but no knowledge-store spec —
   // fall back to the references API so the Product node always shows an image
   // and the inspector always has something to render.
@@ -341,9 +435,10 @@ export default function BoardPage() {
     const required = Object.values(spec?.ports_in || {}).filter((p) => p.required);
     const unlocked = required.every((p) => produced.has(p.type));
     Object.values(spec?.ports_out || {}).forEach((p) => produced.add(p.type));
-    // Selecting a product+campaign satisfies the intake source for job start.
+    // Selecting a product+campaign satisfies the intake source for job start;
+    // a compiled shot satisfies the whole chain (compile resolved every port).
     const gated = nodeType === "intake.load" ? !!productSlug && !!campaignId : unlocked;
-    return { nodeType, unlocked: gated };
+    return { nodeType, unlocked: gated || !!shotCompile };
   });
 
   // Client-side wiring guard: validate an artifacts.load node's ports against
@@ -409,6 +504,9 @@ export default function BoardPage() {
   useEffect(() => {
     setProductDetail(null);
     setFallbackAsset(null);
+    setSelectedShot(null);
+    setShotCompile(null);
+    setShotStatus("");
     if (!productSlug) return;
     let cancelled = false;
     const params = withTenant(new URLSearchParams(), tenant);
@@ -657,10 +755,16 @@ export default function BoardPage() {
             index: i,
             unlocked: state.unlocked,
             waitingOn,
+            promptPreview:
+              nodeType === "prompt.build" && shotCompile?.prompt
+                ? shotCompile.prompt.slice(0, 110) + (shotCompile.prompt.length > 110 ? "…" : "")
+                : undefined,
             onOpen: () => setRuntimeInspect(nodeType),
           },
         };
       });
+
+      const shots: Shot[] = ((product as unknown as { shots?: Shot[] })?.shots || []).slice(0, 12);
 
       const artifactNodes: Node[] = loadedArtifacts.map((a, i) => ({
         id: `art-${a.id}`,
@@ -687,6 +791,20 @@ export default function BoardPage() {
           position: posOf("campaign", { x: 0, y: 220 }),
           data: { campaign, onOpen: openCampaignInspector },
         },
+        {
+          id: "shot",
+          type: "shotNode",
+          position: posOf("shot", { x: 340, y: -140 }),
+          data: {
+            shots,
+            selectedShotId: selectedShot?.id || null,
+            onSelect: selectShot,
+            compiled: !!shotCompile,
+            busy: shotBusy,
+            status: shotStatus,
+            onRun: runShot,
+          },
+        },
         ...opNodes,
         {
           id: "output",
@@ -711,6 +829,7 @@ export default function BoardPage() {
   }, [
     product,
     productDetail,
+    fallbackAsset,
     campaign,
     activeOps,
     customOpLabels,
@@ -723,6 +842,12 @@ export default function BoardPage() {
     compileDir,
     opRunning,
     opRunStatus,
+    runtimeSpecs,
+    loadedArtifacts,
+    selectedShot,
+    shotCompile,
+    shotBusy,
+    shotStatus,
   ]);
 
   useEffect(() => {
@@ -732,6 +857,8 @@ export default function BoardPage() {
       es.push({ id: `e-${chain[i]}-${chain[i + 1]}`, source: chain[i], target: chain[i + 1], animated: true });
     }
     es.push({ id: "e-campaign-output", source: "campaign", target: "output", animated: true, label: "style" });
+    es.push({ id: "e-product-shot", source: "product", target: "shot", animated: true, label: "shot" });
+    es.push({ id: "e-shot-output", source: "shot", target: "output", animated: true });
     // Intent row feeds the runtime rail; the rail chains left to right and
     // its persisted output loops back into the OUTPUT card for review.
     es.push({ id: "e-output-rt", source: "output", target: "rt-intake.load", animated: true, label: "compile" });
@@ -912,6 +1039,12 @@ export default function BoardPage() {
             </p>
             <h3 className="board-inspector__section">What this step does</h3>
             <p>{spec?.description || "—"}</p>
+            {runtimeInspect === "prompt.build" && shotCompile?.prompt && (
+              <>
+                <h3 className="board-inspector__section">Compiled prompt ({selectedShot?.label})</h3>
+                <p style={{ whiteSpace: "pre-wrap", fontSize: "0.8rem" }}>{shotCompile.prompt}</p>
+              </>
+            )}
             <h3 className="board-inspector__section">Input ports</h3>
             <ul className="explorer-list">
               {Object.entries(spec?.ports_in || {}).map(([port, p]) => (

@@ -337,6 +337,21 @@
   color: var(--color-text-tertiary);
 }
 
+.board-node--shot {
+  border-color: var(--color-accent);
+  min-width: 260px;
+  max-width: 340px;
+}
+
+.board-node__prompt {
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  border-left: 2px solid var(--color-accent);
+  padding-left: 0.5rem;
+}
+
 /* Reused approved output attached to the chain */
 .board-node--artifact {
   min-width: 170px;
