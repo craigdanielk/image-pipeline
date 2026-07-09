@@ -63,20 +63,26 @@ function mediaUrl(assetPath: string): string {
 }
 
 function ProductNode({ data }: NodeProps) {
-  const d = data as { product?: Product; productDetail?: ProductSpecV2 | null; onOpen: () => void };
+  const d = data as {
+    product?: Product;
+    productDetail?: ProductSpecV2 | null;
+    fallbackAsset?: string | null;
+    onOpen: () => void;
+  };
   const p = d.product;
   const cadRef = cadReferenceOf(d.productDetail);
+  const asset = cadRef?.asset || d.fallbackAsset || null;
   const [imgFailed, setImgFailed] = useState(false);
-  useEffect(() => setImgFailed(false), [cadRef?.asset]);
+  useEffect(() => setImgFailed(false), [asset]);
   return (
     <div className="board-node board-node--product" onClick={d.onOpen}>
       <Handle type="source" position={Position.Right} />
       <div className="board-node__image">
-        {cadRef && !imgFailed ? (
-          <img src={mediaUrl(cadRef.asset)} alt={`${p?.name || "product"} — CAD source`} onError={() => setImgFailed(true)} />
+        {asset && !imgFailed ? (
+          <img src={mediaUrl(asset)} alt={`${p?.name || "product"} — CAD source`} onError={() => setImgFailed(true)} />
         ) : (
           <span className="board-node__image-empty">
-            {!p ? "" : cadRef ? "source file missing on disk" : "no source image on file"}
+            {!p ? "" : asset ? "source file missing on disk" : "no source image on file"}
           </span>
         )}
       </div>
@@ -193,11 +199,68 @@ function OutputNode({ data }: NodeProps) {
   );
 }
 
+function RuntimeNode({ data }: NodeProps) {
+  const d = data as {
+    label: string;
+    nodeType: string;
+    index: number;
+    unlocked: boolean;
+    waitingOn: string[];
+    runStatus?: string;
+    onOpen: () => void;
+  };
+  return (
+    <div
+      className={`board-node board-node--runtime ${d.unlocked ? "" : "board-node--runtime-locked"}`}
+      onClick={d.onOpen}
+    >
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
+      <div className="board-node__kicker">
+        STEP {d.index + 1}/6 {d.unlocked ? "· READY" : "· LOCKED"}
+      </div>
+      <div className="board-node__title">{d.label}</div>
+      <div className="board-node__meta">{d.nodeType}</div>
+      {!d.unlocked && d.waitingOn.length > 0 && (
+        <div className="board-node__status">waiting on: {d.waitingOn.join(", ")}</div>
+      )}
+      {d.runStatus && <div className="board-node__status">{d.runStatus}</div>}
+      <div className="board-node__foot">click to inspect</div>
+    </div>
+  );
+}
+
+function ArtifactNode({ data }: NodeProps) {
+  const d = data as { id: string; name: string; path?: string; onRemove: () => void };
+  const [imgFailed, setImgFailed] = useState(false);
+  return (
+    <div className="board-node board-node--artifact">
+      <Handle type="source" position={Position.Right} />
+      <div className="board-node__image board-node__image--sm">
+        {d.path && !imgFailed ? (
+          <img src={mediaUrl(d.path)} alt={d.name} onError={() => setImgFailed(true)} />
+        ) : (
+          <span className="board-node__image-empty">{d.name}</span>
+        )}
+      </div>
+      <div className="board-node__kicker">REUSED OUTPUT</div>
+      <div className="board-node__meta" title={d.name}>
+        {d.name}
+      </div>
+      <button type="button" className="board-node__remove nodrag" onClick={d.onRemove}>
+        ✕ remove
+      </button>
+    </div>
+  );
+}
+
 const nodeTypes = {
   productNode: ProductNode,
   campaignNode: CampaignNode,
   operationNode: OperationNode,
   outputNode: OutputNode,
+  runtimeNode: RuntimeNode,
+  artifactNode: ArtifactNode,
 };
 
 export default function BoardPage() {
@@ -239,9 +302,16 @@ export default function BoardPage() {
 
   // Runtime chain (progressive unlock) + output-as-input reuse (artifacts.load).
   const [runtimeSpecs, setRuntimeSpecs] = useState<RuntimeNodeSpec[]>([]);
-  const [artifactIdDraft, setArtifactIdDraft] = useState("");
-  const [loadedArtifacts, setLoadedArtifacts] = useState<{ id: string; path?: string }[]>([]);
+  const [loadedArtifacts, setLoadedArtifacts] = useState<{ id: string; name: string; path?: string }[]>([]);
   const [wiringError, setWiringError] = useState("");
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerArtifacts, setPickerArtifacts] = useState<
+    { id: string; name: string; path: string; url: string; product_slug?: string }[]
+  >([]);
+  const [runtimeInspect, setRuntimeInspect] = useState<string | null>(null);
+  // Some products have reference photos on disk but no knowledge-store spec —
+  // fall back to the references API so the Product node always shows an image.
+  const [fallbackAsset, setFallbackAsset] = useState<string | null>(null);
 
   useEffect(() => {
     api<{ nodes: RuntimeNodeSpec[] }>("/api/board/runtime-chain")
@@ -274,9 +344,7 @@ export default function BoardPage() {
   // the compiler contract (node_registry.validate_node_ports) BEFORE attaching.
   // The server re-validates via POST /api/board/artifacts-load — invalid wiring
   // is rejected on both sides, never silently dropped.
-  const attachArtifact = async () => {
-    const id = artifactIdDraft.trim();
-    if (!id) return;
+  const attachArtifact = async (id: string, name: string) => {
     setWiringError("");
     try {
       await api("/api/board/validate-wiring", {
@@ -291,9 +359,25 @@ export default function BoardPage() {
         { method: "POST", body: JSON.stringify({ artifact_id: id, ...(tenant ? { tenant } : {}) }) },
       );
       setLoadedArtifacts((prev) =>
-        prev.some((a) => a.id === res.artifact.id) ? prev : [...prev, { id: res.artifact.id, path: res.artifact.path }],
+        prev.some((a) => a.id === res.artifact.id)
+          ? prev
+          : [...prev, { id: res.artifact.id, name, path: res.artifact.path }],
       );
-      setArtifactIdDraft("");
+      setPickerOpen(false);
+    } catch (e) {
+      setWiringError(String(e));
+    }
+  };
+
+  const openArtifactPicker = async () => {
+    setPickerOpen(true);
+    if (pickerArtifacts.length) return;
+    try {
+      const params = withTenant(new URLSearchParams({ status: "approved", limit: "60" }), tenant);
+      const d = await api<{ artifacts: { id: string; name: string; path: string; url: string; product_slug?: string }[] }>(
+        `/api/artifacts?${params}`,
+      );
+      setPickerArtifacts(d.artifacts || []);
     } catch (e) {
       setWiringError(String(e));
     }
@@ -315,6 +399,7 @@ export default function BoardPage() {
 
   useEffect(() => {
     setProductDetail(null);
+    setFallbackAsset(null);
     if (!productSlug) return;
     let cancelled = false;
     const params = withTenant(new URLSearchParams(), tenant);
@@ -325,6 +410,18 @@ export default function BoardPage() {
       .catch(() => {
         if (!cancelled) setProductDetail(null);
       });
+    // Fallback thumb: the refs directory is the ground truth even when no
+    // knowledge-store spec exists for this product.
+    api<{ references: { path?: string; asset?: string; role?: string }[] }>(
+      `/api/products/${productSlug}/references?${params}`,
+    )
+      .then((d) => {
+        if (cancelled) return;
+        const refs = d.references || [];
+        const preferred = refs.find((r) => /product|flatlay|cad|main/i.test(r.role || r.path || "")) || refs[0];
+        setFallbackAsset(preferred?.path || preferred?.asset || null);
+      })
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -530,12 +627,49 @@ export default function BoardPage() {
       });
       const outputX = activeOps.length ? 660 : 340;
 
+      // Runtime rail: the six compiler nodes live ON the canvas, left to
+      // right beneath the intent row, locked until their ports are satisfied.
+      const runtimeNodes: Node[] = RUNTIME_CHAIN.map(({ nodeType, label }, i) => {
+        const spec = specByType(nodeType);
+        const state = unlockState[i];
+        const waitingOn = state.unlocked
+          ? []
+          : Object.entries(spec?.ports_in || {})
+              .filter(([, p]) => p.required)
+              .map(([port]) => port);
+        return {
+          id: `rt-${nodeType}`,
+          type: "runtimeNode",
+          position: posOf(`rt-${nodeType}`, { x: i * 250, y: 430 }),
+          data: {
+            label,
+            nodeType,
+            index: i,
+            unlocked: state.unlocked,
+            waitingOn,
+            onOpen: () => setRuntimeInspect(nodeType),
+          },
+        };
+      });
+
+      const artifactNodes: Node[] = loadedArtifacts.map((a, i) => ({
+        id: `art-${a.id}`,
+        type: "artifactNode",
+        position: posOf(`art-${a.id}`, { x: 250 * 2.5, y: 640 + i * 40 }),
+        data: {
+          id: a.id,
+          name: a.name,
+          path: a.path,
+          onRemove: () => setLoadedArtifacts((prev) => prev.filter((x) => x.id !== a.id)),
+        },
+      }));
+
       return [
         {
           id: "product",
           type: "productNode",
           position: posOf("product", { x: 0, y: 0 }),
-          data: { product, productDetail, onOpen: openProductInspector },
+          data: { product, productDetail, fallbackAsset, onOpen: openProductInspector },
         },
         {
           id: "campaign",
@@ -559,6 +693,8 @@ export default function BoardPage() {
             onGenerate: () => runIntent(false),
           },
         },
+        ...runtimeNodes,
+        ...artifactNodes,
       ];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -586,8 +722,28 @@ export default function BoardPage() {
       es.push({ id: `e-${chain[i]}-${chain[i + 1]}`, source: chain[i], target: chain[i + 1], animated: true });
     }
     es.push({ id: "e-campaign-output", source: "campaign", target: "output", animated: true, label: "style" });
+    // Intent row feeds the runtime rail; the rail chains left to right and
+    // its persisted output loops back into the OUTPUT card for review.
+    es.push({ id: "e-output-rt", source: "output", target: "rt-intake.load", animated: true, label: "compile" });
+    for (let i = 0; i < RUNTIME_CHAIN.length - 1; i++) {
+      es.push({
+        id: `e-rt-${i}`,
+        source: `rt-${RUNTIME_CHAIN[i].nodeType}`,
+        target: `rt-${RUNTIME_CHAIN[i + 1].nodeType}`,
+        animated: true,
+      });
+    }
+    for (const a of loadedArtifacts) {
+      es.push({
+        id: `e-art-${a.id}`,
+        source: `art-${a.id}`,
+        target: "rt-reference.resolve",
+        animated: true,
+        label: "reuse",
+      });
+    }
     setEdges(es);
-  }, [activeOps, setEdges]);
+  }, [activeOps, loadedArtifacts, setEdges]);
 
   return (
     <div className="board-page">
@@ -646,60 +802,11 @@ export default function BoardPage() {
         {compileError && <div className="board-toolbar__compile-error">{compileError}</div>}
       </div>
 
-      {/* Runtime chain — all six nodes visible from job start; each renders
-          locked until its input ports are satisfied (progressive unlock). */}
-      <div className="board-runtime-chain">
-        <span className="field-label">Runtime chain</span>
-        <div className="board-runtime-chain__nodes">
-          {RUNTIME_CHAIN.map(({ nodeType, label }, i) => {
-            const state = unlockState[i];
-            return (
-              <div
-                key={nodeType}
-                className={`board-runtime-node ${state.unlocked ? "board-runtime-node--unlocked" : "board-runtime-node--locked"}`}
-                title={specByType(nodeType)?.description || nodeType}
-                data-node-type={nodeType}
-              >
-                <span className="board-runtime-node__lock">{state.unlocked ? "●" : "🔒"}</span>
-                <span className="board-runtime-node__label">{label}</span>
-                <span className="board-runtime-node__type">{nodeType}</span>
-              </div>
-            );
-          })}
-        </div>
-        {/* Output-as-input reuse: attach an approved gallery artifact as an
-            artifacts.load node feeding reference.resolve in a new chain. */}
-        <div className="board-runtime-chain__artifacts">
-          <span className="field-label">artifacts.load — reuse approved output</span>
-          <div className="board-toolbar__custom-op">
-            <input
-              className="field-input"
-              placeholder="approved artifact id…"
-              value={artifactIdDraft}
-              onChange={(e) => setArtifactIdDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  attachArtifact();
-                }
-              }}
-            />
-            <button type="button" className="btn btn--sm" disabled={!artifactIdDraft.trim()} onClick={attachArtifact}>
-              + Attach
-            </button>
-          </div>
-          {loadedArtifacts.length > 0 && (
-            <ul className="explorer-list board-runtime-chain__variants">
-              {loadedArtifacts.map((a) => (
-                <li key={a.id}>
-                  artifacts.load · {a.id}
-                  {a.path ? ` — ${a.path}` : ""}
-                </li>
-              ))}
-            </ul>
-          )}
-          {wiringError && <div className="board-toolbar__compile-error">{wiringError}</div>}
-        </div>
+      <div className="board-actions-row">
+        <button type="button" className="btn btn--sm" onClick={openArtifactPicker}>
+          + Reuse approved output
+        </button>
+        {wiringError && <div className="board-toolbar__compile-error">{wiringError}</div>}
       </div>
 
       <div className="board-canvas">
@@ -716,6 +823,71 @@ export default function BoardPage() {
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>
+
+      {pickerOpen && (
+        <div className="artifact-modal" role="dialog" aria-modal="true" aria-label="Reuse approved output" onClick={() => setPickerOpen(false)}>
+          <div className="artifact-modal__inner artifact-modal__inner--wide" onClick={(e) => e.stopPropagation()}>
+            <strong>Reuse an approved output</strong>
+            <p className="page-subtitle" style={{ margin: "0.4rem 0 0.8rem" }}>
+              Attaches as an artifacts.load node feeding Resolve refs — compiler-validated on both sides.
+            </p>
+            {pickerArtifacts.length === 0 ? (
+              <p className="page-subtitle">Loading approved artifacts…</p>
+            ) : (
+              <div className="assets-grid board-picker-grid">
+                {pickerArtifacts.map((a) => (
+                  <button key={a.id} type="button" className="board-picker-card" onClick={() => attachArtifact(a.id, a.name)}>
+                    <img src={a.url} alt={a.name} loading="lazy" />
+                    <span className="board-picker-card__name" title={a.name}>{a.name}</span>
+                    <span className="board-picker-card__slug">{a.product_slug || ""}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="asset-card__actions" style={{ marginTop: "0.75rem" }}>
+              <button type="button" className="btn btn--sm" onClick={() => setPickerOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {runtimeInspect && (() => {
+        const spec = specByType(runtimeInspect);
+        const idx = RUNTIME_CHAIN.findIndex((r) => r.nodeType === runtimeInspect);
+        const state = idx >= 0 ? unlockState[idx] : undefined;
+        return (
+          <div className="board-inspector">
+            <button type="button" className="btn btn--sm board-inspector__close" onClick={() => setRuntimeInspect(null)}>
+              ✕ close
+            </button>
+            <h2 className="dashboard-panel__title">{RUNTIME_CHAIN[idx]?.label || runtimeInspect}</h2>
+            <p className="page-subtitle">
+              {runtimeInspect} · {state?.unlocked ? "READY" : "LOCKED — inputs not yet satisfied"}
+            </p>
+            <h3 className="board-inspector__section">What this step does</h3>
+            <p>{spec?.description || "—"}</p>
+            <h3 className="board-inspector__section">Input ports</h3>
+            <ul className="explorer-list">
+              {Object.entries(spec?.ports_in || {}).map(([port, p]) => (
+                <li key={port}>
+                  {port}: {p.type} {p.required ? "(required)" : "(optional)"}
+                </li>
+              ))}
+              {Object.keys(spec?.ports_in || {}).length === 0 && <li>none — chain entry point</li>}
+            </ul>
+            <h3 className="board-inspector__section">Output ports</h3>
+            <ul className="explorer-list">
+              {Object.entries(spec?.ports_out || {}).map(([port, p]) => (
+                <li key={port}>
+                  {port}: {p.type}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
 
       {inspector && (
         <div className="board-inspector">
