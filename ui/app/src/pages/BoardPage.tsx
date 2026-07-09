@@ -310,8 +310,10 @@ export default function BoardPage() {
   >([]);
   const [runtimeInspect, setRuntimeInspect] = useState<string | null>(null);
   // Some products have reference photos on disk but no knowledge-store spec —
-  // fall back to the references API so the Product node always shows an image.
+  // fall back to the references API so the Product node always shows an image
+  // and the inspector always has something to render.
   const [fallbackAsset, setFallbackAsset] = useState<string | null>(null);
+  const [productRefs, setProductRefs] = useState<{ path?: string; asset?: string; role?: string; name?: string }[]>([]);
 
   useEffect(() => {
     api<{ nodes: RuntimeNodeSpec[] }>("/api/board/runtime-chain")
@@ -418,6 +420,7 @@ export default function BoardPage() {
       .then((d) => {
         if (cancelled) return;
         const refs = d.references || [];
+        setProductRefs(refs);
         const preferred = refs.find((r) => /product|flatlay|cad|main/i.test(r.role || r.path || "")) || refs[0];
         setFallbackAsset(preferred?.path || preferred?.asset || null);
       })
@@ -894,8 +897,36 @@ export default function BoardPage() {
           <button type="button" className="btn btn--sm board-inspector__close" onClick={() => setInspector(null)}>
             ✕ close
           </button>
-          {inspectorLoading || !inspector.data ? (
+          {inspectorLoading || (inspector.kind === "campaign" && !inspector.data) ? (
             <p className="page-subtitle">Loading…</p>
+          ) : inspector.kind === "product" && !inspector.data ? (
+            // No knowledge-store spec for this product — the refs directory is
+            // still ground truth, so show it instead of loading forever.
+            <div>
+              <h2 className="dashboard-panel__title">{product?.name || productSlug}</h2>
+              <p className="page-subtitle">No compiled product spec yet — showing the refs directory.</p>
+              {product?.geometry_description && (
+                <>
+                  <h3 className="board-inspector__section">Geometry</h3>
+                  <p>{product.geometry_description}</p>
+                </>
+              )}
+              <h3 className="board-inspector__section">Reference images ({productRefs.length})</h3>
+              <div className="assets-grid board-picker-grid">
+                {productRefs.map((r, i) => {
+                  const asset = r.path || r.asset || "";
+                  const name = r.name || asset.split("/").pop() || `ref-${i}`;
+                  return (
+                    <div key={asset || i} className="board-picker-card">
+                      <img src={mediaUrl(asset)} alt={name} loading="lazy" />
+                      <span className="board-picker-card__name" title={name}>{name}</span>
+                      {r.role && <span className="board-picker-card__slug">{r.role}</span>}
+                    </div>
+                  );
+                })}
+                {productRefs.length === 0 && <p className="page-subtitle">none on disk</p>}
+              </div>
+            </div>
           ) : inspector.kind === "product" ? (
             (() => {
               const spec = inspector.data as ProductSpecV2;
