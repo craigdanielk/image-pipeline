@@ -591,6 +591,42 @@ textarea {
   color: var(--color-status-error);
 }
 
+.artifact-status--broken {
+  border-color: rgba(229, 165, 85, 0.55);
+  color: #d98a2b;
+  background: rgba(229, 165, 85, 0.1);
+}
+
+.artifact-card--broken {
+  border-color: rgba(229, 165, 85, 0.5);
+}
+
+.artifact-card__broken {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  min-height: 140px;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #d98a2b;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(229, 165, 85, 0.06),
+    rgba(229, 165, 85, 0.06) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+.artifact-card__broken span[aria-hidden="true"] {
+  font-size: 1.6rem;
+}
+
 .artifact-group {
   margin-bottom: 1.1rem;
 }

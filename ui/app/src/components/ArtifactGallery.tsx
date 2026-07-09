@@ -11,7 +11,7 @@ type Props = {
   title?: string;
 };
 
-type FilterTab = "all" | ArtifactStatus;
+type FilterTab = "all" | ArtifactStatus | "broken";
 
 const PAGE_SIZE = 24;
 
@@ -20,6 +20,7 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
   { id: "pending", label: "Pending" },
   { id: "approved", label: "Approved" },
   { id: "rejected", label: "Rejected" },
+  { id: "broken", label: "Broken" },
 ];
 
 const STATUS_LABEL: Record<ArtifactStatus, string> = {
@@ -61,7 +62,8 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
       if (filter === "rejected") params.set("status", "rejected");
       else if (filter === "approved") params.set("status", "approved");
       else if (filter === "pending") params.set("status", "pending");
-      // "All" = pending + approved. Rejected stays in its own tab only.
+      else if (filter === "broken") params.set("status", "broken");
+      // "All" = pending + approved. Rejected & Broken stay in their own tabs.
       return withTenant(params, tenant);
     },
     [productSlug, campaignSlug, filter, tenant]
@@ -123,7 +125,8 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
   // the list, which resets the page scroll to the top).
   const applyRow = useCallback(
     (row: Artifact) => {
-      const matchesFilter = filter === "all" || row.status === filter;
+      const matchesFilter =
+        filter === "all" || (filter === "broken" ? !!row.broken : row.status === filter);
       setArtifacts((prev) => {
         if (!matchesFilter) {
           setTotal((t) => Math.max(0, t - 1));
@@ -233,18 +236,30 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
         <>
           <div className="assets-grid">
             {sorted.map((a) => (
-                  <GlassCard key={a.id} className="asset-card artifact-card">
+                  <GlassCard key={a.id} className={`asset-card artifact-card${a.broken ? " artifact-card--broken" : ""}`}>
                     <button
                       type="button"
                       className="artifact-card__thumb"
                       onClick={() => setExpanded(a)}
                       aria-label={`Expand ${a.name}`}
                     >
-                      <img src={a.url} alt={a.name} loading="lazy" />
+                      {a.broken ? (
+                        <div className="artifact-card__broken" role="img" aria-label="File missing on disk">
+                          <span aria-hidden="true">⚠</span>
+                          <span>File missing on disk</span>
+                        </div>
+                      ) : (
+                        <img src={a.url} alt={a.name} loading="lazy" />
+                      )}
                     </button>
                     <figcaption>
                       <span className="artifact-card__name" title={a.name}>{a.name}</span>
                       <div className="artifact-card__pills">
+                        {a.broken && (
+                          <span className="accent-pill artifact-status artifact-status--broken" title="Registry row points at a file that is missing or was moved on disk">
+                            Broken
+                          </span>
+                        )}
                         <span className={`accent-pill artifact-status artifact-status--${a.status}`}>
                           {STATUS_LABEL[a.status]}
                         </span>

@@ -47,6 +47,7 @@ export type Artifact = {
   delete_reason?: string | null;
   approved_at?: number | null;
   status: ArtifactStatus;
+  broken?: boolean;
   group_key: string;
 };
 
