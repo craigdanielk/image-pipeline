@@ -28,6 +28,17 @@ _CAPABILITIES: dict[str, dict[str, dict[str, Any]]] = {
             "resolution": ["1k", "2k", "4k", "auto"],
             "negative_prompt": False,
         },
+        # Predecessor of nano_banana_2 — the joga starz-kid corpus (ankle
+        # weights targets, airboost shot-2, sleep-mask lifestyle) was authored
+        # and successfully generated with it before this registry existed.
+        "nano_banana_flash": {
+            "accepts_reference": True,
+            "batch_size": False,
+            "model_type": False,
+            "colors": False,
+            "resolution": ["1k", "2k"],
+            "negative_prompt": False,
+        },
         "gpt_image_2": {
             "accepts_reference": True,
             "batch_size": False,

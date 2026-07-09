@@ -63,6 +63,27 @@ function mediaUrl(assetPath: string): string {
   return `/media?path=${encodeURIComponent(assetPath)}`;
 }
 
+/** Errors from /api/compile carry the full command + stderr blob — surface
+ * only the meaningful last line, never a raw traceback on a canvas node. */
+function friendlyError(e: unknown): string {
+  const raw = String(e);
+  const jsonStart = raw.indexOf("{");
+  if (jsonStart >= 0) {
+    try {
+      const detail = JSON.parse(raw.slice(jsonStart));
+      const stderr: string = detail?.detail?.stderr || detail?.stderr || "";
+      if (stderr) {
+        const last = stderr.trim().split("\n").filter(Boolean).pop() || "";
+        return last.replace(/^[\w.]*(Error|Exception):\s*/i, (m) => m).slice(0, 180);
+      }
+      if (typeof detail?.detail === "string") return detail.detail.slice(0, 180);
+    } catch {
+      /* fall through to raw */
+    }
+  }
+  return raw.slice(0, 180);
+}
+
 function ProductNode({ data }: NodeProps) {
   const d = data as {
     product?: Product;
@@ -438,7 +459,7 @@ export default function BoardPage() {
       setShotCompile({ compile_dir: d.compile_dir, prompt: d.prompt || "" });
       setShotStatus(d.prompt ? "Compiled — prompt on the rail below" : "Compiled");
     } catch (e) {
-      setShotStatus(String(e));
+      setShotStatus(friendlyError(e));
     }
   };
 
@@ -473,7 +494,7 @@ export default function BoardPage() {
       });
       setFallbackAsset(path);
     } catch (e) {
-      setWiringError(String(e));
+      setWiringError(friendlyError(e));
     }
   };
 
@@ -515,7 +536,7 @@ export default function BoardPage() {
       setNpDraft(data.draft || null);
       setNpStatus("Draft ready — confirm the geometry below, then save.");
     } catch (e) {
-      setNpStatus(String(e));
+      setNpStatus(friendlyError(e));
     } finally {
       setNpBusy(false);
     }
@@ -556,7 +577,7 @@ export default function BoardPage() {
       setNpTargetSlug(null);
       setNpName(""); setNpNotes(""); setNpFiles([]); setNpDraft(null); setNpStatus("");
     } catch (e) {
-      setNpStatus(String(e));
+      setNpStatus(friendlyError(e));
     } finally {
       setNpBusy(false);
     }
@@ -601,7 +622,7 @@ export default function BoardPage() {
       setNcExtra(extra);
       setNcStatus("Style source drafted — confirm the description below, then save.");
     } catch (e) {
-      setNcStatus(String(e));
+      setNcStatus(friendlyError(e));
     } finally {
       setNcBusy(false);
     }
@@ -630,7 +651,7 @@ export default function BoardPage() {
       setNewCampaignOpen(false);
       setNcLabel(""); setNcScene(""); setNcStatus(""); setNcFiles([]); setNcUrl(""); setNcExtra({});
     } catch (e) {
-      setNcStatus(String(e));
+      setNcStatus(friendlyError(e));
     }
   };
 
@@ -648,7 +669,7 @@ export default function BoardPage() {
       const n = (d.outputs || []).length;
       setShotStatus(n ? `Done — ${n} output${n === 1 ? "" : "s"} in Assets` : "Run finished — check Runs/Assets");
     } catch (e) {
-      setShotStatus(String(e));
+      setShotStatus(friendlyError(e));
     } finally {
       setShotBusy(false);
     }
@@ -712,7 +733,7 @@ export default function BoardPage() {
       );
       setPickerOpen(false);
     } catch (e) {
-      setWiringError(String(e));
+      setWiringError(friendlyError(e));
     }
   };
 
@@ -726,7 +747,7 @@ export default function BoardPage() {
       const d = await api<{ artifacts: typeof pickerArtifacts }>(`/api/artifacts?${params}`);
       setPickerArtifacts(d.artifacts || []);
     } catch (e) {
-      setWiringError(String(e));
+      setWiringError(friendlyError(e));
     }
   };
 

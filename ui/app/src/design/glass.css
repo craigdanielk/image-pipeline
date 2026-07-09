@@ -365,6 +365,16 @@
   max-width: 340px;
 }
 
+/* Status text on any board node must never balloon the node or spill over
+   neighbours — cap it, scroll it, wrap it. */
+.board-node .board-node__status {
+  max-height: 4.6em;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  font-size: 0.7rem;
+}
+
 .board-node__prompt {
   margin-top: 0.4rem;
   font-size: 0.72rem;
