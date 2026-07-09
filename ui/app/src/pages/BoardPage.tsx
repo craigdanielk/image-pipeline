@@ -67,11 +67,18 @@ function ProductNode({ data }: NodeProps) {
     product?: Product;
     productDetail?: ProductSpecV2 | null;
     fallbackAsset?: string | null;
+    hasSpec: boolean;
     onOpen: () => void;
+    onExtract: () => void;
   };
   const p = d.product;
   const cadRef = cadReferenceOf(d.productDetail);
-  const asset = cadRef?.asset || d.fallbackAsset || null;
+  // Knowledge specs store reference paths RELATIVE to the product's own dir
+  // (refs/flatlay.png) — the browser can't resolve those against /media, so
+  // an absolute path from the references API always wins. This was the
+  // "Products tab renders, Generate tab doesn't" split-brain.
+  const specAsset = cadRef?.asset && cadRef.asset.startsWith("/") ? cadRef.asset : null;
+  const asset = specAsset || d.fallbackAsset || null;
   const [imgFailed, setImgFailed] = useState(false);
   useEffect(() => setImgFailed(false), [asset]);
   return (
@@ -86,7 +93,25 @@ function ProductNode({ data }: NodeProps) {
           </span>
         )}
       </div>
-      <div className="board-node__kicker">PRODUCT · CAD SOURCE</div>
+      <div className="board-node__kicker">
+        PRODUCT · CAD SOURCE{" "}
+        {p &&
+          (d.hasSpec ? (
+            <span className="cad-badge cad-badge--ok">SPEC ✓</span>
+          ) : (
+            <button
+              type="button"
+              className="cad-badge cad-badge--missing nodrag"
+              onClick={(e) => {
+                e.stopPropagation();
+                d.onExtract();
+              }}
+              title="No CAD spec yet — extract one from photos"
+            >
+              NO SPEC — extract
+            </button>
+          ))}
+      </div>
       <div className="board-node__title">{p?.name || "Select a product…"}</div>
       <div className="board-node__meta">
         {p?.geometry_description ? p.geometry_description.slice(0, 64) + (p.geometry_description.length > 64 ? "…" : "") : "no geometry set"}
@@ -399,6 +424,16 @@ export default function BoardPage() {
   const [npDraft, setNpDraft] = useState<Record<string, unknown> | null>(null);
   const [npBusy, setNpBusy] = useState(false);
   const [npStatus, setNpStatus] = useState("");
+  // When extracting for an EXISTING spec-less product, save under its slug so
+  // the CAD node flips to SPEC ✓ instead of minting a duplicate product.
+  const [npTargetSlug, setNpTargetSlug] = useState<string | null>(null);
+  const [detailRefresh, setDetailRefresh] = useState(0);
+
+  const openExtractForCurrent = () => {
+    setNpTargetSlug(productSlug || null);
+    setNpName(product?.name || productSlug || "");
+    setNewProductOpen(true);
+  };
 
   const npGeometry = (): string => {
     const d = npDraft as { geometry_description?: string; product?: { geometry?: { description?: string } } } | null;
@@ -439,7 +474,11 @@ export default function BoardPage() {
       const params = withTenant(new URLSearchParams(), tenant);
       const d = await api<{ product: { id: string } }>(`/api/knowledge/products?${params}`, {
         method: "POST",
-        body: JSON.stringify({ name, geometry_description: geometry }),
+        body: JSON.stringify({
+          ...(npTargetSlug ? { id: npTargetSlug } : {}),
+          name,
+          geometry_description: geometry,
+        }),
       });
       const slug = d.product.id;
       for (const f of npFiles) {
@@ -452,7 +491,9 @@ export default function BoardPage() {
       const p = await api<{ products: Product[] }>(`/api/products?${params}`);
       setProducts(p.products || []);
       setProductSlug(slug);
+      setDetailRefresh((n) => n + 1);
       setNewProductOpen(false);
+      setNpTargetSlug(null);
       setNpName(""); setNpNotes(""); setNpFiles([]); setNpDraft(null); setNpStatus("");
     } catch (e) {
       setNpStatus(String(e));
@@ -637,7 +678,7 @@ export default function BoardPage() {
     return () => {
       cancelled = true;
     };
-  }, [productSlug, tenant]);
+  }, [productSlug, tenant, detailRefresh]);
 
   const openProductInspector = () => {
     if (!productSlug) return;
@@ -887,7 +928,14 @@ export default function BoardPage() {
           id: "product",
           type: "productNode",
           position: posOf("product", { x: 0, y: 0 }),
-          data: { product, productDetail, fallbackAsset, onOpen: openProductInspector },
+          data: {
+            product,
+            productDetail,
+            fallbackAsset,
+            hasSpec: !!productDetail,
+            onOpen: openProductInspector,
+            onExtract: openExtractForCurrent,
+          },
         },
         {
           id: "campaign",

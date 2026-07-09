@@ -337,6 +337,28 @@
   color: var(--color-text-tertiary);
 }
 
+.cad-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+
+.cad-badge--ok {
+  color: var(--color-status-ok, #4ade80);
+  border-color: var(--color-status-ok, #4ade80);
+}
+
+.cad-badge--missing {
+  color: var(--color-status-warn, #f0b429);
+  border-color: var(--color-status-warn, #f0b429);
+  background: transparent;
+  cursor: pointer;
+}
+
 .board-node--shot {
   border-color: var(--color-accent);
   min-width: 260px;
