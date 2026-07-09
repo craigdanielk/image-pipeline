@@ -12,6 +12,7 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import BriefModal from "../components/BriefModal";
 import { api, uploadFile } from "../api";
 import { useTenant, withTenant } from "../TenantContext";
 import type { Campaign, Operation, Product, ProductSpecV2 } from "../types";
@@ -382,9 +383,13 @@ export default function BoardPage() {
   const [loadedArtifacts, setLoadedArtifacts] = useState<{ id: string; name: string; path?: string }[]>([]);
   const [wiringError, setWiringError] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerScope, setPickerScope] = useState<"product" | "all">("product");
   const [pickerArtifacts, setPickerArtifacts] = useState<
-    { id: string; name: string; path: string; url: string; product_slug?: string }[]
+    { id: string; name: string; path: string; url: string; product_slug?: string; status?: string; comment?: string; delete_reason?: string }[]
   >([]);
+  // Tweak an existing output: opens the drafter with the artifact as the base —
+  // product CAD stays the grounding, the feedback becomes the edit instruction.
+  const [tweakTarget, setTweakTarget] = useState<{ name: string; status?: string; comment?: string; delete_reason?: string } | null>(null);
   const [runtimeInspect, setRuntimeInspect] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(() => localStorage.getItem("board-help-seen") !== "1");
   useEffect(() => {
@@ -633,18 +638,23 @@ export default function BoardPage() {
     }
   };
 
-  const openArtifactPicker = async () => {
-    setPickerOpen(true);
-    if (pickerArtifacts.length) return;
+  const loadPicker = async (scope: "product" | "all") => {
+    setPickerScope(scope);
+    setPickerArtifacts([]);
     try {
-      const params = withTenant(new URLSearchParams({ status: "approved", limit: "60" }), tenant);
-      const d = await api<{ artifacts: { id: string; name: string; path: string; url: string; product_slug?: string }[] }>(
-        `/api/artifacts?${params}`,
-      );
+      const q = new URLSearchParams({ status: "approved", limit: "60" });
+      if (scope === "product" && productSlug) q.set("product_slug", productSlug);
+      const params = withTenant(q, tenant);
+      const d = await api<{ artifacts: typeof pickerArtifacts }>(`/api/artifacts?${params}`);
       setPickerArtifacts(d.artifacts || []);
     } catch (e) {
       setWiringError(String(e));
     }
+  };
+
+  const openArtifactPicker = () => {
+    setPickerOpen(true);
+    loadPicker(productSlug ? "product" : "all");
   };
 
   useEffect(() => {
@@ -1261,20 +1271,44 @@ export default function BoardPage() {
       {pickerOpen && (
         <div className="artifact-modal" role="dialog" aria-modal="true" aria-label="Reuse approved output" onClick={() => setPickerOpen(false)}>
           <div className="artifact-modal__inner artifact-modal__inner--wide" onClick={(e) => e.stopPropagation()}>
-            <strong>Reuse an approved output</strong>
+            <strong>Existing outputs{pickerScope === "product" && product ? ` — ${product.name}` : ""}</strong>
             <p className="page-subtitle" style={{ margin: "0.4rem 0 0.8rem" }}>
-              Attaches as an artifacts.load node feeding Resolve refs — compiler-validated on both sides.
+              <em>Reuse</em> wires it in as an input node for a new run (product CAD stays the grounding).{" "}
+              <em>Tweak</em> opens the drafter to adjust this exact image with your feedback.
             </p>
+            <div className="chip-grid" style={{ marginBottom: "0.6rem" }}>
+              <button type="button" className={`chip chip--sm ${pickerScope === "product" ? "chip--on" : ""}`} onClick={() => loadPicker("product")}>
+                This product
+              </button>
+              <button type="button" className={`chip chip--sm ${pickerScope === "all" ? "chip--on" : ""}`} onClick={() => loadPicker("all")}>
+                All products
+              </button>
+            </div>
             {pickerArtifacts.length === 0 ? (
-              <p className="page-subtitle">Loading approved artifacts…</p>
+              <p className="page-subtitle">No approved outputs {pickerScope === "product" ? "for this product yet — flip to All products, or generate first." : "yet."}</p>
             ) : (
               <div className="assets-grid board-picker-grid">
                 {pickerArtifacts.map((a) => (
-                  <button key={a.id} type="button" className="board-picker-card" onClick={() => attachArtifact(a.id, a.name)}>
+                  <div key={a.id} className="board-picker-card">
                     <img src={a.url} alt={a.name} loading="lazy" />
                     <span className="board-picker-card__name" title={a.name}>{a.name}</span>
                     <span className="board-picker-card__slug">{a.product_slug || ""}</span>
-                  </button>
+                    <div className="board-picker-card__actions">
+                      <button type="button" className="btn btn--sm" onClick={() => attachArtifact(a.id, a.name)}>
+                        Reuse
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--sm btn--primary-solid"
+                        onClick={() => {
+                          setTweakTarget(a);
+                          setPickerOpen(false);
+                        }}
+                      >
+                        Tweak
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
@@ -1285,6 +1319,21 @@ export default function BoardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {tweakTarget && productSlug && (
+        <BriefModal
+          productSlug={productSlug}
+          basedOnLabel={`Tweaking: ${tweakTarget.name}${tweakTarget.status ? ` (${tweakTarget.status})` : ""}`}
+          initialFeedback={tweakTarget.delete_reason || tweakTarget.comment || undefined}
+          onClose={() => setTweakTarget(null)}
+          onGenerated={() => {
+            setTweakTarget(null);
+            // The tweak became a new shot spec — refresh so it shows as a chip.
+            const params = withTenant(new URLSearchParams(), tenant);
+            api<{ products: Product[] }>(`/api/products?${params}`).then((p) => setProducts(p.products || []));
+          }}
+        />
       )}
 
       {runtimeInspect && (() => {
