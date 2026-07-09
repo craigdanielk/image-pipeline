@@ -400,16 +400,55 @@ def _workspace_id(tenant: str | None = None) -> str:
     return "default"
 
 
+_IMG_EXTS = (".png", ".jpg", ".jpeg", ".webp")
+
+
+def _shot_thumb(job_path_field: str) -> str | None:
+    """A shot's target thumbnail: the first reference image its job spec names
+    that exists on disk (absolute or relative to the job's directory)."""
+    jp = Path(job_path_field)
+    if not jp.is_absolute():
+        jp = ROOT / jp
+    try:
+        job = json.loads(jp.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    candidates: list[str] = []
+
+    def _walk(value: Any) -> None:
+        if isinstance(value, str) and value.lower().endswith(_IMG_EXTS):
+            candidates.append(value)
+        elif isinstance(value, list):
+            for v in value:
+                _walk(v)
+        elif isinstance(value, dict):
+            for v in value.values():
+                _walk(v)
+
+    _walk(job.get("references") or job.get("refs") or job)
+    for c in candidates:
+        p = Path(c)
+        if not p.is_absolute():
+            p = jp.parent / c
+        if p.is_file():
+            return str(p)
+    return None
+
+
 def _shots_for_product(slug: str, tenant: str | None = None) -> list[dict[str, Any]]:
     shots: list[dict[str, Any]] = []
     for job in _glob_jobs(tenant):
         if job["product"] == slug:
+            thumb = _shot_thumb(job["path"])
             shots.append(
                 {
                     "id": job["id"],
                     "label": job["label"],
                     "path": job["path"],
                     "dir": job["dir"],
+                    "thumb": thumb,
+                    "thumb_url": f"/media?path={thumb}" if thumb else None,
                 }
             )
     return shots
@@ -641,6 +680,89 @@ async def knowledge_extract_product(
     return {"draft": draft}
 
 
+@app.post("/api/knowledge/campaigns/extract")
+async def knowledge_extract_style(
+    label: str = Form(""),
+    notes: str = Form(""),
+    url: str = Form(""),
+    photos: list[UploadFile] = File(default=[]),
+) -> dict[str, Any]:
+    """Vision-draft a STYLE SOURCE from reference imagery and/or a URL —
+    the campaign mirror of /api/knowledge/products/extract."""
+    if not photos and not url.strip():
+        raise HTTPException(status_code=400, detail="provide at least one photo or an image URL")
+    with tempfile.TemporaryDirectory(prefix="style-extract-") as tmp:
+        photo_paths: list[str] = []
+        for i, photo in enumerate(photos):
+            if not photo.filename:
+                continue
+            safe = re.sub(r"[^a-zA-Z0-9._-]+", "-", photo.filename).strip("-") or f"photo-{i}.png"
+            dest = Path(tmp) / f"{i:02d}-{safe}"
+            dest.write_bytes(await photo.read())
+            photo_paths.append(str(dest))
+        if url.strip():
+            import urllib.request
+
+            target = url.strip()
+            if not target.startswith(("http://", "https://")):
+                raise HTTPException(status_code=400, detail="url must be http(s)")
+            try:
+                req = urllib.request.Request(target, headers={"User-Agent": "image-pipeline-style-extract"})
+                with urllib.request.urlopen(req, timeout=20) as resp:
+                    ctype = resp.headers.get("Content-Type", "")
+                    if not ctype.startswith("image/"):
+                        raise HTTPException(status_code=400, detail=f"url is not an image (Content-Type: {ctype})")
+                    ext = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}.get(ctype.split(";")[0], ".png")
+                    dest = Path(tmp) / f"url-ref{ext}"
+                    dest.write_bytes(resp.read(25 * 1024 * 1024))
+                    photo_paths.append(str(dest))
+            except HTTPException:
+                raise
+            except Exception as exc:
+                raise HTTPException(status_code=400, detail=f"could not fetch url: {exc}") from exc
+        if not photo_paths:
+            raise HTTPException(status_code=400, detail="no valid reference images")
+        try:
+            draft = await spec_extractor.extract_style_from_photos(
+                photo_paths, label_hint=label or None, notes=notes or None
+            )
+        except spec_extractor.SpecExtractError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {"draft": draft}
+
+
+def _canonical_images_path(tenant: str | None) -> Path:
+    return workspace_runs.workspace_dir(ROOT, _workspace_id(tenant)) / "canonical_images.json"
+
+
+def _load_canonical_images(tenant: str | None) -> dict[str, str]:
+    p = _canonical_images_path(tenant)
+    if not p.is_file():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except json.JSONDecodeError:
+        return {}
+
+
+class CanonicalImageRequest(BaseModel):
+    path: str = Field(..., min_length=1)
+
+
+@app.post("/api/products/{slug}/canonical-image")
+def set_canonical_image(slug: str, req: CanonicalImageRequest, tenant: Optional[str] = None) -> dict[str, Any]:
+    """Operator designates which reference IS the product image on the board."""
+    resolved = _resolve_path(req.path)
+    if not resolved.is_file():
+        raise HTTPException(status_code=404, detail="image not found on disk")
+    data = _load_canonical_images(tenant)
+    data[slug] = str(resolved)
+    p = _canonical_images_path(tenant)
+    p.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    return {"ok": True, "slug": slug, "path": str(resolved)}
+
+
 @app.get("/api/knowledge/campaigns")
 def knowledge_list_campaigns(product_spec_id: Optional[str] = None, tenant: Optional[str] = None) -> dict[str, Any]:
     return {"campaigns": _knowledge(tenant).list_campaigns(product_spec_id)}
@@ -850,7 +972,7 @@ def list_product_references(slug: str, tenant: Optional[str] = None) -> dict[str
                 continue
             seen.add(path_str)
             refs.append({"path": path_str, "name": img.name, "url": f"/media?path={path_str}"})
-    return {"references": refs}
+    return {"references": refs, "canonical": _load_canonical_images(tenant).get(slug)}
 
 
 def _resolve_product_dir(product_slug: str, tenant: str | None) -> Path:

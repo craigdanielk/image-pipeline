@@ -439,6 +439,70 @@
   margin-top: 0.25rem;
 }
 
+.board-picker-card--canonical {
+  border-color: var(--color-status-ok, #4ade80);
+}
+
+/* Shot cards — target thumbnails inside the SHOT node */
+.shot-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 96px);
+  gap: 0.4rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.shot-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-bg-card);
+  cursor: pointer;
+  text-align: left;
+}
+
+.shot-card--on,
+.shot-card:hover {
+  border-color: var(--color-accent);
+}
+
+.shot-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 5px;
+  background: var(--color-bg-base);
+}
+
+.shot-card__noimg {
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: var(--color-text-tertiary);
+  border-radius: 5px;
+  background: var(--color-bg-base);
+}
+
+.shot-card__label {
+  font-size: 0.62rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-style-extract {
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: 8px;
+  padding: 0.6rem;
+  margin-bottom: 0.7rem;
+}
+
 .board-actions-row {
   display: flex;
   align-items: center;

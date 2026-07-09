@@ -262,7 +262,18 @@ function RuntimeNode({ data }: NodeProps) {
   );
 }
 
-type Shot = { id: string; label: string; path: string };
+type Shot = { id: string; label: string; path: string; thumb_url?: string | null };
+
+/** Collapse version iterations (shot-1, shot-1-v2, shot-1-v3) to the latest of each. */
+function collapseShotVersions(shots: Shot[]): Shot[] {
+  const groups = new Map<string, Shot>();
+  for (const s of shots) {
+    const key = s.id.replace(/-v\d+[a-z]?$/i, "");
+    const prev = groups.get(key);
+    if (!prev || s.id.localeCompare(prev.id, undefined, { numeric: true }) > 0) groups.set(key, s);
+  }
+  return Array.from(groups.values());
+}
 
 function ShotNode({ data }: NodeProps) {
   const d = data as {
@@ -273,36 +284,47 @@ function ShotNode({ data }: NodeProps) {
     busy: boolean;
     status: string;
     onRun: () => void;
+    onNewShot: () => void;
   };
+  const collapsed = collapseShotVersions(d.shots);
   return (
     <div className="board-node board-node--shot">
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
       <div className="board-node__kicker">SHOT · WHICH IMAGE TO MAKE</div>
-      {d.shots.length === 0 ? (
-        <div className="board-node__meta">no authored shots for this product yet</div>
+      {collapsed.length === 0 ? (
+        <div className="board-node__meta">No shots authored yet — create the first one below.</div>
       ) : (
-        <div className="board-node__chip-row nodrag">
-          {d.shots.map((s) => (
+        <div className="shot-card-grid nodrag">
+          {collapsed.map((s) => (
             <button
               key={s.id}
               type="button"
-              className={`chip chip--sm ${d.selectedShotId === s.id ? "chip--on" : ""}`}
+              className={`shot-card ${d.selectedShotId === s.id ? "shot-card--on" : ""}`}
               onClick={() => d.onSelect(s)}
+              title={s.id}
             >
-              {s.label}
+              {s.thumb_url ? (
+                <img src={s.thumb_url} alt={s.label} loading="lazy" />
+              ) : (
+                <span className="shot-card__noimg">no target image</span>
+              )}
+              <span className="shot-card__label">{s.label}</span>
             </button>
           ))}
         </div>
       )}
       {d.status && <div className="board-node__status">{d.status}</div>}
-      {d.compiled && (
-        <div className="board-node__actions nodrag">
+      <div className="board-node__actions nodrag">
+        <button type="button" className="btn btn--sm" onClick={d.onNewShot}>
+          + New shot
+        </button>
+        {d.compiled && (
           <button type="button" className="btn btn--sm btn--primary-solid" disabled={d.busy} onClick={d.onRun}>
             {d.busy ? "Running…" : "Run this shot"}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -440,6 +462,21 @@ export default function BoardPage() {
     setNewProductOpen(true);
   };
 
+  // Operator designates THE product image by clicking a reference in the inspector.
+  const setCanonicalImage = async (path: string) => {
+    if (!productSlug) return;
+    try {
+      const params = withTenant(new URLSearchParams(), tenant);
+      await api(`/api/products/${productSlug}/canonical-image?${params}`, {
+        method: "POST",
+        body: JSON.stringify({ path }),
+      });
+      setFallbackAsset(path);
+    } catch (e) {
+      setWiringError(String(e));
+    }
+  };
+
   const npGeometry = (): string => {
     const d = npDraft as { geometry_description?: string; product?: { geometry?: { description?: string } } } | null;
     return d?.geometry_description || d?.product?.geometry?.description || "";
@@ -531,6 +568,44 @@ export default function BoardPage() {
   const [ncScene, setNcScene] = useState("");
   const [ncMood, setNcMood] = useState("studio");
   const [ncStatus, setNcStatus] = useState("");
+  // Style extraction (mirror of CAD extraction, for feel): reference images
+  // and/or a URL -> vision agent drafts the style source -> operator confirms.
+  const [ncFiles, setNcFiles] = useState<File[]>([]);
+  const [ncUrl, setNcUrl] = useState("");
+  const [ncBusy, setNcBusy] = useState(false);
+  const [ncExtra, setNcExtra] = useState<Record<string, string>>({});
+
+  const extractStyle = async () => {
+    if (!ncFiles.length && !ncUrl.trim()) {
+      setNcStatus("Add at least one reference image or an image URL to extract from.");
+      return;
+    }
+    setNcBusy(true);
+    setNcStatus("Extracting style source (vision model — ~30s)…");
+    try {
+      const form = new FormData();
+      form.append("label", ncLabel);
+      form.append("url", ncUrl.trim());
+      for (const f of ncFiles) form.append("photos", f);
+      const res = await fetch("/api/knowledge/campaigns/extract", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || res.statusText);
+      const draft = data.draft || {};
+      if (draft.label && !ncLabel) setNcLabel(String(draft.label));
+      if (draft.scene_description) setNcScene(String(draft.scene_description));
+      if (draft.mood) setNcMood(String(draft.mood));
+      const extra: Record<string, string> = {};
+      for (const k of ["style", "lighting", "camera", "background", "composition"]) {
+        if (draft[k]) extra[k] = String(draft[k]);
+      }
+      setNcExtra(extra);
+      setNcStatus("Style source drafted — confirm the description below, then save.");
+    } catch (e) {
+      setNcStatus(String(e));
+    } finally {
+      setNcBusy(false);
+    }
+  };
 
   const saveNewCampaign = async () => {
     if (!productSlug || !ncLabel || !ncScene) {
@@ -546,17 +621,20 @@ export default function BoardPage() {
           label: ncLabel,
           scene_description: ncScene,
           mood: ncMood,
+          ...ncExtra,
         }),
       });
       const c = await api<{ campaigns: Campaign[] }>(`/api/campaigns?${params}`);
       setCampaigns(c.campaigns || []);
       setCampaignId(d.campaign.id);
       setNewCampaignOpen(false);
-      setNcLabel(""); setNcScene(""); setNcStatus("");
+      setNcLabel(""); setNcScene(""); setNcStatus(""); setNcFiles([]); setNcUrl(""); setNcExtra({});
     } catch (e) {
       setNcStatus(String(e));
     }
   };
+
+  const [newShotOpen, setNewShotOpen] = useState(false);
 
   const runShot = async () => {
     if (!shotCompile) return;
@@ -691,14 +769,19 @@ export default function BoardPage() {
         if (!cancelled) setProductDetail(null);
       });
     // Fallback thumb: the refs directory is the ground truth even when no
-    // knowledge-store spec exists for this product.
-    api<{ references: { path?: string; asset?: string; role?: string }[] }>(
+    // knowledge-store spec exists. An operator-designated canonical image
+    // always wins over heuristics.
+    api<{ references: { path?: string; asset?: string; role?: string }[]; canonical?: string | null }>(
       `/api/products/${productSlug}/references?${params}`,
     )
       .then((d) => {
         if (cancelled) return;
         const refs = d.references || [];
         setProductRefs(refs);
+        if (d.canonical) {
+          setFallbackAsset(d.canonical);
+          return;
+        }
         const preferred = refs.find((r) => /product|flatlay|cad|main/i.test(r.role || r.path || "")) || refs[0];
         setFallbackAsset(preferred?.path || preferred?.asset || null);
       })
@@ -814,6 +897,14 @@ export default function BoardPage() {
   // target. Cheap no-op guard: nothing to compile without product+campaign+
   // at least one output type selected.
   useEffect(() => {
+    // Intent-path compile requires a knowledge spec; firing it for jobs_only
+    // products produced the persistent "product not found" error. Spec-less
+    // products run through SHOT instead — silently skip, never error.
+    if (!productDetail) {
+      setCompileDir(null);
+      setCompileError("");
+      return;
+    }
     if (!productSlug || !campaignId || outputs.size === 0) return;
     const handle = setTimeout(() => {
       api<{ compile_dir: string; graph: { nodes: unknown[]; edges: unknown[] } }>("/api/board/compile", {
@@ -832,7 +923,8 @@ export default function BoardPage() {
         .catch((e) => setCompileError(String(e)));
     }, 500);
     return () => clearTimeout(handle);
-  }, [productSlug, campaignId, activeOps, outputs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productSlug, campaignId, activeOps, outputs, productDetail]);
 
   // Close every open SSE connection on unmount so re-runs from a previous
   // mount/compile never leak a socket or keep firing state updates.
@@ -983,6 +1075,7 @@ export default function BoardPage() {
             busy: shotBusy,
             status: shotStatus,
             onRun: runShot,
+            onNewShot: () => setNewShotOpen(true),
           },
         },
         ...opNodes,
@@ -1246,9 +1339,34 @@ export default function BoardPage() {
           <div className="artifact-modal__inner" onClick={(e) => e.stopPropagation()}>
             <strong>New campaign — the style/scene target</strong>
             <p className="page-subtitle" style={{ margin: "0.4rem 0 0.8rem" }}>
-              Describe what the final image should look like. This is the confirmation step: the generator only sees
-              what you write here.
+              Describe the look — or hand the extractor reference imagery (an ad you like, a competitor shot, a
+              moodboard frame) and confirm what it drafts. The generator only sees what you approve here.
             </p>
+            <div className="board-style-extract">
+              <label className="field-label">Style references — images and/or an image URL</label>
+              <input type="file" accept="image/*" multiple onChange={(e) => setNcFiles(Array.from(e.target.files || []))} />
+              <input
+                className="field-input"
+                style={{ marginTop: "0.35rem" }}
+                placeholder="https://… (direct image URL)"
+                value={ncUrl}
+                onChange={(e) => setNcUrl(e.target.value)}
+              />
+              <button
+                type="button"
+                className="btn btn--sm"
+                style={{ marginTop: "0.4rem" }}
+                disabled={ncBusy || (!ncFiles.length && !ncUrl.trim())}
+                onClick={extractStyle}
+              >
+                {ncBusy ? "Extracting…" : "Extract style source"}
+              </button>
+              {Object.keys(ncExtra).length > 0 && (
+                <p className="page-subtitle" style={{ marginTop: "0.3rem" }}>
+                  extracted: {Object.entries(ncExtra).map(([k, v]) => `${k}: ${v}`).join(" · ").slice(0, 160)}…
+                </p>
+              )}
+            </div>
             <label className="field-label">Label</label>
             <input className="field-input" value={ncLabel} onChange={(e) => setNcLabel(e.target.value)} placeholder="e.g. Starz Kid — turf action" />
             <label className="field-label" style={{ marginTop: "0.5rem" }}>Scene description</label>
@@ -1319,6 +1437,18 @@ export default function BoardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {newShotOpen && productSlug && (
+        <BriefModal
+          productSlug={productSlug}
+          onClose={() => setNewShotOpen(false)}
+          onGenerated={() => {
+            setNewShotOpen(false);
+            const params = withTenant(new URLSearchParams(), tenant);
+            api<{ products: Product[] }>(`/api/products?${params}`).then((p) => setProducts(p.products || []));
+          }}
+        />
       )}
 
       {tweakTarget && productSlug && (
@@ -1398,16 +1528,24 @@ export default function BoardPage() {
                 </>
               )}
               <h3 className="board-inspector__section">Reference images ({productRefs.length})</h3>
+              <p className="page-subtitle">Click one to make it the product's image on the board.</p>
               <div className="assets-grid board-picker-grid">
                 {productRefs.map((r, i) => {
                   const asset = r.path || r.asset || "";
                   const name = r.name || asset.split("/").pop() || `ref-${i}`;
+                  const isCanonical = asset === fallbackAsset;
                   return (
-                    <div key={asset || i} className="board-picker-card">
+                    <button
+                      key={asset || i}
+                      type="button"
+                      className={`board-picker-card ${isCanonical ? "board-picker-card--canonical" : ""}`}
+                      onClick={() => setCanonicalImage(asset)}
+                      title="Set as the product image on the board"
+                    >
                       <img src={mediaUrl(asset)} alt={name} loading="lazy" />
                       <span className="board-picker-card__name" title={name}>{name}</span>
-                      {r.role && <span className="board-picker-card__slug">{r.role}</span>}
-                    </div>
+                      <span className="board-picker-card__slug">{isCanonical ? "★ product image" : r.role || ""}</span>
+                    </button>
                   );
                 })}
                 {productRefs.length === 0 && <p className="page-subtitle">none on disk</p>}
