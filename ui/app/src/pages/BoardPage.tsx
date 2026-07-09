@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   Controls,
@@ -144,17 +144,19 @@ function ProductNode({ data }: NodeProps) {
 }
 
 function CampaignNode({ data }: NodeProps) {
-  const d = data as { campaign?: CampaignDetail; onOpen: () => void };
+  const d = data as { campaign?: CampaignDetail; onOpen: () => void; onPick: () => void };
   const c = d.campaign;
   return (
-    <div className="board-node board-node--campaign" onClick={d.onOpen}>
+    <div className="board-node board-node--campaign" onClick={c ? d.onOpen : d.onPick}>
       <Handle type="source" position={Position.Right} />
-      <div className="board-node__kicker">CAMPAIGN</div>
-      <div className="board-node__title">{c?.label || "Select a campaign…"}</div>
+      <div className="board-node__kicker">CAMPAIGN · HOW IT SHOULD LOOK</div>
+      <div className="board-node__title">{c?.label || "Choose a campaign…"}</div>
       <div className="board-node__meta">
-        {c?.scene?.description ? c.scene.description.slice(0, 64) + (c.scene.description.length > 64 ? "…" : "") : c?.scene?.lighting || "no scene set"}
+        {c?.scene?.description
+          ? c.scene.description.slice(0, 64) + (c.scene.description.length > 64 ? "…" : "")
+          : c?.scene?.lighting || "scene, lighting, mood — optional style target"}
       </div>
-      <div className="board-node__foot">{c ? "click to inspect" : ""}</div>
+      <div className="board-node__foot">{c ? "click to inspect" : "click to choose"}</div>
     </div>
   );
 }
@@ -298,54 +300,73 @@ function collapseShotVersions(shots: Shot[]): Shot[] {
 
 function ShotNode({ data }: NodeProps) {
   const d = data as {
-    shots: Shot[];
-    selectedShotId: string | null;
-    onSelect: (s: Shot) => void;
+    shotCount: number;
+    selectedShot: Shot | null;
     compiled: boolean;
     busy: boolean;
     status: string;
     onRun: () => void;
     onNewShot: () => void;
+    onBrowse: () => void;
+    onRefine: () => void;
   };
-  const collapsed = collapseShotVersions(d.shots);
   return (
     <div className="board-node board-node--shot">
       <Handle type="target" position={Position.Left} />
       <Handle type="source" position={Position.Right} />
       <div className="board-node__kicker">SHOT · WHICH IMAGE TO MAKE</div>
-      {collapsed.length === 0 ? (
-        <div className="board-node__meta">No shots authored yet — create the first one below.</div>
+      {d.selectedShot ? (
+        <>
+          <div className="board-node__image board-node__image--shot">
+            {d.selectedShot.thumb_url ? (
+              <img src={d.selectedShot.thumb_url} alt={d.selectedShot.label} />
+            ) : (
+              <span className="board-node__image-empty">no target image for this shot</span>
+            )}
+          </div>
+          <div className="board-node__title">{d.selectedShot.label}</div>
+        </>
       ) : (
-        <div className="shot-card-grid nodrag">
-          {collapsed.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`shot-card ${d.selectedShotId === s.id ? "shot-card--on" : ""}`}
-              onClick={() => d.onSelect(s)}
-              title={s.id}
-            >
-              {s.thumb_url ? (
-                <img src={s.thumb_url} alt={s.label} loading="lazy" />
-              ) : (
-                <span className="shot-card__noimg">no target image</span>
-              )}
-              <span className="shot-card__label">{s.label}</span>
-            </button>
-          ))}
+        <div className="board-node__meta">
+          {d.shotCount === 0
+            ? "No shots authored yet — create the first one below."
+            : `${d.shotCount} shot${d.shotCount === 1 ? "" : "s"} on this product — browse to pick one.`}
         </div>
       )}
       {d.status && <div className="board-node__status">{d.status}</div>}
       <div className="board-node__actions nodrag">
+        {d.shotCount > 0 && (
+          <button type="button" className="btn btn--sm" onClick={d.onBrowse}>
+            {d.selectedShot ? "Change shot" : `Browse shots (${d.shotCount})`}
+          </button>
+        )}
         <button type="button" className="btn btn--sm" onClick={d.onNewShot}>
           + New shot
         </button>
-        {d.compiled && (
-          <button type="button" className="btn btn--sm btn--primary-solid" disabled={d.busy} onClick={d.onRun}>
-            {d.busy ? "Running…" : "Run this shot"}
-          </button>
-        )}
       </div>
+      {d.selectedShot && (
+        <div className="board-node__actions nodrag">
+          <button
+            type="button"
+            className="btn btn--sm"
+            onClick={d.onRefine}
+            title="Describe a change — the drafter starts from this shot and lets you attach reference images"
+          >
+            Refine with AI
+          </button>
+          {d.compiled && (
+            <button
+              type="button"
+              className="btn btn--sm btn--primary-solid"
+              disabled={d.busy}
+              onClick={d.onRun}
+              title="Runs this shot through the compiler — outputs land in Assets"
+            >
+              {d.busy ? "Generating…" : "Generate image"}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -656,6 +677,8 @@ export default function BoardPage() {
   };
 
   const [newShotOpen, setNewShotOpen] = useState(false);
+  const [shotBrowserOpen, setShotBrowserOpen] = useState(false);
+  const [campaignPickerOpen, setCampaignPickerOpen] = useState(false);
 
   const runShot = async () => {
     if (!shotCompile) return;
@@ -993,6 +1016,12 @@ export default function BoardPage() {
   const product = products.find((p) => p.slug === productSlug);
   const campaign = campaigns.find((c) => c.id === campaignId);
 
+  // Version-collapsed shot list for the SHOT node and its browser modal.
+  const productShots = useMemo(
+    () => collapseShotVersions(((product as unknown as { shots?: Shot[] })?.shots || [])),
+    [product]
+  );
+
   // Rebuild node `data` whenever the underlying selection changes, but reuse each
   // node's *existing* position from the previous render so a drag in progress
   // (or already committed via onNodesChange) is never overwritten — only brand-new
@@ -1007,7 +1036,7 @@ export default function BoardPage() {
         return {
           id: `op-${opId}`,
           type: "operationNode",
-          position: posOf(`op-${opId}`, { x: 340, y: 40 + i * 110 }),
+          position: posOf(`op-${opId}`, { x: 400, y: 360 + i * 110 }),
           data: {
             label: opLabel(opId),
             onRemove: () => removeOp(opId),
@@ -1019,7 +1048,7 @@ export default function BoardPage() {
           },
         };
       });
-      const outputX = activeOps.length ? 660 : 340;
+      const outputX = 1180;
 
       // Runtime rail: the six compiler nodes live ON the canvas, left to
       // right beneath the intent row, locked until their ports are satisfied.
@@ -1034,7 +1063,7 @@ export default function BoardPage() {
         return {
           id: `rt-${nodeType}`,
           type: "runtimeNode",
-          position: posOf(`rt-${nodeType}`, { x: i * 250, y: 430 }),
+          position: posOf(`rt-${nodeType}`, { x: i * 250, y: 560 }),
           data: {
             label,
             nodeType,
@@ -1050,12 +1079,10 @@ export default function BoardPage() {
         };
       });
 
-      const shots: Shot[] = ((product as unknown as { shots?: Shot[] })?.shots || []).slice(0, 12);
-
       const artifactNodes: Node[] = loadedArtifacts.map((a, i) => ({
         id: `art-${a.id}`,
         type: "artifactNode",
-        position: posOf(`art-${a.id}`, { x: 250 * 2.5, y: 640 + i * 40 }),
+        position: posOf(`art-${a.id}`, { x: 250 * 2.5, y: 770 + i * 40 }),
         data: {
           id: a.id,
           name: a.name,
@@ -1065,10 +1092,12 @@ export default function BoardPage() {
       }));
 
       return [
+        // Reading order = interaction order: PRODUCT (what) → SHOT (which image)
+        // → CAMPAIGN (how it should look) → OUTPUT (run it).
         {
           id: "product",
           type: "productNode",
-          position: posOf("product", { x: 0, y: 0 }),
+          position: posOf("product", { x: 0, y: 40 }),
           data: {
             product,
             productDetail,
@@ -1081,29 +1110,35 @@ export default function BoardPage() {
         {
           id: "campaign",
           type: "campaignNode",
-          position: posOf("campaign", { x: 0, y: 220 }),
-          data: { campaign, onOpen: openCampaignInspector },
+          position: posOf("campaign", { x: 800, y: 60 }),
+          data: {
+            campaign,
+            onOpen: openCampaignInspector,
+            onPick: () => setCampaignPickerOpen(true),
+          },
         },
         {
           id: "shot",
           type: "shotNode",
-          position: posOf("shot", { x: 340, y: -140 }),
+          position: posOf("shot", { x: 400, y: 0 }),
           data: {
-            shots,
-            selectedShotId: selectedShot?.id || null,
-            onSelect: selectShot,
+            shotCount: productShots.length,
+            selectedShot,
             compiled: !!shotCompile,
             busy: shotBusy,
             status: shotStatus,
             onRun: runShot,
             onNewShot: () => setNewShotOpen(true),
+            onBrowse: () => setShotBrowserOpen(true),
+            onRefine: () =>
+              selectedShot && setTweakTarget({ name: selectedShot.label }),
           },
         },
         ...opNodes,
         {
           id: "output",
           type: "outputNode",
-          position: posOf("output", { x: outputX, y: 110 }),
+          position: posOf("output", { x: outputX, y: 60 }),
           data: {
             outputs,
             toggleOutput,
@@ -1142,6 +1177,7 @@ export default function BoardPage() {
     shotCompile,
     shotBusy,
     shotStatus,
+    productShots,
   ]);
 
   useEffect(() => {
@@ -1462,6 +1498,114 @@ export default function BoardPage() {
             <div className="asset-card__actions" style={{ marginTop: "0.75rem" }}>
               <button type="button" className="btn btn--sm" onClick={() => setPickerOpen(false)}>
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {shotBrowserOpen && (
+        <div
+          className="artifact-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Choose which image to make"
+          onClick={() => setShotBrowserOpen(false)}
+        >
+          <div className="artifact-modal__inner artifact-modal__inner--wide" onClick={(e) => e.stopPropagation()}>
+            <div className="brief-modal__header">
+              <strong>Which image to make — {product?.name || "product"}</strong>
+              <button type="button" className="btn btn--sm" onClick={() => setShotBrowserOpen(false)}>
+                Close
+              </button>
+            </div>
+            <p className="page-subtitle">
+              Each card is a shot — a target composition for this product. Pick one to compile it, or start a new one.
+            </p>
+            <div className="shot-browser-grid">
+              {productShots.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={`shot-browser-card ${selectedShot?.id === s.id ? "shot-browser-card--on" : ""}`}
+                  onClick={() => {
+                    void selectShot(s);
+                    setShotBrowserOpen(false);
+                  }}
+                >
+                  {s.thumb_url ? (
+                    <img src={s.thumb_url} alt={s.label} loading="lazy" />
+                  ) : (
+                    <span className="shot-card__noimg">no target image</span>
+                  )}
+                  <span className="shot-browser-card__label">{s.label}</span>
+                  <span className="shot-browser-card__id">{s.id}</span>
+                </button>
+              ))}
+            </div>
+            <div className="asset-card__actions" style={{ marginTop: "0.75rem" }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setShotBrowserOpen(false);
+                  setNewShotOpen(true);
+                }}
+              >
+                + New shot — describe it, attach reference images
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {campaignPickerOpen && (
+        <div
+          className="artifact-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Choose a campaign"
+          onClick={() => setCampaignPickerOpen(false)}
+        >
+          <div className="artifact-modal__inner" onClick={(e) => e.stopPropagation()}>
+            <div className="brief-modal__header">
+              <strong>Choose a campaign</strong>
+              <button type="button" className="btn btn--sm" onClick={() => setCampaignPickerOpen(false)}>
+                Close
+              </button>
+            </div>
+            <p className="page-subtitle">
+              The campaign is the style target — scene, lighting, mood. It changes how the shot looks, not what the
+              product is.
+            </p>
+            <div className="campaign-picker-list">
+              {campaigns.length === 0 && (
+                <p className="dashboard-empty">No campaigns yet — create the first one below.</p>
+              )}
+              {campaigns.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`campaign-picker-row ${campaignId === c.id ? "campaign-picker-row--on" : ""}`}
+                  onClick={() => {
+                    setCampaignId(c.id);
+                    setCampaignPickerOpen(false);
+                  }}
+                >
+                  <span className="campaign-picker-row__label">{c.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="asset-card__actions" style={{ marginTop: "0.75rem" }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => {
+                  setCampaignPickerOpen(false);
+                  setNewCampaignOpen(true);
+                }}
+              >
+                + New campaign — from images or a URL
               </button>
             </div>
           </div>

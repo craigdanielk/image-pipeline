@@ -762,7 +762,104 @@ textarea.field-input {
 
 .board-node__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.board-node__actions + .board-node__actions {
+  margin-top: var(--space-2);
+}
+
+.board-node__image--shot {
+  height: 170px;
+}
+
+/* Shot browser modal — large, legible cards instead of 96px chips */
+.shot-browser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.shot-browser-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-card);
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text-primary);
+}
+
+.shot-browser-card:hover {
+  border-color: var(--color-accent);
+}
+
+.shot-browser-card--on {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent-dim);
+}
+
+.shot-browser-card img,
+.shot-browser-card .shot-card__noimg {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--color-media-backdrop);
+}
+
+.shot-browser-card__label {
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+}
+
+.shot-browser-card__id {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Campaign picker modal */
+.campaign-picker-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.campaign-picker-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.campaign-picker-row:hover {
+  border-color: var(--color-accent);
+}
+
+.campaign-picker-row--on {
+  border-color: var(--color-accent);
+  background: var(--color-bg-card-active);
 }
 
 .board-inspector {

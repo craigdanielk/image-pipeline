@@ -1267,57 +1267,25 @@ textarea {
   color: var(--color-accent-bright);
 }
 
-/* Buttons */
-.btn {
-  background: var(--color-btn-surface);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-glass-border);
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 0.85rem;
-  font-size: var(--text-base);
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  display: inline-flex;
-  align-items: center;
-}
-
-.btn:hover:not(:disabled) {
-  border-color: var(--color-glass-border-active);
-  background: var(--color-glass-active);
-}
-
-.btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn--primary {
-  border-color: var(--color-glass-border-active);
-  color: var(--color-accent-bright);
-}
-
+/* Buttons: the canonical .btn system lives in design/glass.css — index.css
+   loads after it, so NO base .btn/.btn--sm redefinitions here (a duplicate
+   block silently cancelled .btn--primary-solid for months). Only variants
+   that don't exist in glass.css are allowed below. */
 .btn--accent {
   background: var(--color-accent-dim);
-  border-color: var(--color-glass-border-active);
+  border-color: transparent;
   color: var(--color-accent-bright);
 }
 
 .btn--generate {
   background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-text-primary);
-  font-weight: 600;
+  border-color: transparent;
+  color: var(--color-text-on-accent);
 }
 
 .btn--generate:hover:not(:disabled) {
   background: var(--color-accent-bright);
-  border-color: var(--color-accent-bright);
-}
-
-.btn--sm {
-  padding: 0.3rem 0.55rem;
-  font-size: var(--text-sm);
+  border-color: transparent;
 }
 
 /* Wizard */
