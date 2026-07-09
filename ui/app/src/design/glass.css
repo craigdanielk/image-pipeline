@@ -619,17 +619,39 @@ textarea.field-input {
 
 .board-extract-thumbs {
   display: flex;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin: 0.35rem 0 0.5rem;
 }
 
-.board-extract-thumbs img {
-  width: 72px;
-  height: 72px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--color-border-subtle);
+.board-extract-thumb {
+  padding: 0;
+  border: 2px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
   background: var(--color-bg-base);
+  cursor: pointer;
+  line-height: 0;
+  overflow: hidden;
+  opacity: 0.55;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+
+.board-extract-thumb:hover {
+  opacity: 0.85;
+  border-color: var(--color-border-strong);
+}
+
+.board-extract-thumb--on {
+  opacity: 1;
+  border-color: var(--color-accent);
+}
+
+.board-extract-thumb img,
+.board-extract-thumbs img {
+  width: 88px;
+  height: 88px;
+  object-fit: cover;
+  display: block;
 }
 
 .board-style-extract {

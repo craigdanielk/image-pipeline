@@ -528,13 +528,20 @@ export default function BoardPage() {
     setNpBusy(true);
     setNpStatus("Extracting CAD spec from photos (vision model — ~30s)…");
     try {
-      // No fresh uploads? Use the reference images already on the product
-      // node — they're on disk, so pull them through /media as files.
+      // No fresh uploads? Use the reference images the operator SELECTED
+      // from the product's existing refs — they're on disk, so pull them
+      // through /media as files.
       let files = npFiles;
       if (!files.length && npTargetSlug && productRefs.length) {
-        setNpStatus(`Using the ${Math.min(productRefs.length, 4)} reference image(s) already on file…`);
+        const chosen = productRefs.filter((r) => npSelectedRefs.includes(r.path || r.asset || ""));
+        if (!chosen.length) {
+          setNpStatus("Select at least one photo below (click to toggle), or upload new ones.");
+          setNpBusy(false);
+          return;
+        }
+        setNpStatus(`Using ${chosen.length} selected reference image${chosen.length === 1 ? "" : "s"}…`);
         const pulled: File[] = [];
-        for (const r of productRefs.slice(0, 4)) {
+        for (const r of chosen) {
           const asset = r.path || r.asset;
           if (!asset) continue;
           const blob = await (await fetch(mediaUrl(asset))).blob();
@@ -713,6 +720,27 @@ export default function BoardPage() {
   // and the inspector always has something to render.
   const [fallbackAsset, setFallbackAsset] = useState<string | null>(null);
   const [productRefs, setProductRefs] = useState<{ path?: string; asset?: string; role?: string; name?: string }[]>([]);
+
+  // Which of the product's existing reference images feed the CAD extraction.
+  // Default: the first one — the operator toggles from there (1-4 allowed).
+  const [npSelectedRefs, setNpSelectedRefs] = useState<string[]>([]);
+  useEffect(() => {
+    if (!newProductOpen) {
+      setNpSelectedRefs([]);
+      return;
+    }
+    if (npTargetSlug && productRefs.length && npSelectedRefs.length === 0) {
+      const first = productRefs[0]?.path || productRefs[0]?.asset;
+      if (first) setNpSelectedRefs([first]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newProductOpen, npTargetSlug, productRefs]);
+
+  const toggleNpRef = (asset: string) => {
+    setNpSelectedRefs((prev) =>
+      prev.includes(asset) ? prev.filter((a) => a !== asset) : prev.length >= 4 ? prev : [...prev, asset]
+    );
+  };
 
   useEffect(() => {
     api<{ nodes: RuntimeNodeSpec[] }>("/api/board/runtime-chain")
@@ -1366,15 +1394,29 @@ export default function BoardPage() {
             {npTargetSlug && productRefs.length > 0 && !npFiles.length && (
               <>
                 <p className="page-subtitle">
-                  Extracting from these {Math.min(productRefs.length, 4)} image
-                  {productRefs.length === 1 ? "" : "s"} already on the product — upload below only to override.
+                  Click to choose which photos the extractor reads (1–4). One clean packshot or flatlay usually beats
+                  four mixed shots — upload below only if none of these show the product clearly.
                 </p>
                 <div className="board-extract-thumbs">
-                  {productRefs.slice(0, 4).map((r, i) => {
+                  {productRefs.map((r, i) => {
                     const asset = r.path || r.asset || "";
-                    return <img key={asset || i} src={mediaUrl(asset)} alt={r.name || `ref-${i}`} loading="lazy" />;
+                    const on = npSelectedRefs.includes(asset);
+                    return (
+                      <button
+                        key={asset || i}
+                        type="button"
+                        className={`board-extract-thumb ${on ? "board-extract-thumb--on" : ""}`}
+                        onClick={() => asset && toggleNpRef(asset)}
+                        title={on ? "Selected — click to remove" : "Click to include in extraction"}
+                      >
+                        <img src={mediaUrl(asset)} alt={r.name || `ref-${i}`} loading="lazy" />
+                      </button>
+                    );
                   })}
                 </div>
+                <p className="page-subtitle" style={{ margin: "0.35rem 0 0" }}>
+                  {npSelectedRefs.length} of {productRefs.length} selected
+                </p>
               </>
             )}
             <input
