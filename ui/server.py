@@ -129,6 +129,13 @@ def _allowed_roots() -> list[Path]:
     extra = os.environ.get("IMAGE_PIPELINE_JOBS_ROOT", "").strip()
     if extra:
         roots.append(Path(extra).expanduser().resolve())
+    # Tenant jobs roots from config/tenants.json. Use the parent of jobs_root
+    # (the tenant's image-pipeline tool dir) so sibling dirs the registry may
+    # reference — _swept-*/, labeled/, Craig Photos/ — stay servable.
+    for t in tenants.load_tenants(ROOT):
+        jobs_root = Path(t.get("jobs_root", "")).expanduser()
+        if jobs_root.is_dir():
+            roots.append(jobs_root.parent.resolve())
     return roots
 
 
@@ -380,7 +387,17 @@ def _knowledge(tenant: str | None = None) -> knowledge_store.KnowledgeStore:
 def _workspace_id(tenant: str | None = None) -> str:
     if tenant:
         return tenant
-    return os.environ.get("IMAGE_PIPELINE_WORKSPACE_ID", "default").strip() or "default"
+    env = os.environ.get("IMAGE_PIPELINE_WORKSPACE_ID", "").strip()
+    if env:
+        return env
+    # Single-tenant install: requests missing the tenant param must not fall
+    # into a phantom "default" workspace — review state (comments, approvals,
+    # rejections) silently landed there and was invisible under the real
+    # tenant. If exactly one tenant is configured, it IS the workspace.
+    known = tenants.load_tenants(ROOT)
+    if len(known) == 1:
+        return known[0]["slug"]
+    return "default"
 
 
 def _shots_for_product(slug: str, tenant: str | None = None) -> list[dict[str, Any]]:

@@ -404,7 +404,10 @@ body {
 
 .assets-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  /* auto-fill (not auto-fit): sparse groups keep empty tracks instead of
+     stretching a few cards across the full row as huge images. Every card
+     renders at the same width regardless of group size. */
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 0.75rem;
 }
 

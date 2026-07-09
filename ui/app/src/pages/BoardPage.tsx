@@ -159,10 +159,10 @@ function OutputNode({ data }: NodeProps) {
     canRun: boolean;
   };
   return (
-    <div className="board-node board-node--output nodrag">
+    <div className="board-node board-node--output">
       <Handle type="target" position={Position.Left} />
       <div className="board-node__kicker">OUTPUT</div>
-      <div className="board-node__chip-row">
+      <div className="board-node__chip-row nodrag">
         {OUTPUT_TYPES.map((o) => (
           <button
             key={o.id}
@@ -176,7 +176,7 @@ function OutputNode({ data }: NodeProps) {
       </div>
       {d.credits != null && <div className="board-node__credits">~{d.credits} credits</div>}
       <div className="board-node__status">{d.status}</div>
-      <div className="board-node__actions">
+      <div className="board-node__actions nodrag">
         <button type="button" className="btn btn--sm" disabled={d.loading || !d.canRun} onClick={d.onEstimate}>
           Estimate
         </button>

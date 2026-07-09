@@ -61,7 +61,7 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
       if (filter === "rejected") params.set("status", "rejected");
       else if (filter === "approved") params.set("status", "approved");
       else if (filter === "pending") params.set("status", "pending");
-      else params.set("include_deleted", "true");
+      // "All" = pending + approved. Rejected stays in its own tab only.
       return withTenant(params, tenant);
     },
     [productSlug, campaignSlug, filter, tenant]
@@ -189,15 +189,15 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
     }
   };
 
-  const groups = useMemo(() => {
-    const byKey = new Map<string, Artifact[]>();
-    for (const a of artifacts) {
-      const bucket = byKey.get(a.group_key) || [];
-      bucket.push(a);
-      byKey.set(a.group_key, bucket);
-    }
-    return Array.from(byKey.entries());
-  }, [artifacts]);
+  // One flat grid: cards sorted by shot group then name so versions of the
+  // same shot sit adjacent, and rows fill naturally as images are added.
+  const sorted = useMemo(
+    () =>
+      [...artifacts].sort(
+        (a, b) => a.group_key.localeCompare(b.group_key) || a.name.localeCompare(b.name)
+      ),
+    [artifacts]
+  );
 
   if (loading) {
     return (
@@ -231,15 +231,8 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
         <GlassCard className="stub-note">No {filter === "all" ? "" : filter} artifacts here yet.</GlassCard>
       ) : (
         <>
-          {groups.map(([groupKey, items]) => (
-            <div key={groupKey} className="artifact-group">
-              {items.length > 1 && (
-                <div className="artifact-group__header">
-                  {groupKey} <span className="artifact-group__count">{items.length} versions</span>
-                </div>
-              )}
-              <div className="assets-grid">
-                {items.map((a) => (
+          <div className="assets-grid">
+            {sorted.map((a) => (
                   <GlassCard key={a.id} className="asset-card artifact-card">
                     <button
                       type="button"
@@ -319,11 +312,9 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
                         </a>
                       )}
                     </div>
-                  </GlassCard>
-                ))}
-              </div>
-            </div>
-          ))}
+              </GlassCard>
+            ))}
+          </div>
 
           {artifacts.length < total && (
             <div style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}>
