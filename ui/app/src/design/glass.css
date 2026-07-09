@@ -403,6 +403,22 @@
   margin: 0.5rem 0;
 }
 
+.board-help {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-card);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.board-help ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
 .board-node__image {
   width: 100%;
   height: 110px;

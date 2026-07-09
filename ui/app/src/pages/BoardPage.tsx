@@ -309,6 +309,10 @@ export default function BoardPage() {
     { id: string; name: string; path: string; url: string; product_slug?: string }[]
   >([]);
   const [runtimeInspect, setRuntimeInspect] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(() => localStorage.getItem("board-help-seen") !== "1");
+  useEffect(() => {
+    if (!showHelp) localStorage.setItem("board-help-seen", "1");
+  }, [showHelp]);
   // Some products have reference photos on disk but no knowledge-store spec —
   // fall back to the references API so the Product node always shows an image
   // and the inspector always has something to render.
@@ -386,10 +390,13 @@ export default function BoardPage() {
   };
 
   useEffect(() => {
+    // Tenant-scoped: without the tenant param the server falls back to the
+    // service repo's own jobs/knowledge dirs and legacy products leak in.
+    const params = withTenant(new URLSearchParams(), tenant);
     Promise.all([
-      api<{ products: Product[] }>("/api/products"),
-      api<{ campaigns: Campaign[] }>("/api/campaigns"),
-      api<{ operations: Operation[] }>("/api/operations"),
+      api<{ products: Product[] }>(`/api/products?${params}`),
+      api<{ campaigns: Campaign[] }>(`/api/campaigns?${params}`),
+      api<{ operations: Operation[] }>(`/api/operations?${params}`),
     ]).then(([p, c, o]) => {
       setProducts(p.products || []);
       setCampaigns(c.campaigns || []);
@@ -397,7 +404,7 @@ export default function BoardPage() {
       if (p.products?.[0]) setProductSlug(p.products[0].slug);
       if (c.campaigns?.[0]) setCampaignId(c.campaigns[0].id);
     });
-  }, []);
+  }, [tenant]);
 
   useEffect(() => {
     setProductDetail(null);
@@ -809,8 +816,42 @@ export default function BoardPage() {
         <button type="button" className="btn btn--sm" onClick={openArtifactPicker}>
           + Reuse approved output
         </button>
+        <button type="button" className="btn btn--sm" onClick={() => setShowHelp((v) => !v)}>
+          {showHelp ? "Hide guide" : "How this works"}
+        </button>
         {wiringError && <div className="board-toolbar__compile-error">{wiringError}</div>}
       </div>
+
+      {showHelp && (
+        <div className="board-help">
+          <ol>
+            <li>
+              <strong>Pick a product</strong> — the physical item being shot. Its node shows the source photo the
+              compiler grounds every generation in.
+            </li>
+            <li>
+              <strong>Pick a campaign</strong> — the style/scene target (who's in the shot, lighting, mood). Product
+              says <em>what</em>; campaign says <em>how it should look</em>.
+            </li>
+            <li>
+              <strong>Add operations</strong> (optional) — targeted edits like swap subject or replace logo, chained
+              between product and output.
+            </li>
+            <li>
+              <strong>Choose output types</strong> on the OUTPUT node (PDP / Lifestyle / Hero / Social), then{" "}
+              <strong>Estimate</strong> for a credit cost or <strong>Generate</strong> to run.
+            </li>
+            <li>
+              <strong>Watch the runtime rail</strong> — the six compiler steps below unlock left to right as their
+              inputs are satisfied; click any step to see what it needs and produces.
+            </li>
+            <li>
+              <strong>Review in Assets</strong> — approve, comment, or reject each render; rejections feed the next
+              run. Reuse any approved image here via “+ Reuse approved output”.
+            </li>
+          </ol>
+        </div>
+      )}
 
       <div className="board-canvas">
         <ReactFlow
