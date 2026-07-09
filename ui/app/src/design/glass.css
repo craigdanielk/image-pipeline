@@ -496,6 +496,21 @@
   white-space: nowrap;
 }
 
+.board-extract-thumbs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.board-extract-thumbs img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-base);
+}
+
 .board-style-extract {
   border: 1px dashed var(--color-border-subtle);
   border-radius: 8px;

@@ -1288,10 +1288,18 @@ export default function BoardPage() {
             <textarea className="field-input" rows={2} value={npNotes} onChange={(e) => setNpNotes(e.target.value)} placeholder="anything the photos don't show — size, materials, branding rules…" />
             <label className="field-label" style={{ marginTop: "0.5rem" }}>Photos</label>
             {npTargetSlug && productRefs.length > 0 && !npFiles.length && (
-              <p className="page-subtitle">
-                Will use the {Math.min(productRefs.length, 4)} reference image
-                {productRefs.length === 1 ? "" : "s"} already on this product's node — upload below only to override.
-              </p>
+              <>
+                <p className="page-subtitle">
+                  Extracting from these {Math.min(productRefs.length, 4)} image
+                  {productRefs.length === 1 ? "" : "s"} already on the product — upload below only to override.
+                </p>
+                <div className="board-extract-thumbs">
+                  {productRefs.slice(0, 4).map((r, i) => {
+                    const asset = r.path || r.asset || "";
+                    return <img key={asset || i} src={mediaUrl(asset)} alt={r.name || `ref-${i}`} loading="lazy" />;
+                  })}
+                </div>
+              </>
             )}
             <input
               type="file"

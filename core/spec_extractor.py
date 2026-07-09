@@ -199,6 +199,12 @@ def _deny_reads_outside_allowlist(allowed_paths: set[str]):
     return can_use_tool
 
 
+async def _prompt_stream(text: str):
+    """claude-agent-sdk requires streaming (AsyncIterable) input when a
+    can_use_tool callback is set — a bare string prompt hard-fails."""
+    yield {"type": "user", "message": {"role": "user", "content": text}}
+
+
 async def extract_product_spec_from_photos(
     photo_paths: list[str],
     *,
@@ -237,7 +243,7 @@ async def extract_product_spec_from_photos(
 
     text_parts: list[str] = []
     try:
-        async for message in query(prompt=user_msg, options=options):
+        async for message in query(prompt=_prompt_stream(user_msg), options=options):
             for block in getattr(message, "content", []) or []:
                 text = getattr(block, "text", None)
                 if text:
@@ -317,7 +323,7 @@ async def extract_style_from_photos(
 
     text_parts: list[str] = []
     try:
-        async for message in query(prompt=user_msg, options=options):
+        async for message in query(prompt=_prompt_stream(user_msg), options=options):
             for block in getattr(message, "content", []) or []:
                 text = getattr(block, "text", None)
                 if text:
