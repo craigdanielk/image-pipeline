@@ -382,6 +382,22 @@ textarea.field-input {
   display: none;
 }
 
+.board-canvas__fullscreen {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  z-index: 20;
+}
+
+.board-canvas--full {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  min-height: 0;
+  border-radius: 0;
+  border: none;
+}
+
 .board-node {
   min-width: 220px;
   padding: 0.75rem 0.9rem;

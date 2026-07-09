@@ -679,6 +679,17 @@ export default function BoardPage() {
   const [newShotOpen, setNewShotOpen] = useState(false);
   const [shotBrowserOpen, setShotBrowserOpen] = useState(false);
   const [campaignPickerOpen, setCampaignPickerOpen] = useState(false);
+  const [canvasFull, setCanvasFull] = useState(false);
+
+  // Esc leaves fullscreen canvas.
+  useEffect(() => {
+    if (!canvasFull) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setCanvasFull(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [canvasFull]);
 
   const runShot = async () => {
     if (!shotCompile) return;
@@ -1316,7 +1327,15 @@ export default function BoardPage() {
         </div>
       )}
 
-      <div className="board-canvas">
+      <div className={`board-canvas ${canvasFull ? "board-canvas--full" : ""}`}>
+        <button
+          type="button"
+          className="btn btn--sm board-canvas__fullscreen"
+          onClick={() => setCanvasFull((v) => !v)}
+          title={canvasFull ? "Exit fullscreen (Esc)" : "Expand the board to fill the screen"}
+        >
+          {canvasFull ? "Exit fullscreen" : "Fullscreen"}
+        </button>
         <ReactFlow
           nodes={nodes}
           edges={edges}
