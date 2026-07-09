@@ -89,6 +89,49 @@ app = FastAPI(title="Creative Compiler UI", version="0.3.0")
 _graph_runs: dict[str, dict[str, Any]] = {}
 
 
+def _reconcile_all_tenants() -> None:
+    """Run one reconcile cycle for every configured tenant. Best-effort —
+    one tenant's failure must never abort the sweep or crash the scheduler."""
+    for t in tenants.load_tenants(ROOT):
+        slug = t.get("slug")
+        try:
+            report = artifact_registry.reconcile(
+                ROOT, _primary_jobs_dir(slug), _workspace_id(slug)
+            )
+            c = report.get("counts", {})
+            print(
+                f"[reconcile] tenant={slug} ok={c.get('ok')} broken={c.get('broken')} "
+                f"unlinked={c.get('unlinked')} orphaned={c.get('orphaned')}"
+            )
+        except Exception as exc:  # noqa: BLE001 — scheduler must survive any tenant
+            print(f"[reconcile] tenant={slug} FAILED: {exc}")
+
+
+@app.on_event("startup")
+def _start_reconcile_scheduler() -> None:
+    """Reconcile on a schedule as well as on-demand. Interval from
+    IMAGE_PIPELINE_RECONCILE_INTERVAL seconds (default 900 = 15m); set to 0 to
+    disable the loop (on-demand /api/reconcile still works)."""
+    import threading
+
+    try:
+        interval = int(os.environ.get("IMAGE_PIPELINE_RECONCILE_INTERVAL", "900"))
+    except ValueError:
+        interval = 900
+    if interval <= 0:
+        return
+
+    def _loop() -> None:
+        import time as _t
+
+        while True:
+            _t.sleep(interval)
+            _reconcile_all_tenants()
+
+    threading.Thread(target=_loop, name="reconcile-scheduler", daemon=True).start()
+    print(f"[reconcile] scheduler started, every {interval}s")
+
+
 def _graph_run_status_event(run_id: str, event: dict[str, Any]) -> None:
     """on_status callback for run_graph_async — updates the snapshot and
     fans the event out to any live SSE subscribers for this run."""
@@ -130,14 +173,28 @@ def _allowed_roots() -> list[Path]:
     extra = os.environ.get("IMAGE_PIPELINE_JOBS_ROOT", "").strip()
     if extra:
         roots.append(Path(extra).expanduser().resolve())
-    # Tenant jobs roots from config/tenants.json. Use the parent of jobs_root
-    # (the tenant's image-pipeline tool dir) so sibling dirs the registry may
-    # reference — _swept-*/, labeled/, Craig Photos/ — stay servable.
+    # Tenant image roots from config/tenants.json. Serve BOTH the jobs_root
+    # itself (where out/ trees and drive-upload/ webps live — previously every
+    # tenant image 400'd because only the parent was allowlisted and resolved
+    # tenant image paths don't always sit under it) AND the parent tool dir so
+    # sibling reference dirs — _swept-*/, labeled/, Craig Photos/ — stay
+    # servable. Path-traversal is refused downstream in _resolve_path: both the
+    # request path and each root are fully resolved before the containment
+    # check, so ../ escapes normalise away and never match an allowed root.
     for t in tenants.load_tenants(ROOT):
         jobs_root = Path(t.get("jobs_root", "")).expanduser()
         if jobs_root.is_dir():
+            roots.append(jobs_root.resolve())
             roots.append(jobs_root.parent.resolve())
-    return roots
+    # Dedupe while preserving order (multiple tenants can share a parent).
+    seen: set[str] = set()
+    unique: list[Path] = []
+    for r in roots:
+        key = str(r)
+        if key not in seen:
+            seen.add(key)
+            unique.append(r)
+    return unique
 
 
 def _is_under(path: Path, root: Path) -> bool:
@@ -897,6 +954,25 @@ def sync_artifacts_api(product_slug: Optional[str] = None, tenant: Optional[str]
         ROOT, _primary_jobs_dir(tenant), _workspace_id(tenant), product_slug=product_slug
     )
     return {"ok": True, **stats}
+
+
+@app.post("/api/reconcile")
+def reconcile_api(tenant: Optional[str] = None) -> dict[str, Any]:
+    """On-demand reconcile: sync disk, flag broken/orphaned rows, report
+    unlinked Drive uploads, and write a timestamped divergence report."""
+    report = artifact_registry.reconcile(
+        ROOT, _primary_jobs_dir(tenant), _workspace_id(tenant)
+    )
+    return {"ok": True, "report": report}
+
+
+@app.get("/api/reconcile/report")
+def reconcile_report_api(tenant: Optional[str] = None) -> dict[str, Any]:
+    """Return the latest divergence report for this tenant (or empty if none)."""
+    div = workspace_runs.workspace_dir(ROOT, _workspace_id(tenant)) / "divergence" / "divergence-latest.json"
+    if not div.is_file():
+        return {"ok": True, "report": None}
+    return {"ok": True, "report": json.loads(div.read_text(encoding="utf-8"))}
 
 
 @app.patch("/api/artifacts/{artifact_id}")

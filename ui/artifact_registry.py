@@ -6,11 +6,17 @@ import hashlib
 import json
 import re
 import shutil
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 import workspace_runs
+
+# core/ is a sibling of ui/ — pull the tenant-agnostic reconciler in without a
+# package install (same bare-python3 import style the rest of the UI uses).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "core"))
+import state_reconciler  # noqa: E402
 
 _IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 _REGISTRY_VERSION = 1
@@ -277,6 +283,22 @@ def _status_of(row: dict[str, Any]) -> str:
     return _STATUS_PENDING
 
 
+def _is_broken(row: dict[str, Any]) -> bool:
+    """A row is broken when its recorded path no longer resolves on disk.
+
+    This is the divergence the reconciler flags. We compute it live here too so
+    the gallery is correct even between reconcile cycles — but crucially we NEVER
+    drop the row for being broken (that was the silent-hide bug). Rejected rows
+    are exempt: their file was intentionally moved to a _rejected/ sibling.
+    """
+    if row.get("deleted_at"):
+        return False
+    path = (row.get("path") or "").strip()
+    if not path:
+        return True
+    return not Path(path).is_file()
+
+
 def _group_key(name: str) -> str:
     """Collapse version iterations of the same shot: shot-4-logo-fix-v3.png -> shot-4-logo-fix."""
     stem = name.rsplit(".", 1)[0]
@@ -296,7 +318,12 @@ def _filtered_rows(
     data = load_registry(root, workspace_id)
     rows: list[dict[str, Any]] = []
     for row in data["artifacts"].values():
-        if status:
+        # "broken" is a cross-cutting filter (a broken row still has an
+        # underlying pending/approved status) — handle it before the status tab.
+        if status == "broken":
+            if not _is_broken(row):
+                continue
+        elif status:
             if _status_of(row) != status:
                 continue
         elif not include_deleted and row.get("deleted_at"):
@@ -305,9 +332,9 @@ def _filtered_rows(
             continue
         if campaign_slug and row.get("campaign_slug") != campaign_slug:
             continue
-        path = row.get("path") or ""
-        if path and not Path(path).is_file():
-            continue
+        # NOTE: we deliberately do NOT drop rows whose file is missing. Hiding
+        # them was the silent-hide bug (159 images vanished after a disk sweep).
+        # Broken rows stay visible and get flagged via _enrich_row → broken:true.
         rows.append(_enrich_row(row))
     rows.sort(key=lambda r: r.get("created_at", 0), reverse=True)
     return rows
@@ -461,11 +488,55 @@ def restore_artifact(
     return _enrich_row(row)
 
 
+def reconcile(
+    root: Path,
+    jobs_root: Path,
+    workspace_id: str | None = None,
+    *,
+    sync_first: bool = True,
+    product_slug: str | None = None,
+) -> dict[str, Any]:
+    """Run one reconcile cycle: sync disk → classify rows → persist → report.
+
+    1. (optional) sync_registry so newly-landed disk files get rows first.
+    2. Hand the registry to core.state_reconciler which flags broken/orphaned
+       rows in place and reports unlinked disk files (Drive uploads with no row).
+    3. Persist the flagged registry and write a timestamped divergence report.
+
+    Returns the divergence report (counts + entries). This is the single entry
+    point used by both the on-demand endpoint and the scheduled loop.
+    """
+    if sync_first:
+        try:
+            sync_registry(root, jobs_root, workspace_id, product_slug=product_slug)
+        except Exception:
+            # A sync failure must not block the divergence read — reconcile
+            # whatever rows already exist and let the report surface the drift.
+            pass
+
+    data = load_registry(root, workspace_id)
+    now = time.time()
+    report = state_reconciler.reconcile_registry(data, jobs_root, now=now)
+    data["last_reconcile_at"] = now
+    data["last_divergence"] = report["counts"]
+    save_registry(root, data, workspace_id)
+
+    stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime(now))
+    out_dir = workspace_runs.workspace_dir(root, workspace_id)
+    try:
+        report_path = state_reconciler.write_divergence_report(report, out_dir, stamp=stamp)
+        report["report_path"] = str(report_path)
+    except Exception:
+        report["report_path"] = None
+    return report
+
+
 def _enrich_row(row: dict[str, Any]) -> dict[str, Any]:
     out = dict(row)
     path = row.get("path") or ""
     if path:
         out["url"] = f"/media?path={path}"
     out["status"] = _status_of(row)
+    out["broken"] = _is_broken(row)
     out["group_key"] = _group_key(row.get("name") or "")
     return out
