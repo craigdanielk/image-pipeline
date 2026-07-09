@@ -441,14 +441,32 @@ export default function BoardPage() {
   };
 
   const extractCad = async () => {
-    if (!npFiles.length) return;
     setNpBusy(true);
     setNpStatus("Extracting CAD spec from photos (vision model — ~30s)…");
     try {
+      // No fresh uploads? Use the reference images already on the product
+      // node — they're on disk, so pull them through /media as files.
+      let files = npFiles;
+      if (!files.length && npTargetSlug && productRefs.length) {
+        setNpStatus(`Using the ${Math.min(productRefs.length, 4)} reference image(s) already on file…`);
+        const pulled: File[] = [];
+        for (const r of productRefs.slice(0, 4)) {
+          const asset = r.path || r.asset;
+          if (!asset) continue;
+          const blob = await (await fetch(mediaUrl(asset))).blob();
+          pulled.push(new File([blob], r.name || asset.split("/").pop() || "ref.png", { type: blob.type }));
+        }
+        files = pulled;
+      }
+      if (!files.length) {
+        setNpStatus("No photos — upload at least one, or select a product that has references on file.");
+        setNpBusy(false);
+        return;
+      }
       const form = new FormData();
       form.append("name", npName);
       form.append("notes", npNotes);
-      for (const f of npFiles) form.append("photos", f);
+      for (const f of files) form.append("photos", f);
       const res = await fetch("/api/knowledge/products/extract", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || res.statusText);
@@ -1166,6 +1184,12 @@ export default function BoardPage() {
             <label className="field-label" style={{ marginTop: "0.5rem" }}>Notes for the extractor (optional)</label>
             <textarea className="field-input" rows={2} value={npNotes} onChange={(e) => setNpNotes(e.target.value)} placeholder="anything the photos don't show — size, materials, branding rules…" />
             <label className="field-label" style={{ marginTop: "0.5rem" }}>Photos</label>
+            {npTargetSlug && productRefs.length > 0 && !npFiles.length && (
+              <p className="page-subtitle">
+                Will use the {Math.min(productRefs.length, 4)} reference image
+                {productRefs.length === 1 ? "" : "s"} already on this product's node — upload below only to override.
+              </p>
+            )}
             <input
               type="file"
               accept="image/*"
@@ -1191,7 +1215,12 @@ export default function BoardPage() {
               <button type="button" className="btn btn--sm" onClick={() => setNewProductOpen(false)}>
                 Cancel
               </button>
-              <button type="button" className="btn btn--sm" disabled={npBusy || !npFiles.length} onClick={extractCad}>
+              <button
+                type="button"
+                className="btn btn--sm"
+                disabled={npBusy || (!npFiles.length && !(npTargetSlug && productRefs.length))}
+                onClick={extractCad}
+              >
                 {npBusy ? "Working…" : "Extract CAD spec"}
               </button>
               <button type="button" className="btn btn--sm btn--primary-solid" disabled={npBusy || !npDraft} onClick={saveNewProduct}>
