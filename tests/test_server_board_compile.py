@@ -77,5 +77,57 @@ class TestBoardCompile(unittest.TestCase):
         self.assertEqual(res.status_code, 422, res.text)
 
 
+class TestRuntimeChainAndWiring(unittest.TestCase):
+    def setUp(self) -> None:
+        self.client = TestClient(server.app)
+
+    def test_runtime_chain_lists_six_nodes_with_ports(self):
+        res = self.client.get("/api/board/runtime-chain")
+        self.assertEqual(res.status_code, 200, res.text)
+        types = [n["node_type"] for n in res.json()["nodes"]]
+        for expected in (
+            "intake.load",
+            "jobspec.validate",
+            "prompt.build",
+            "reference.resolve",
+            "engine.generate",
+            "output.persist",
+            "artifacts.load",
+        ):
+            self.assertIn(expected, types)
+
+    def test_validate_wiring_accepts_valid_ports(self):
+        res = self.client.post(
+            "/api/board/validate-wiring",
+            json={
+                "node_type": "engine.generate",
+                "ports": {
+                    "in": {"artifacts": {"type": "compile_artifacts"}},
+                    "out": {"results": {"type": "engine_results"}},
+                },
+            },
+        )
+        self.assertEqual(res.status_code, 200, res.text)
+        self.assertTrue(res.json()["ok"])
+
+    def test_validate_wiring_rejects_port_contract_violation(self):
+        res = self.client.post(
+            "/api/board/validate-wiring",
+            json={"node_type": "engine.generate", "ports": {"in": {"artifacts": {"type": "prompt"}}}},
+        )
+        self.assertEqual(res.status_code, 400, res.text)
+
+    def test_validate_wiring_rejects_undeclared_port(self):
+        res = self.client.post(
+            "/api/board/validate-wiring",
+            json={"node_type": "prompt.build", "ports": {"out": {"bogus": {"type": "prompt"}}}},
+        )
+        self.assertEqual(res.status_code, 400, res.text)
+
+    def test_artifacts_load_rejects_unknown_artifact(self):
+        res = self.client.post("/api/board/artifacts-load", json={"artifact_id": "does-not-exist"})
+        self.assertEqual(res.status_code, 404, res.text)
+
+
 if __name__ == "__main__":
     unittest.main()

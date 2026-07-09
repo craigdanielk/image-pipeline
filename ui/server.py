@@ -65,9 +65,11 @@ _load_env_file(UI_DIR / ".env")
 import artifact_registry  # noqa: E402
 import brief_drafter  # noqa: E402
 import compile_bundle  # noqa: E402
+import compile_validator  # noqa: E402
 import graph_to_reactflow  # noqa: E402
 import job_compiler  # noqa: E402
 import knowledge_store  # noqa: E402
+import node_registry  # noqa: E402
 import run_graph  # noqa: E402
 import spec_extractor  # noqa: E402
 import spec_validator_v2  # noqa: E402
@@ -102,6 +104,24 @@ def _graph_run_status_event(run_id: str, event: dict[str, Any]) -> None:
         }
     for queue in entry["subscribers"]:
         queue.put_nowait(event)
+
+
+def _validate_graph_ports(graph: dict[str, Any]) -> None:
+    """Compiler binding: reject any board mutation whose nodes violate the
+    node_registry port contracts before it can compile or run. Every node's
+    declared ports are checked through node_registry.validate_node_ports;
+    free-form wiring outside compiler bounds raises HTTP 400 (never silently
+    dropped). This is the server-side half of the client's wiring guard."""
+    for node in graph.get("nodes") or []:
+        ntype = node.get("type")
+        try:
+            node_registry.validate_node_type(ntype)
+            node_registry.validate_node_ports(ntype, node.get("ports"))
+        except node_registry.NodeRegistryError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"invalid node wiring on {node.get('id', ntype)!r}: {exc}",
+            ) from exc
 
 
 def _allowed_roots() -> list[Path]:
@@ -1355,11 +1375,83 @@ def compile_board(req: BoardCompileRequest) -> dict[str, Any]:
 
     bundle = job_compiler.compile_job_multi_op(job, edit_specs, dry_run=True)
 
+    # Compiler binding — the compiled chain's node ports must satisfy the
+    # node_registry contracts before it is persisted or made runnable.
+    _validate_graph_ports(bundle["graph"])
+
     compile_dir = str(_allowed_roots()[0] / "workspace" / _workspace_id(req.tenant) / "board-compiles" / job["id"])
     compile_bundle.write_compile_dir(compile_dir, bundle, source={"kind": "board-ui", "path": None})
 
     graph = bundle["graph"]
     return {"compile_dir": compile_dir, "graph": graph_to_reactflow.graph_v1_to_reactflow(graph)}
+
+
+@app.get("/api/board/runtime-chain")
+def board_runtime_chain() -> dict[str, Any]:
+    """Publish the six runtime node types and their port contracts so the
+    board can render the full chain from job start with progressive unlock —
+    a node is 'locked' until every declared input port is satisfied."""
+    chain = []
+    for ntype in node_registry.PHASE1_NODE_TYPES:
+        spec = node_registry.get(ntype)
+        chain.append(
+            {
+                "node_type": ntype,
+                "description": spec.description,
+                "ports_in": {n: {"type": p.type, "required": p.required} for n, p in spec.ports_in.items()},
+                "ports_out": {n: {"type": p.type, "required": p.required} for n, p in spec.ports_out.items()},
+            }
+        )
+    return {"nodes": chain}
+
+
+class WiringValidateRequest(BaseModel):
+    node_type: str
+    ports: dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/api/board/validate-wiring")
+def validate_wiring(req: WiringValidateRequest) -> dict[str, Any]:
+    """Server-side wiring guard. Every board mutation is validated through
+    node_registry.validate_node_ports before it can run — port contract
+    violations are rejected here (HTTP 400) so free-form wiring outside
+    compiler bounds never reaches a run."""
+    try:
+        node_registry.validate_node_type(req.node_type)
+        node_registry.validate_node_ports(req.node_type, req.ports)
+    except node_registry.NodeRegistryError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True, "node_type": req.node_type}
+
+
+class ArtifactsLoadRequest(BaseModel):
+    artifact_id: str
+    tenant: Optional[str] = Field(None, pattern=r"^[a-z0-9][a-z0-9-]*$")
+
+
+@app.post("/api/board/artifacts-load")
+def board_artifacts_load(req: ArtifactsLoadRequest) -> dict[str, Any]:
+    """Output-as-input reuse. Turn an approved gallery artifact into an
+    artifacts.load node descriptor that can feed reference.resolve in a new
+    chain. Only approved artifacts are attachable; the emitted node is
+    validated through the same compiler port contract as any board node."""
+    root = _allowed_roots()[0]
+    try:
+        row = artifact_registry.get_artifact(root, req.artifact_id, _workspace_id(req.tenant))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="unknown artifact_id") from exc
+    if row.get("status") != "approved":
+        raise HTTPException(status_code=400, detail="only approved artifacts can be attached as artifacts.load input")
+
+    node = {
+        "id": f"artifacts-load-{req.artifact_id}",
+        "type": "artifacts.load",
+        "params": {"artifact_id": req.artifact_id, "path": row.get("path")},
+        "ports": {"out": {"artifacts": {"type": "compile_artifacts"}}},
+    }
+    # Validate the generated node against the compiler port contract.
+    _validate_graph_ports({"nodes": [node]})
+    return {"node": node, "artifact": {"id": req.artifact_id, "path": row.get("path"), "status": row.get("status")}}
 
 
 class GraphRunRequest(BaseModel):
@@ -1380,6 +1472,10 @@ async def create_graph_run(req: GraphRunRequest) -> dict[str, Any]:
     if not graph_path.is_file():
         raise HTTPException(status_code=404, detail="graph.json not found")
     graph = json.loads(graph_path.read_text(encoding="utf-8"))
+
+    # Re-validate the persisted graph's node ports before executing — a run is
+    # a board mutation too, and must stay inside compiler bounds.
+    _validate_graph_ports(graph)
 
     if req.target_node_id:
         node_ids = {n["id"] for n in graph.get("nodes") or []}
