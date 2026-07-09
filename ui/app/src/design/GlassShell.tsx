@@ -20,7 +20,7 @@ export default function GlassShell({ children }: Props) {
       <a href="#main-content" className="skip-link sr-only">
         Skip to main content
       </a>
-      <ContextCanvas />
+      <ContextCanvas variant="mesh" />
       <div className="glass-shell__frame">
         <GlassNavRail />
         <div className="glass-shell__main">
@@ -29,7 +29,6 @@ export default function GlassShell({ children }: Props) {
               <span className="glass-shell__product">
                 {workspace?.name || "Creative IDE"}
               </span>
-              <span className="glass-shell__tagline">Structured knowledge → deterministic compilation</span>
             </div>
             <div className="glass-shell__actions">
               {tenants.length > 0 && (

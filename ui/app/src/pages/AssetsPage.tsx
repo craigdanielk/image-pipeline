@@ -30,7 +30,7 @@ export default function AssetsPage() {
         </label>
         <select
           id="assets-product"
-          className="field-input"
+          className="field-select"
           value={product}
           onChange={(e) => setProduct(e.target.value)}
         >

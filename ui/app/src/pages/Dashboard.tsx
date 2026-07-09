@@ -50,8 +50,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-page">
-      <GlassCard className="dashboard-hero glass-card--active">
-        <p className="dashboard-hero__eyebrow">Creative IDE</p>
+      <GlassCard className="dashboard-hero">
         <h1 className="dashboard-hero__title">Compile knowledge into assets</h1>
         <p className="dashboard-hero__copy">{HERO}</p>
         {stats.products === 0 ? (
@@ -78,7 +77,7 @@ export default function Dashboard() {
         </div>
       </GlassCard>
 
-      <div className="page-grid page-grid--stats" style={{ marginTop: "1rem" }}>
+      <div className="page-grid page-grid--stats">
         <GlassCard className="stat-card">
           <div className="stat-card__value">{stats.products}</div>
           <div className="stat-card__label">Products</div>
@@ -101,7 +100,7 @@ export default function Dashboard() {
         </GlassCard>
       </div>
 
-      <GlassCard className="dashboard-panel" style={{ marginTop: "1rem" }}>
+      <GlassCard className="dashboard-panel">
         <div className="dashboard-panel__header">
           <h2 className="dashboard-panel__title">Recent runs</h2>
           <Link to="/runs" className="btn btn--sm">
@@ -121,7 +120,7 @@ export default function Dashboard() {
                   </span>
                 </div>
                 <span
-                  className={`accent-pill ${run.status === "complete" ? "accent-pill--active" : ""}`}
+                  className={`accent-pill ${run.status === "complete" ? "accent-pill--ok" : ""}`}
                 >
                   {run.status === "complete" ? `${run.outputs} outputs` : "Pending"}
                 </span>
@@ -131,7 +130,7 @@ export default function Dashboard() {
         )}
       </GlassCard>
 
-      <GlassCard className="dashboard-panel" style={{ marginTop: "1rem" }}>
+      <GlassCard className="dashboard-panel">
         <h2 className="dashboard-panel__title">Quick actions</h2>
         <div className="dashboard-actions">
           <Link to="/products" className="btn">

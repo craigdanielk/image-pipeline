@@ -269,7 +269,7 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
                     />
                     <div className="asset-card__actions">
                       <button type="button" className="btn btn--sm" onClick={() => saveComment(a.id)}>
-                        Save comment
+                        Save
                       </button>
                       {a.status === "rejected" ? (
                         <button type="button" className="btn btn--sm" onClick={() => restoreArtifact(a)}>
@@ -298,7 +298,7 @@ export default function ArtifactGallery({ productSlug, campaignSlug, title = "Re
                         </>
                       )}
                       <button type="button" className="btn btn--sm" onClick={() => setRegenTarget(a)}>
-                        Regenerate…
+                        Regenerate
                       </button>
                       {a.drive_url && (
                         <a
