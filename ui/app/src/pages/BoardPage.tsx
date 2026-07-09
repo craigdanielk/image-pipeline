@@ -23,6 +23,27 @@ const OUTPUT_TYPES = [
   { id: "social", label: "Social" },
 ];
 
+// The six runtime nodes are visible from job start — no hidden pipeline. Each
+// unlocks only when its input ports are satisfied per node_registry
+// (validate_node_ports server-side). "artifacts.load" is the output-as-input
+// reuse node: an approved gallery artifact attaches here and feeds
+// reference.resolve in a new chain.
+const RUNTIME_CHAIN: { nodeType: string; label: string }[] = [
+  { nodeType: "intake.load", label: "Load job" },
+  { nodeType: "jobspec.validate", label: "Validate spec" },
+  { nodeType: "prompt.build", label: "Build prompt" },
+  { nodeType: "reference.resolve", label: "Resolve refs" },
+  { nodeType: "engine.generate", label: "Generate" },
+  { nodeType: "output.persist", label: "Persist" },
+];
+
+type RuntimeNodeSpec = {
+  node_type: string;
+  description: string;
+  ports_in: Record<string, { type: string; required: boolean }>;
+  ports_out: Record<string, { type: string; required: boolean }>;
+};
+
 type CampaignDetail = Campaign & {
   scene?: { description?: string; lighting?: string; camera?: string; composition?: string; background?: string };
   campaign?: { mood?: string; audience?: string; style?: string };
@@ -215,6 +236,68 @@ export default function BoardPage() {
   const [opRunning, setOpRunning] = useState<Record<string, boolean>>({});
   const [opRunStatus, setOpRunStatus] = useState<Record<string, string>>({});
   const activeStreamsRef = useRef<Set<EventSource>>(new Set());
+
+  // Runtime chain (progressive unlock) + output-as-input reuse (artifacts.load).
+  const [runtimeSpecs, setRuntimeSpecs] = useState<RuntimeNodeSpec[]>([]);
+  const [artifactIdDraft, setArtifactIdDraft] = useState("");
+  const [loadedArtifacts, setLoadedArtifacts] = useState<{ id: string; path?: string }[]>([]);
+  const [wiringError, setWiringError] = useState("");
+
+  useEffect(() => {
+    api<{ nodes: RuntimeNodeSpec[] }>("/api/board/runtime-chain")
+      .then((d) => setRuntimeSpecs(d.nodes || []))
+      .catch(() => setRuntimeSpecs([]));
+  }, []);
+
+  const specByType = (t: string) => runtimeSpecs.find((s) => s.node_type === t);
+
+  // Progressive unlock: walk the linear chain accumulating produced output port
+  // types. A node unlocks once every *required* input port type is available
+  // upstream. reference.resolve additionally unlocks when an artifacts.load node
+  // has been attached (output-as-input reuse feeds its compile_artifacts port).
+  const produced = new Set<string>();
+  if (loadedArtifacts.length > 0) {
+    const al = specByType("artifacts.load");
+    Object.values(al?.ports_out || {}).forEach((p) => produced.add(p.type));
+  }
+  const unlockState = RUNTIME_CHAIN.map(({ nodeType }) => {
+    const spec = specByType(nodeType);
+    const required = Object.values(spec?.ports_in || {}).filter((p) => p.required);
+    const unlocked = required.every((p) => produced.has(p.type));
+    Object.values(spec?.ports_out || {}).forEach((p) => produced.add(p.type));
+    // Selecting a product+campaign satisfies the intake source for job start.
+    const gated = nodeType === "intake.load" ? !!productSlug && !!campaignId : unlocked;
+    return { nodeType, unlocked: gated };
+  });
+
+  // Client-side wiring guard: validate an artifacts.load node's ports against
+  // the compiler contract (node_registry.validate_node_ports) BEFORE attaching.
+  // The server re-validates via POST /api/board/artifacts-load — invalid wiring
+  // is rejected on both sides, never silently dropped.
+  const attachArtifact = async () => {
+    const id = artifactIdDraft.trim();
+    if (!id) return;
+    setWiringError("");
+    try {
+      await api("/api/board/validate-wiring", {
+        method: "POST",
+        body: JSON.stringify({
+          node_type: "artifacts.load",
+          ports: { out: { artifacts: { type: "compile_artifacts" } } },
+        }),
+      });
+      const res = await api<{ node: { params?: { path?: string } }; artifact: { id: string; path?: string } }>(
+        "/api/board/artifacts-load",
+        { method: "POST", body: JSON.stringify({ artifact_id: id, ...(tenant ? { tenant } : {}) }) },
+      );
+      setLoadedArtifacts((prev) =>
+        prev.some((a) => a.id === res.artifact.id) ? prev : [...prev, { id: res.artifact.id, path: res.artifact.path }],
+      );
+      setArtifactIdDraft("");
+    } catch (e) {
+      setWiringError(String(e));
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -561,6 +644,62 @@ export default function BoardPage() {
           </div>
         </div>
         {compileError && <div className="board-toolbar__compile-error">{compileError}</div>}
+      </div>
+
+      {/* Runtime chain — all six nodes visible from job start; each renders
+          locked until its input ports are satisfied (progressive unlock). */}
+      <div className="board-runtime-chain">
+        <span className="field-label">Runtime chain</span>
+        <div className="board-runtime-chain__nodes">
+          {RUNTIME_CHAIN.map(({ nodeType, label }, i) => {
+            const state = unlockState[i];
+            return (
+              <div
+                key={nodeType}
+                className={`board-runtime-node ${state.unlocked ? "board-runtime-node--unlocked" : "board-runtime-node--locked"}`}
+                title={specByType(nodeType)?.description || nodeType}
+                data-node-type={nodeType}
+              >
+                <span className="board-runtime-node__lock">{state.unlocked ? "●" : "🔒"}</span>
+                <span className="board-runtime-node__label">{label}</span>
+                <span className="board-runtime-node__type">{nodeType}</span>
+              </div>
+            );
+          })}
+        </div>
+        {/* Output-as-input reuse: attach an approved gallery artifact as an
+            artifacts.load node feeding reference.resolve in a new chain. */}
+        <div className="board-runtime-chain__artifacts">
+          <span className="field-label">artifacts.load — reuse approved output</span>
+          <div className="board-toolbar__custom-op">
+            <input
+              className="field-input"
+              placeholder="approved artifact id…"
+              value={artifactIdDraft}
+              onChange={(e) => setArtifactIdDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  attachArtifact();
+                }
+              }}
+            />
+            <button type="button" className="btn btn--sm" disabled={!artifactIdDraft.trim()} onClick={attachArtifact}>
+              + Attach
+            </button>
+          </div>
+          {loadedArtifacts.length > 0 && (
+            <ul className="explorer-list board-runtime-chain__variants">
+              {loadedArtifacts.map((a) => (
+                <li key={a.id}>
+                  artifacts.load · {a.id}
+                  {a.path ? ` — ${a.path}` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
+          {wiringError && <div className="board-toolbar__compile-error">{wiringError}</div>}
+        </div>
       </div>
 
       <div className="board-canvas">
