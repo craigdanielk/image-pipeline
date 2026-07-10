@@ -1,7 +1,7 @@
 # Adapter Contracts (Frozen Baseline)
 
 **Status:** FROZEN — do not change function signatures without a schema version bump.  
-**Baseline:** see `docs/GRAPH_MIGRATION_BASELINE.md` for the git SHA this contract was captured against.  
+**Baseline:** see `CONSOLIDATION.md` (§ Baselines) for the canonical/tenant-fork git SHAs this contract was captured against.  
 **Purpose:** These four seams are the **only** places the pure core (`core/run_job.py`) touches the outside world. The graph-v1 execution engine MUST call the same adapter interfaces; provider swaps are registry entries, not core changes.
 
 ## Registry (`core/adapters/__init__.py`)
