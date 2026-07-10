@@ -25,7 +25,7 @@ from typing import Any, Optional
 from urllib.parse import unquote
 
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -64,6 +64,7 @@ _load_env_file(UI_DIR / ".env")
 
 import artifact_registry  # noqa: E402
 import brief_drafter  # noqa: E402
+import cloud_store  # noqa: E402  — Supabase-backed store (brief #30201)
 import compile_bundle  # noqa: E402
 import compile_validator  # noqa: E402
 import graph_to_reactflow  # noqa: E402
@@ -532,6 +533,17 @@ def list_jobs(tenant: Optional[str] = None) -> dict[str, Any]:
 @app.get("/api/products")
 def list_products(tenant: Optional[str] = None) -> dict[str, Any]:
     """Knowledge-first products with optional job shot counts."""
+    if cloud_store.enabled():
+        rows = cloud_store.list_products(_workspace_id(tenant))
+        return {"products": [
+            {
+                "slug": r["slug"],
+                "name": r["name"],
+                "geometry_description": (r.get("spec") or {}).get("geometry_description"),
+                "source": "knowledge" if r.get("spec") else "jobs_only",
+            }
+            for r in rows
+        ]}
     store = _knowledge(tenant)
     products: list[dict[str, Any]] = []
     for row in store.list_products():
@@ -590,6 +602,14 @@ def get_product_unified(slug: str, tenant: Optional[str] = None) -> dict[str, An
     only exist as job folders on disk — they never get a knowledge/products/*.json
     entry. Detail pages must still be able to open them.
     """
+    if cloud_store.enabled():
+        row = cloud_store.get_product(_workspace_id(tenant), slug)
+        if not row:
+            raise HTTPException(status_code=404, detail=f"product not found: {slug}")
+        product = row.get("spec") or {
+            "id": slug, "name": row["name"], "cad_md": row.get("cad_md"),
+        }
+        return {"product": product, "source": "knowledge" if row.get("spec") else "jobs_only"}
     try:
         spec = _knowledge(tenant).get_product(slug)
         return {"product": spec, "source": "knowledge"}
@@ -848,6 +868,14 @@ def list_artifacts_api(
     sync: bool = False,
 ) -> dict[str, Any]:
     wid = _workspace_id(tenant)
+    if cloud_store.enabled():
+        # Cloud path: rows + signed Storage URLs, zero disk reads.
+        capped = min(limit, 60)
+        rows = cloud_store.list_artifacts(
+            wid, product_slug=product_slug, status=status, limit=capped + offset
+        )
+        page = rows[offset:offset + capped]
+        return {"artifacts": page, "total": len(rows), "offset": offset, "limit": capped}
     if sync:
         artifact_registry.sync_registry(ROOT, _primary_jobs_dir(tenant), wid, product_slug=product_slug)
     capped_limit = min(limit, 60)
@@ -875,6 +903,12 @@ def sync_artifacts_api(product_slug: Optional[str] = None, tenant: Optional[str]
 def patch_artifact_comment(
     artifact_id: str, req: ArtifactCommentRequest, tenant: Optional[str] = None
 ) -> dict[str, Any]:
+    if cloud_store.enabled():
+        row = cloud_store.set_artifact_comment(artifact_id, req.comment or "")
+        if row is None:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        cloud_store.add_comment(artifact_id, req.comment or "")
+        return {"ok": True, "artifact": cloud_store.get_artifact(artifact_id)}
     try:
         row = artifact_registry.update_comment(
             ROOT, artifact_id, req.comment, _workspace_id(tenant), drive_url=req.drive_url
@@ -890,6 +924,13 @@ def delete_artifact(
     reason: Optional[str] = Query(None),
     tenant: Optional[str] = None,
 ) -> dict[str, Any]:
+    if cloud_store.enabled():
+        row = cloud_store.set_artifact_status(artifact_id, "rejected", comment=reason)
+        if row is None:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        if reason:
+            cloud_store.add_comment(artifact_id, reason)
+        return {"ok": True, "artifact": cloud_store.get_artifact(artifact_id)}
     try:
         row = artifact_registry.soft_delete(
             ROOT, artifact_id, reason=reason, workspace_id=_workspace_id(tenant)
@@ -901,6 +942,11 @@ def delete_artifact(
 
 @app.post("/api/artifacts/{artifact_id}/approve")
 def approve_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
+    if cloud_store.enabled():
+        row = cloud_store.set_artifact_status(artifact_id, "approved")
+        if row is None:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        return {"ok": True, "artifact": cloud_store.get_artifact(artifact_id)}
     try:
         row = artifact_registry.approve_artifact(ROOT, artifact_id, workspace_id=_workspace_id(tenant))
         return {"ok": True, "artifact": row}
@@ -910,6 +956,11 @@ def approve_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict
 
 @app.post("/api/artifacts/{artifact_id}/restore")
 def restore_artifact_api(artifact_id: str, tenant: Optional[str] = None) -> dict[str, Any]:
+    if cloud_store.enabled():
+        row = cloud_store.set_artifact_status(artifact_id, "pending")
+        if row is None:
+            raise HTTPException(status_code=404, detail="artifact not found")
+        return {"ok": True, "artifact": cloud_store.get_artifact(artifact_id)}
     try:
         row = artifact_registry.restore_artifact(ROOT, artifact_id, workspace_id=_workspace_id(tenant))
         return {"ok": True, "artifact": row}
@@ -1720,7 +1771,26 @@ async def stream_graph_run(run_id: str) -> StreamingResponse:
 
 
 @app.get("/media")
-def serve_media(path: str) -> FileResponse:
+def serve_media(path: str, bucket: Optional[str] = None):
+    """Media gateway.
+
+    Cloud mode (brief #30201): `path` is a Storage object key; redirect to a
+    short-lived signed URL so no file ever leaves local disk. `bucket` selects
+    reference-images vs rendered-outputs (default: rendered-outputs).
+
+    Legacy mode: stream the file from an allowed disk root.
+    """
+    if cloud_store.enabled():
+        b = bucket or cloud_store.OUTPUT_BUCKET
+        # tolerate "<bucket>/<key>" convenience form
+        if path.startswith(f"{cloud_store.REFERENCE_BUCKET}/"):
+            b, path = cloud_store.REFERENCE_BUCKET, path.split("/", 1)[1]
+        elif path.startswith(f"{cloud_store.OUTPUT_BUCKET}/"):
+            b, path = cloud_store.OUTPUT_BUCKET, path.split("/", 1)[1]
+        try:
+            return RedirectResponse(url=cloud_store.signed_url(b, path), status_code=307)
+        except cloud_store.CloudStoreError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
     file_path = _resolve_path(path)
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="file not found")
