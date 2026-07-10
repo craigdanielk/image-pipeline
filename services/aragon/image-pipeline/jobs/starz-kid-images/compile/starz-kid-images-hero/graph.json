@@ -1,0 +1,142 @@
+{
+  "schema_version": "graph-v1",
+  "id": "starz-kid-images-hero-exec-graph",
+  "metadata": {
+    "compiled_from": "compile-artifacts-v1:starz-kid-images-hero",
+    "compile_hash": "fd53f31bc738c69ff0fe85196a52f29548c6cd64d6367eca2b7572b986be82db",
+    "execution_id": "starz-kid-images-hero"
+  },
+  "nodes": [
+    {
+      "id": "load",
+      "type": "artifacts.load",
+      "params": {},
+      "ports": {
+        "out": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve_refs",
+      "type": "reference.resolve",
+      "params": {
+        "adapter": "local",
+        "reference": "reference/plates/plate-hero.png"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        },
+        "out": {
+          "refs": {
+            "type": "image_path"
+          }
+        }
+      }
+    },
+    {
+      "id": "generate",
+      "type": "engine.generate",
+      "params": {
+        "model": "nano_banana_2",
+        "provider": "higgsfield"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "refs": {
+            "type": "image_path"
+          }
+        },
+        "out": {
+          "results": {
+            "type": "engine_results"
+          }
+        }
+      }
+    },
+    {
+      "id": "persist",
+      "type": "output.persist",
+      "params": {
+        "imgtype": "hero",
+        "out_dir": "out",
+        "adapter": "local"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "results": {
+            "type": "engine_results"
+          }
+        },
+        "out": {
+          "files": {
+            "type": "file_list"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "resolve_refs",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "generate",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "persist",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "resolve_refs",
+        "port": "refs"
+      },
+      "to": {
+        "node": "generate",
+        "port": "refs"
+      }
+    },
+    {
+      "from": {
+        "node": "generate",
+        "port": "results"
+      },
+      "to": {
+        "node": "persist",
+        "port": "results"
+      }
+    }
+  ]
+}

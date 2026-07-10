@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/execution-request-v1.schema.json",
+  "title": "ExecutionRequest v1",
+  "description": "Per-run execution parameters. Lowered from job-v1 for backwards compatibility.",
+  "type": "object",
+  "required": ["schema_version", "id", "engine", "output"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "execution-request-v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "reference": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string" },
+        {
+          "type": "object",
+          "required": ["image"],
+          "properties": {
+            "image": { "type": "string" },
+            "optional": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": { "type": "string" },
+                  "optional": { "type": "boolean" }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "imgtype": { "type": "string" },
+        "aspect_ratio": { "type": "string" },
+        "resolution": { "type": "string" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "background": { "type": "string" },
+        "composition": { "type": "string" },
+        "colors": { "type": "array", "items": { "type": "string" } },
+        "dir": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "engine": {
+      "type": "object",
+      "required": ["name", "model"],
+      "properties": {
+        "name": { "type": "string" },
+        "model": { "type": "string" },
+        "model_type": { "type": "string" },
+        "params": { "type": "object", "additionalProperties": true }
+      },
+      "additionalProperties": false
+    },
+    "dry_run": { "type": "boolean", "default": false },
+    "parent_run_id": { "type": ["string", "null"] },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "compiled_from": { "type": "string", "enum": ["job-v1", "api", "graph-node"] },
+        "source_job_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

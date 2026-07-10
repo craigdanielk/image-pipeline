@@ -1,0 +1,27 @@
+{
+  "$schema": "../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "example-multi-ref-plates",
+  "subject": {
+    "view": "three-quarter hero angle, device tilted about 30 degrees"
+  },
+  "spec": {
+    "cad": "../jobs/primikey-usba/cad.md",
+    "prompt_template": "Studio product photograph. Match geometry from reference images 1–3.\n\n{cad}\n\nVIEW: {view}."
+  },
+  "reference": [
+    "../jobs/primikey-usba/reference/plates/plate-2-hero34.png",
+    "../jobs/primikey-usba/reference/plates/plate-1-plan.png",
+    "../jobs/primikey-usba/reference/plates/plate-3-profile.png"
+  ],
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2"
+  }
+}

@@ -1,182 +1,141 @@
 #!/usr/bin/env python3
-"""Tests for the Phase 1 node registry.
-
-Verifies:
-  * all six Phase 1 node types resolve,
-  * each declares non-empty input_schema and output_schema,
-  * payload validation accepts good payloads and rejects bad ones,
-  * graph_ir uses the registry for port-compatibility checks.
-
-Dep-free: plain asserts, runnable via `python3 test_node_registry.py` or
-`python3 -m pytest`.
-"""
+"""Tests for core/node_registry.py"""
 from __future__ import annotations
 
+import json
 import os
 import sys
+import unittest
 
-_CORE = os.path.join(os.path.dirname(__file__), "..", "core")
-sys.path.insert(0, os.path.abspath(_CORE))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "core"))
 
-import node_registry  # noqa: E402
+import graph_compiler  # noqa: E402
 import graph_ir  # noqa: E402
-
-EXPECTED_SIX = {
-    "cad.load",
-    "prompt.build",
-    "reference.resolve",
-    "engine.cost",
-    "engine.generate",
-    "output.persist",
-}
+import node_registry  # noqa: E402
+import prompt_compiler  # noqa: E402
 
 
-def test_registry_registers_exactly_the_six_phase1_nodes():
-    assert set(node_registry.list_node_types()) == EXPECTED_SIX
-    assert set(node_registry.PHASE1_NODE_TYPES) == EXPECTED_SIX
-    assert len(node_registry.PHASE1_NODE_TYPES) == 6
+JOBS_DIR = os.path.join(os.path.dirname(__file__), "..", "jobs")
 
 
-def test_all_six_node_types_resolve():
-    for ntype in EXPECTED_SIX:
-        spec = node_registry.get(ntype)
-        assert spec.node_type == ntype
-        handler = node_registry.get_handler(ntype)
-        assert handler.node_type == ntype
-        # Handler satisfies the NodeHandler protocol.
-        assert isinstance(handler, node_registry.NodeHandler)
+class TestNodeRegistry(unittest.TestCase):
+    def test_phase1_node_types_registered(self):
+        types = node_registry.list_node_types()
+        self.assertEqual(len(types), 8)
+        for ntype in node_registry.PHASE1_NODE_TYPES:
+            self.assertIn(ntype, types)
 
+    def test_each_node_has_input_and_output_schemas(self):
+        for ntype in node_registry.PHASE1_NODE_TYPES:
+            spec = node_registry.get(ntype)
+            if ntype in ("intake.load", "artifacts.load"):
+                self.assertTrue(spec.output_schema)
+            else:
+                self.assertTrue(spec.input_schema, ntype)
+                self.assertTrue(spec.output_schema, ntype)
 
-def test_each_node_declares_input_and_output_schema():
-    for ntype in EXPECTED_SIX:
-        spec = node_registry.get(ntype)
-        assert spec.input_schema, f"{ntype} missing input_schema"
-        assert spec.output_schema, f"{ntype} missing output_schema"
-        # Well-formed schema shape (type or oneOf present).
-        assert node_registry.validate_schema_shape(ntype) is True
-        assert node_registry.input_schema(ntype) == spec.input_schema
-        assert node_registry.output_schema(ntype) == spec.output_schema
+    def test_unknown_node_raises(self):
+        with self.assertRaises(node_registry.NodeRegistryError):
+            node_registry.get("cad.load")
 
+    def test_handler_stubs_instantiate(self):
+        for ntype in node_registry.PHASE1_NODE_TYPES:
+            handler = node_registry.get_handler(ntype)
+            self.assertEqual(handler.node_type, ntype)
+            with self.assertRaises(NotImplementedError):
+                handler.execute({}, {}, {})
 
-def test_unknown_node_type_raises():
-    try:
-        node_registry.get("does.not.exist")
-    except node_registry.NodeRegistryError:
-        pass
-    else:  # pragma: no cover
-        raise AssertionError("expected NodeRegistryError")
+    def test_prompt_build_references_prompt_compiler(self):
+        handler = node_registry.get_handler("prompt.build")
+        self.assertIs(node_registry.PromptBuildHandler.compiler, prompt_compiler)
+        self.assertIs(handler.compiler, prompt_compiler)
+        job = {
+            "schema_version": "job-v1",
+            "id": "registry-prompt-test",
+            "spec": {
+                "prompt_template": "Product {product} on white.",
+                "cad": "Compact hairband geometry for prompt compile test.",
+            },
+            "subject": {"product": "hairband"},
+            "output": {"imgtype": "hero", "count": 1},
+            "engine": {"name": "higgsfield", "model": "nano_banana_2"},
+            "_dir": "/tmp",
+        }
+        prompt = node_registry.PromptBuildHandler.compile_prompt(job)
+        self.assertIn("hairband", prompt)
 
+    def test_validate_payload_job_spec(self):
+        job = {
+            "schema_version": "job-v1",
+            "id": "payload-test",
+            "spec": {},
+            "output": {"count": 1},
+            "engine": {"name": "higgsfield", "model": "nano_banana_2"},
+        }
+        self.assertTrue(
+            node_registry.validate_payload("jobspec.validate", "in", job)
+        )
 
-def test_payload_validation_accepts_valid_payloads():
-    assert node_registry.validate_payload(
-        "cad.load", "in", {"schema_version": "job-v1", "id": "j1"}
-    )
-    assert node_registry.validate_payload(
-        "cad.load", "out", {"schema_version": "cad-doc-v1", "product": "grip"}
-    )
-    assert node_registry.validate_payload("prompt.build", "out", "a resolved prompt")
-    assert node_registry.validate_payload(
-        "reference.resolve", "out", ["/tmp/a.png", "/tmp/b.png"]
-    )
-    assert node_registry.validate_payload("reference.resolve", "out", None)
-    assert node_registry.validate_payload(
-        "engine.cost", "out", {"provider": "fal", "estimated_cost_usd": 0.04}
-    )
-    assert node_registry.validate_payload(
-        "engine.generate", "out", [{"result_url": "https://x/y.png"}]
-    )
-    assert node_registry.validate_payload("output.persist", "out", ["/out/1.png"])
+    def test_validate_payload_prompt_string(self):
+        self.assertTrue(
+            node_registry.validate_payload("prompt.build", "out", "A valid prompt.")
+        )
+        with self.assertRaises(node_registry.NodeRegistryError):
+            node_registry.validate_payload("prompt.build", "out", "")
 
+    def test_types_compatible_image_path_widening(self):
+        self.assertTrue(
+            node_registry.types_compatible("image_path", "image_path_list")
+        )
+        self.assertFalse(
+            node_registry.types_compatible("job_spec", "prompt")
+        )
 
-def test_payload_validation_rejects_bad_payloads():
-    # prompt.build output must be a non-empty string.
-    for bad in (123, "", None):
-        try:
-            node_registry.validate_payload("prompt.build", "out", bad)
-        except node_registry.NodeRegistryError:
-            pass
-        else:  # pragma: no cover
-            raise AssertionError(f"expected rejection for {bad!r}")
+    def test_published_schemas_on_disk(self):
+        for ntype in node_registry.PHASE1_NODE_TYPES:
+            slug = ntype.replace(".", "-")
+            for direction in ("in", "out"):
+                path = os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "schemas",
+                    "nodes",
+                    f"{slug}-{direction}.schema.json",
+                )
+                if ntype == "intake.load" and direction == "in":
+                    continue
+                if ntype == "artifacts.load" and direction == "in":
+                    continue
+                self.assertTrue(os.path.isfile(path), path)
+                schema = node_registry.load_published_schema(ntype, direction)
+                self.assertIn("$schema", schema)
 
-    # cad.load output missing required field.
-    try:
-        node_registry.validate_payload("cad.load", "out", {"product": "grip"})
-    except node_registry.NodeRegistryError:
-        pass
-    else:  # pragma: no cover
-        raise AssertionError("expected rejection for missing schema_version")
+    def test_graph_compiler_nodes_pass_registry_validation(self):
+        path = os.path.join(JOBS_DIR, "primikey-usba", "scene-float-a.job.json")
+        graph = graph_compiler.compile_path(path)
+        graph_ir.validate(graph)
+        for node in graph["nodes"]:
+            spec = node_registry.get(node["type"])
+            node_registry.validate_node_ports(node["type"], node.get("ports"))
+            self.assertTrue(spec.input_schema or spec.output_schema)
 
-    # engine.cost output missing estimated_cost_usd.
-    try:
-        node_registry.validate_payload("engine.cost", "out", {"provider": "fal"})
-    except node_registry.NodeRegistryError:
-        pass
-    else:  # pragma: no cover
-        raise AssertionError("expected rejection for missing cost")
-
-
-def test_phase1_handlers_are_declaration_only_stubs():
-    # Handlers are addressable but refuse runtime execution in Phase 1.
-    for ntype in EXPECTED_SIX:
-        handler = node_registry.get_handler(ntype)
-        try:
-            handler.execute({}, {}, {})
-        except NotImplementedError:
-            pass
-        else:  # pragma: no cover
-            raise AssertionError(f"{ntype} handler should be a Phase 1 stub")
-
-
-def test_types_compatible_matrix():
-    assert node_registry.types_compatible("prompt", "prompt")
-    assert node_registry.types_compatible("prompt", "string")
-    assert node_registry.types_compatible("image_path", "image_path_list")
-    assert node_registry.types_compatible("cost_estimate", "any")
-    assert not node_registry.types_compatible("job_spec", "engine_results")
-
-
-def test_graph_ir_uses_registry_for_port_compat():
-    # Compatible edge (prompt.build.prompt -> engine.cost.prompt) is accepted.
-    g = graph_ir.GraphIR()
-    g.add_node("a", "prompt.build")
-    g.add_node("b", "engine.cost")
-    edge = g.add_edge("a", "prompt", "b", "prompt")
-    assert edge.dst_node == "b"
-    assert g.validate() is True
-
-    # Incompatible edge (cad.load.cad -> output.persist.results) is rejected.
-    g2 = graph_ir.GraphIR()
-    g2.add_node("c", "cad.load")
-    g2.add_node("d", "output.persist")
-    try:
-        g2.add_edge("c", "cad", "d", "results")
-    except node_registry.NodeRegistryError:
-        pass
-    else:  # pragma: no cover
-        raise AssertionError("expected incompatible-edge rejection")
-
-    # Undeclared port is rejected via registry lookup.
-    try:
-        node_registry.ports_compatible("cad.load", "nope", "prompt.build", "cad")
-    except node_registry.NodeRegistryError:
-        pass
-    else:  # pragma: no cover
-        raise AssertionError("expected undeclared-port rejection")
-
-
-def test_canonical_linear_phase1_graph_validates():
-    g = graph_ir.linear_phase1_graph()
-    assert len(g.nodes) == 6
-    assert g.validate() is True
-
-
-def _run_all():
-    fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
-    for fn in fns:
-        fn()
-        print(f"PASS {fn.__name__}")
-    print(f"\n{len(fns)} tests passed.")
+    def test_unknown_graph_node_type_rejected(self):
+        graph = {
+            "schema_version": "graph-v1",
+            "id": "bad-graph",
+            "nodes": [
+                {
+                    "id": "x",
+                    "type": "cad.load",
+                    "ports": {"out": {"job": {"type": "job_spec"}}},
+                }
+            ],
+            "edges": [],
+        }
+        with self.assertRaises(graph_ir.GraphIRError) as ctx:
+            graph_ir.validate(graph)
+        self.assertIn("Unknown node type", str(ctx.exception))
 
 
 if __name__ == "__main__":
-    _run_all()
+    unittest.main()

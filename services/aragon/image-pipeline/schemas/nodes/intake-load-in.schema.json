@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/intake-load-in.schema.json",
+  "title": "intake.load params (source path)",
+  "type": "object",
+  "required": ["source"],
+  "properties": {
+    "source": {
+      "type": "string",
+      "description": "Path to .job.json or '-' for stdin."
+    },
+    "schema_version": { "type": "string", "const": "job-v1" }
+  }
+}

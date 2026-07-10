@@ -1,0 +1,36 @@
+{
+  "schema_version": "provider-execution-plan-v1",
+  "id": "starz-kid-images-hero-plan",
+  "provider_prompt_id": "fd53f31bc738c69ff0fe85196a52f29548c6cd64d6367eca2b7572b986be82db",
+  "provider": "higgsfield",
+  "model": "nano_banana_2",
+  "method": "cost_estimate",
+  "params": {
+    "aspect_ratio": "4:3",
+    "resolution": "2k"
+  },
+  "uploads": [],
+  "media_inputs": [],
+  "retries": {
+    "max_attempts": 3,
+    "backoff": "exponential"
+  },
+  "masks": [],
+  "metadata": {
+    "capability_registry_version": "v1-inline",
+    "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images",
+    "accepts_reference": true,
+    "content_hash": "e6cd42cf6193477e50f7bbe60db5d75779bdeb3ac7c62828d49b74b49e1e256a"
+  },
+  "prompt": {
+    "positive": "Studio product photograph.\n\nA bright kids' athletic sneaker, chunky sole, velcro strap.\n\nVIEW: three-quarter hero angle on a seamless studio backdrop.",
+    "negative": null
+  },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "dir": "out",
+    "count": 1
+  }
+}

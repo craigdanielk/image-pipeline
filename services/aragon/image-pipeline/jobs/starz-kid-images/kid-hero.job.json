@@ -1,0 +1,25 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "starz-kid-images-hero",
+  "subject": {
+    "product": "kids' athletic shoe",
+    "view": "three-quarter hero angle on a seamless studio backdrop"
+  },
+  "spec": {
+    "cad": "A bright kids' athletic sneaker, chunky sole, velcro strap.",
+    "prompt_template": "Studio product photograph.\n\n{cad}\n\nVIEW: {view}."
+  },
+  "reference": "reference/plates/plate-hero.png",
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "dir": "out",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2"
+  }
+}

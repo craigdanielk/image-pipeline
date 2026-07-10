@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/edit-spec-v1.schema.json",
+  "title": "EditSpec v1",
+  "description": "Per-run surgical modification — delta applied on top of CreativeSpec. Chains via parent_asset_id / parent_run_id.",
+  "type": "object",
+  "required": ["schema_version", "id", "operation", "parent_asset_id"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "edit-spec-v1" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "creative_spec_id": {
+      "type": "string",
+      "description": "Campaign this edit belongs to."
+    },
+    "operation": {
+      "type": "string",
+      "enum": [
+        "lock_and_rerender",
+        "replace_mark",
+        "remove_element",
+        "insert_mark",
+        "region_edit",
+        "subject_swap"
+      ]
+    },
+    "parent_asset_id": {
+      "type": "string",
+      "description": "Content-addressed handle of parent output or anchor image."
+    },
+    "parent_run_id": {
+      "type": "string",
+      "description": "Optional lineage link to prior execution run."
+    },
+    "constraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule"],
+        "properties": {
+          "rule": { "type": "string" },
+          "region": { "type": "string" },
+          "value": { "type": "string" }
+        },
+        "additionalProperties": false
+      },
+      "description": "Machine-evaluable rules compiled into ProviderPrompt sections."
+    },
+    "exclusions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Hard negations compiled into negative prompt (no hole, no crown, etc.)."
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["region_id"],
+        "properties": {
+          "region_id": { "type": "string" },
+          "semantic": { "type": "string" },
+          "bbox": {
+            "type": "object",
+            "required": ["x", "y", "w", "h"],
+            "properties": {
+              "x": { "type": "number", "minimum": 0, "maximum": 1 },
+              "y": { "type": "number", "minimum": 0, "maximum": 1 },
+              "w": { "type": "number", "minimum": 0, "maximum": 1 },
+              "h": { "type": "number", "minimum": 0, "maximum": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "reference_roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "asset_id"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "pose_anchor",
+              "product_ref",
+              "brand_mark",
+              "style_ref",
+              "parent_output"
+            ]
+          },
+          "asset_id": { "type": "string" },
+          "ordinal": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "compiled_from": { "type": "string" },
+        "source_job_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

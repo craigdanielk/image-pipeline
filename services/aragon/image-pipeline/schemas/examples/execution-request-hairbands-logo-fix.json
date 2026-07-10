@@ -1,0 +1,25 @@
+{
+  "schema_version": "execution-request-v1",
+  "id": "hairbands-shot-1-logo-fix",
+  "reference": {
+    "image": "asset:sha256:parent-shot-1-base"
+  },
+  "output": {
+    "imgtype": "edit",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "higgsfield-ai/soul/standard",
+    "params": {
+      "input_images": []
+    }
+  },
+  "dry_run": true,
+  "provenance": {
+    "compiled_from": "spec-v2",
+    "source": "schemas/examples/edit-spec-v2-hairbands-logo-fix.json"
+  }
+}

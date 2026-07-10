@@ -1,0 +1,22 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t9-hero",
+  "subject": {
+    "name": "GHK-Cu PLUS",
+    "form": "Gel cream",
+    "size": "30ml"
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of an airless cosmetic pump JAR. CRITICAL CONTAINER DETAILS — the body is OPAQUE MATTE WHITE plastic (pure white, NOT amber, NOT brown, NOT glass, NOT translucent), a smooth cylindrical white jar; the cap is a tall SMOOTH WHITE DOMED twist cap that sits flush over the body (NOT a lotion pump, NOT a spout, NOT a nozzle, NOT a dispenser head). The WHOLE container is white — there is NO amber or brown anywhere. Match the attached reference image EXACTLY for this white jar shape, the white domed cap, the white body, label placement, AVID-RA branding, materials and lighting. BACKGROUND seamless very-light warm grey, soft key light from top-left, jar vertically centered ~90% of frame height, soft contact shadow. On the white lower body, CENTERED navy text, top to bottom: the AVID-RA molecule logo (blue node/molecule icon) with 'AVID-RA' and the small 'COMPLEX AMINO RESEARCH' tagline; then the product name 'GHK-Cu PLUS' in navy #1b2846 (largest, ONE line); then a single row with 'Gel cream' at the LEFT and '30ml' at the RIGHT in muted grey #5b687b. This product is AVID-RA brand, NOT Regenic|Lab. There is NO schedule badge, NO dose/strength number, NO 'Jar' text, and ABSOLUTELY NO 'RESEARCH PURPOSES ONLY' line anywhere. TYPOGRAPHY DISCIPLINE: replicate the reference's text sizes, centering and spacing exactly; do not enlarge or invent text. No 'Novecy' or other third-party branding. Clean premium research-grade skincare product image, sharp focus, sRGB. Portrait 406x595.",
+    "cad": "CAD source of truth: config/cad/T9_hero.json (regenic Norwood-Ludwig template T9 — AVID-RA airless pump jar, gel cream). Single SKU ghk-cu-gel-cream; all label text fixed in the prompt."
+  },
+  "reference": { "image": "reference/t9-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "2:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "gpt_image_2" }
+}

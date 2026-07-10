@@ -1,0 +1,27 @@
+{
+  "schema_version": "provider-prompt-v1",
+  "positive": "Studio product photograph.\n\nA bright kids' athletic sneaker, chunky sole, velcro strap.\n\nVIEW: three-quarter hero angle on a seamless studio backdrop.",
+  "negative": null,
+  "metadata": {
+    "execution_id": "starz-kid-images-hero",
+    "product_spec_id": "starz-kid-images-hero-product",
+    "creative_spec_id": "starz-kid-images-hero-creative",
+    "edit_spec_ids": [],
+    "placeholders_resolved": {
+      "product": "kids' athletic shoe",
+      "view": "three-quarter hero angle on a seamless studio backdrop",
+      "composition": "",
+      "background": "",
+      "cad": "A bright kids' athletic sneaker, chunky sole, velcro strap."
+    },
+    "composition": "",
+    "background": "",
+    "content_hash": "fd53f31bc738c69ff0fe85196a52f29548c6cd64d6367eca2b7572b986be82db"
+  },
+  "input_assets": {
+    "references": [
+      "reference/plates/plate-hero.png"
+    ],
+    "input_images": []
+  }
+}

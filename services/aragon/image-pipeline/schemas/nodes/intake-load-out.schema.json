@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/intake-load-out.schema.json",
+  "title": "intake.load output (job_spec)",
+  "type": "object",
+  "required": ["schema_version", "id"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "job-v1" },
+    "id": { "type": "string" },
+    "spec": { "type": "object" },
+    "subject": { "type": "object" },
+    "reference": {},
+    "output": { "type": "object" },
+    "engine": { "type": "object" },
+    "_dir": { "type": "string" }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": "compile-manifest-v1",
+  "job_id": "starz-kid-images-hero",
+  "lowering_version": "job-v1@1",
+  "dry_run": true,
+  "source": {
+    "kind": "job-v1",
+    "path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images/kid-hero.job.json"
+  },
+  "artifacts": {
+    "ProductSpec.json": {
+      "content_hash": "fa6f07b44cdc5e037c147baa75067ab45e7371b9d72770f23ed1bfa6933e0826",
+      "schema_version": "product-spec-v1"
+    },
+    "CreativeSpec.json": {
+      "content_hash": "aa3260f4e7f3a8ba202fd327142317a6395a6dfe59593c0fa66f7015c8807e7c",
+      "schema_version": "creative-spec-v1"
+    },
+    "EditSpecs.json": {
+      "content_hash": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "ExecutionRequest.json": {
+      "content_hash": "0c825ccc48f13f1ad56f516473f5d5cf6c5218f4b94dcd0096ba9e3752a7d210",
+      "schema_version": "execution-request-v1"
+    },
+    "ProviderPrompt.json": {
+      "content_hash": "02a628b18f401bcb0a45aa19338d69d949890170d2dc11b474b91bd211cb7a6c",
+      "schema_version": "provider-prompt-v1"
+    },
+    "ProviderExecutionPlan.json": {
+      "content_hash": "6b2466bcec2909ce1dab3dcd01c22de8262a7e1dae0cad4e8eea8e8a0cedab71",
+      "schema_version": "provider-execution-plan-v1"
+    },
+    "graph.json": {
+      "content_hash": "5784993d12c08b9368b5c750fd91fdbbac5a54113a869aa485ed2730c4f01bf3",
+      "schema_version": "graph-v1"
+    },
+    "RuntimeContext.json": {
+      "content_hash": "18e06077a7a5b01e14637ef5b6ba9a602ffae2cc304f44a14d738ae3a15ca204",
+      "schema_version": "runtime-context-v1"
+    }
+  },
+  "compile_hash": "fd53f31bc738c69ff0fe85196a52f29548c6cd64d6367eca2b7572b986be82db",
+  "manifest_hash": "ff1d2ea99e8d668336069b9c1e262e7af0decec5918c065dbd6391db348fa53f"
+}

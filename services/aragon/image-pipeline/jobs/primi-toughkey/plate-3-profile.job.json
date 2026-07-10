@@ -1,0 +1,17 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primi-toughkey-plate-profile",
+  "subject": { "view": "side profile view, the long edge facing camera, long axis horizontal, showing the racetrack cross-section thickness" },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Clean studio product photograph, a single USB-C contactless hardware security key isolated on a seamless neutral light-grey (#d9d9dd) background. VIEW: {view} — show the thin 3.35mm racetrack edge profile: the molded keyring through-slot at the left end, the slab thickness with its full-radius rounded long edge, the brass NFC disc seen edge-on as a slight dome, and the USB-C connector protruding at the right end with its short black overmold neck. Preserve the EXACT object in the attached reference image; do not restyle the product. Soft even large-softbox lighting, NO coloured rim light, NO dramatic shadows, only a subtle soft contact shadow, true-to-material colour (matte black glass-filled-nylon body, brushed brass disc, nickel-steel USB-C). Sharp focus edge to edge, catalogue reference plate, centered with even margins. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": "reference/toughkey-target.png",
+  "output": {
+    "imgtype": "plate",
+    "aspect_ratio": "3:2",
+    "resolution": "2k"
+  },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}

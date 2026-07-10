@@ -1,0 +1,34 @@
+{
+  "schema_version": "edit-spec-v1",
+  "id": "hairbands-shot-1-logo-fix-v3",
+  "creative_spec_id": "hairbands-kid-campaign",
+  "operation": "replace_mark",
+  "parent_asset_id": "asset:sha256:parent-output-hairbands-shot-1-kid-v1",
+  "parent_run_id": "hairbands-shot-1-kid",
+  "constraints": [
+    {
+      "rule": "lock_pose_lighting_background",
+      "region": "global"
+    },
+    {
+      "rule": "replace_chest_mark",
+      "region": "sternum",
+      "value": "stacked JO/GA pale chartreuse, centred, 90% hero scale"
+    }
+  ],
+  "exclusions": [
+    "white swoosh",
+    "Joma J",
+    "wrong chest mark",
+    "crown",
+    "GA badge on jersey"
+  ],
+  "reference_roles": [
+    { "role": "parent_output", "asset_id": "asset:sha256:parent-output-hairbands-shot-1-kid-v1", "ordinal": 1 },
+    { "role": "brand_mark", "asset_id": "asset:sha256:joga-chest-logo-stacked-yellow", "ordinal": 2 }
+  ],
+  "provenance": {
+    "compiled_from": "job-v1",
+    "source_job_path": "jobs/starz-kid-images/hairbands/shot-1-logo-fix-v3.job.json"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primi-toughkey-plate-hero34",
+  "subject": { "view": "three-quarter view, device tilted about 30 degrees, USB-C connector pointing up and to the right, top face and near long edge both visible, keyring loop at lower-left" },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Clean studio product photograph, a single USB-C contactless hardware security key isolated on a seamless neutral light-grey (#d9d9dd) background. VIEW: {view}. Preserve the EXACT object in the attached reference image; do not restyle the product. Soft even large-softbox lighting, NO coloured rim light, NO dramatic shadows, only a subtle soft contact shadow, true-to-material colour (matte black glass-filled-nylon body, brushed brass NFC disc with three-arc contactless wave, nickel-steel USB-C). Sharp focus edge to edge, catalogue reference plate, centered with even margins. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": "reference/toughkey-target.png",
+  "output": {
+    "imgtype": "plate",
+    "aspect_ratio": "4:3",
+    "resolution": "2k"
+  },
+  "engine": { "name": "higgsfield", "model": "nano_banana_2" }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "provider-prompt-v1",
+  "positive": "Ultra-premium studio product photograph of a single satin-white USB-A contactless hardware security key, floating in dark space. VIEW: three-quarter hero angle, device tilted about 30 degrees, flat USB-A blade with four gold contact pads pointing up and to the right, top face and near long edge both visible, molded keyring slot at lower-left. Preserve the EXACT object shown in the reference images — do not restyle, recolour, or change the geometry. Satin WHITE glass-filled-nylon body, a single brushed-brass NFC disc with a three-arc contactless wave centred on the face, one plain debossed stadium mark, flat USB-A blade with four exposed gold contact pads. Dramatic dark studio look: near-black background #0a0a0b, a soft deep-blue radial glow behind the key, a crisp electric-blue rim light tracing the top edge, a subtle soft reflection beneath. The product is floating — no surface, no desk, no props, no laptop. Razor-sharp focus edge to edge, hero product shot, generous even margins around the key. Object geometry must match this spec exactly:\n\n| Axis | Feature | Dimension |\n|------|---------|-----------|\n| X (long) | full length, keyring end → USB-A tip | **≈ 45.0 mm** |\n| X | body slab only (excl. connector blade) | **≈ 33.0 mm** |\n| X | USB-A flat blade protrusion | **≈ 12.0 mm** |\n| Y (width) | body width | **18.0 mm** |\n| Y | USB-A blade width | **≈ 12.0 mm** |\n| Z (thickness) | body thickness | **3.35 mm** |\n| Z | USB-A blade thickness | **≈ 2.0 mm** |\n| — | mass (archetype) | ≈ 3 g |\n\nCoordinate frame: **X** = long axis (loop→connector), **Y** = width, **Z** =\nthickness. Mirror-symmetric about the X–Z plane; NFC disc and blade centered on Y.",
+  "negative": null,
+  "metadata": {
+    "execution_id": "primikey-usba-scene-float-a",
+    "product_spec_id": "usb-a-primikey-engineering-grade-cad-extraction-object-model",
+    "creative_spec_id": "primikey-usba-scene-creative",
+    "placeholders_resolved": {
+      "view": "three-quarter hero angle, device tilted about 30 degrees, flat USB-A blade with four gold contact pads pointing up and to the right, top face and near long edge both visible, molded keyring slot at lower-left",
+      "composition": "",
+      "background": "",
+      "cad": "| Axis | Feature | Dimension |\n|------|---------|-----------|\n| X (long) | full length, keyring end → USB-A tip | **≈ 45.0 mm** |\n| X | body slab only (excl. connector blade) | **≈ 33.0 mm** |\n| X | USB-A flat blade protrusion | **≈ 12.0 mm** |\n| Y (width) | body width | **18.0 mm** |\n| Y | USB-A blade width | **≈ 12.0 mm** |\n| Z (thickness) | body thickness | **3.35 mm** |\n| Z | USB-A blade thickness | **≈ 2.0 mm** |\n| — | mass (archetype) | ≈ 3 g |\n\nCoordinate frame: **X** = long axis (loop→connector), **Y** = width, **Z** =\nthickness. Mirror-symmetric about the X–Z plane; NFC disc and blade centered on Y."
+    },
+    "composition": "",
+    "background": "",
+    "content_hash": "9c1132a59cc5329c0c46c5c05ca5d71a8e872f0eef444681a81eea9d57d914f5"
+  },
+  "input_assets": {
+    "references": [],
+    "input_images": [
+      "reference/plates/plate-2-hero34.png",
+      "reference/plates/plate-1-plan.png",
+      "reference/plates/plate-3-profile.png"
+    ]
+  }
+}

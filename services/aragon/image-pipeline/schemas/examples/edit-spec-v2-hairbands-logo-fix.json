@@ -1,0 +1,43 @@
+{
+  "schema_version": "edit-spec-v2",
+  "id": "hairbands-shot-1-logo-fix",
+  "creative_spec_id": "starz-kid-hairbands",
+  "parent": {
+    "asset_id": "asset:sha256:parent-shot-1-base"
+  },
+  "operations": [
+    {
+      "op": "replace_logo",
+      "target": "chest_sternum",
+      "asset": "shared/refs/joga-chest-logo-stacked-yellow",
+      "scale": 0.9
+    },
+    {
+      "op": "remove_element",
+      "target": "joma_j"
+    },
+    {
+      "op": "remove_element",
+      "target": "white_swoosh"
+    }
+  ],
+  "constraints": {
+    "preserve": ["geometry", "pose", "lighting", "background", "band_placement"],
+    "forbidden": ["joma_j", "white_swoosh", "crop_product", "distort_logo"]
+  },
+  "reference_roles": [
+    {
+      "role": "parent",
+      "asset_id": "asset:sha256:parent-shot-1-base",
+      "ordinal": 1
+    },
+    {
+      "role": "logo_ref",
+      "asset_id": "shared/refs/joga-chest-logo-stacked-yellow",
+      "ordinal": 2
+    }
+  ],
+  "source": {
+    "knowledge_path": "schemas/examples/edit-spec-v2-hairbands-logo-fix.json"
+  }
+}

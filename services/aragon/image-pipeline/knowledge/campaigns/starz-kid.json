@@ -1,0 +1,32 @@
+{
+  "schema_version": "creative-spec-v2",
+  "id": "starz-kid-hairbands",
+  "product_spec_id": "hairbands",
+  "campaign": {
+    "id": "starz-kid",
+    "label": "Starz Kid",
+    "audience": "youth_athletics",
+    "mood": "energetic",
+    "style": "studio_lifestyle"
+  },
+  "scene": {
+    "description": "Young athlete wearing hairband, studio lifestyle, product visible on head",
+    "lighting": "soft_key_fill, neutral backdrop",
+    "camera": "eye_level, medium_close, product legible",
+    "composition": "subject centered, band readable, chest mark optional",
+    "background": "neutral_studio_grey"
+  },
+  "scene_locks": [
+    {
+      "id": "band_visibility",
+      "title": "Band must remain legible",
+      "invariants": {
+        "band_region": "unoccluded",
+        "band_color": "royal_blue"
+      }
+    }
+  ],
+  "source": {
+    "knowledge_path": "knowledge/campaigns/starz-kid.json"
+  }
+}

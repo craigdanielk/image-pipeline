@@ -1,0 +1,14 @@
+{
+  "schema_version": "creative-spec-v1",
+  "id": "starz-kid-images-hero-creative",
+  "product_spec_id": "starz-kid-images-hero-product",
+  "campaign_id": "starz-kid-images",
+  "prompt_template": "Studio product photograph.\n\n{cad}\n\nVIEW: {view}.",
+  "negative_template": null,
+  "default_subject": {
+    "product": "kids' athletic shoe",
+    "view": "three-quarter hero angle on a seamless studio backdrop"
+  },
+  "default_composition": "",
+  "default_background": ""
+}

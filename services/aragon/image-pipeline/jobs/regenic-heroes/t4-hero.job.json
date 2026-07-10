@@ -1,0 +1,23 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t4-hero",
+  "subject": {
+    "badge_code": "S4",
+    "title": "Finasteride 0.1% + Minoxidil 5%",
+    "form": "TOPICAL FOAM",
+    "size": "50 ml"
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of a white cylindrical foam bottle with a white foamer pump head under a CLEAR transparent domed over-cap. Match the attached reference image EXACTLY for bottle shape, the clear domed over-cap, the white foamer pump, label shape and CENTERED layout, materials and lighting — change ONLY the printed label text. BACKGROUND seamless very-light warm grey, soft key from top-left, bottle vertically centered ~90% of frame height, soft contact shadow. The large white wrap-around label has a CENTERED stack of navy text: in the UPPER-LEFT a filled dark-navy CIRCLE containing the schedule code '{badge_code}' in white (if '{badge_code}' is blank, omit the circle entirely); centered below, the 'Regenic|Lab' wordmark with 'Regenic' in blue #2e6fb0, a small leaf accent and a '|' divider, and 'Lab' in navy #1b2846; then the title '{title}' in Montserrat SemiBold navy #1b2846, the LARGEST text, centered, wrapping to two lines if needed; then the form '{form}' in Montserrat Medium muted grey #5b687b, centered, with wide letter-spacing, about a third the title size; then a small blue filled square swatch on the left; then the size '{size}' in Montserrat navy, centered, about half the title size. TYPOGRAPHY DISCIPLINE: replicate the reference's text sizes, centering and spacing exactly — title largest, form small and letter-spaced, generous vertical spacing; do not enlarge or left-align text. No 'Novecy' or third-party branding. Clean premium clinical pharmacy, sharp focus, sRGB. Portrait 1358x1434.",
+    "cad": "CAD source of truth: config/cad/T4_hero.json (regenic Norwood-Ludwig template T4 — foam canister hero). Metafields swap per SKU; this config carries the T4 example SKU (Finasteride 0.1% + Minoxidil 5% topical foam)."
+  },
+  "reference": { "image": "reference/t4-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "gpt_image_2" }
+}

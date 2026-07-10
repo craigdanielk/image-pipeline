@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/nodes/artifacts-load-out.schema.json",
+  "title": "artifacts.load output (compile_artifacts)",
+  "type": "object",
+  "required": ["schema_version", "provider_prompt", "execution_plan"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "compile-artifacts-v1" },
+    "provider_prompt": { "type": "object" },
+    "execution_plan": { "type": "object" },
+    "execution_request": { "type": "object" },
+    "product_spec": { "type": "object" },
+    "creative_spec": { "type": "object" },
+    "edit_specs": { "type": "array" },
+    "persist_context": { "type": "object" },
+    "job_dir": { "type": "string" }
+  },
+  "additionalProperties": true
+}

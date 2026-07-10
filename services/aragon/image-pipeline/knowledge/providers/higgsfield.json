@@ -1,0 +1,15 @@
+{
+  "id": "higgsfield",
+  "label": "Higgsfield Soul image generation",
+  "provider": "higgsfield",
+  "default_model": "higgsfield-ai/soul/standard",
+  "methods": {
+    "text_to_image": "text2image/soul",
+    "image_to_image": "image2image/soul"
+  },
+  "param_map": {
+    "width_and_height": "width_and_height",
+    "batch_size": "batch_size",
+    "enhance_prompt": "enhance_prompt"
+  }
+}

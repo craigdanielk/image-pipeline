@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/edit-spec-v2.schema.json",
+  "title": "EditSpec v2",
+  "description": "Structured per-run surgical operations. No prose. No prompt fragments.",
+  "type": "object",
+  "required": ["schema_version", "id", "operations", "constraints"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "edit-spec-v2" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "creative_spec_id": { "type": "string" },
+    "parent": {
+      "type": "object",
+      "required": ["asset_id"],
+      "properties": {
+        "asset_id": { "type": "string" },
+        "run_id": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["op"],
+        "properties": {
+          "op": {
+            "type": "string",
+            "enum": [
+              "replace_logo",
+              "replace_child",
+              "remove_element",
+              "insert_mark",
+              "region_edit",
+              "subject_swap",
+              "increase_spacing",
+              "reposition_logo",
+              "remove_background",
+              "change_colour"
+            ]
+          },
+          "target": { "type": "string" },
+          "asset": { "type": "string" },
+          "scale": { "type": "number" },
+          "region": { "type": "string" },
+          "params": {
+            "type": "object",
+            "additionalProperties": { "type": ["string", "number", "boolean"] }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "required": ["preserve", "forbidden"],
+      "properties": {
+        "preserve": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "forbidden": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "reference_roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["role", "asset_id"],
+        "properties": {
+          "role": { "type": "string" },
+          "asset_id": { "type": "string" },
+          "ordinal": { "type": "integer", "minimum": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "knowledge_path": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

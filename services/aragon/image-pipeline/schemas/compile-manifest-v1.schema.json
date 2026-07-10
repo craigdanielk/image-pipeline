@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/compile-manifest-v1.schema.json",
+  "title": "CompileManifest v1",
+  "description": "Entry contract for compile/ artifact directories.",
+  "type": "object",
+  "required": ["schema_version", "job_id", "lowering_version", "source", "artifacts", "compile_hash"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string", "const": "compile-manifest-v1" },
+    "job_id": { "type": "string" },
+    "lowering_version": { "type": "string" },
+    "dry_run": { "type": "boolean" },
+    "source": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["job-v1", "spec-bundle"] },
+        "path": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["content_hash"],
+        "properties": {
+          "content_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "schema_version": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "compile_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "manifest_hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

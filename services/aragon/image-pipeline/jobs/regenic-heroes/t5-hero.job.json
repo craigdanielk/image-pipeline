@@ -1,0 +1,22 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-t5-hero",
+  "subject": {
+    "product_name": "Tirzepatide",
+    "dose_clause": "below it the dose '5MG/2ML' in Montserrat SemiBold navy, rendered EXACTLY as given; ",
+    "composition": "Each unit contains Tirzepatide 5 mg / 2 ml."
+  },
+  "spec": {
+    "prompt_template": "Photorealistic e-commerce hero render of a pharmaceutical injection-pen carry CASE, CLOSED, standing vertical on its short edge. Match the attached reference image EXACTLY for the case shape, proportions, materials, clasps, label placement and layout — reproduce it faithfully and change ONLY the text on the lower label. CONTAINER: a slim rigid matte deep-navy #1b2846 hard-shell case, height-to-width about 3 to 1, rounded-rectangle with a subtle embossed bevel frame line around the front face and a faint vertical brushed sheen; small navy latch tabs of the same material protrude from the long edges (upper-left, a larger one upper-right, and one lower-right). CAMERA: straight-on front, eye-level with a slight high angle, ~85mm equivalent, the case vertically centered filling ~88% of frame height, portrait. LIGHTING: soft large key from top-left, gentle fill, low contrast, no harsh speculars; soft contact shadow plus faint cast to lower-right. BACKGROUND: seamless very-light warm grey #e8e8e7 with a subtle floor reflection. THERE ARE EXACTLY TWO WHITE ROUNDED-RECTANGLE ADHESIVE LABELS on the navy face, nothing printed directly on the navy: (1) an UPPER label that is TALL and NARROW, centered on the upper-middle of the face, carrying ONLY the 'Regenic|Lab' wordmark ROTATED 90 DEGREES CLOCKWISE so it runs vertically up the case — 'Regenic' in navy #1b2846, a thin grey pipe divider, then 'Lab' in cyan #00a1d6; (2) a LARGER LOWER label in the lower third of the face with all text NAVY #1b2846, left-aligned on a shared left margin, top to bottom: the product name '{product_name}' in Montserrat Bold (largest); {dose_clause}then a small light-grey rounded bar with a tiny boxed 'SC' at its left followed by '2ml Peptide Pen' in Montserrat Medium muted grey #5b687b (a route/form tag, NOT a schedule badge); then 'Composition:' in Montserrat Bold navy followed by '{composition}' and 'Store in fridge (2-8°C)' in Montserrat Regular navy small; then 'Compounded by:' in Montserrat Bold navy followed by 'Regenic Lab, George, South Africa' in Montserrat Regular muted grey x-small. PALETTE: navy #1b2846, cyan #00a1d6, grey #5b687b, label white. TYPOGRAPHY DISCIPLINE (critical): replicate the reference image's text SIZES and SPACING exactly — the product name is modest, the lower blocks are small, tidy and legible with generous line spacing; do NOT enlarge text to fill the label; keep the vertical logo on the upper label crisp and correctly oriented. There is NO schedule badge or round schedule mark anywhere. If a dose line is shown above render it EXACTLY as given preserving units; if no dose line is specified, do NOT invent one. Do NOT print 'Novecy' or any third-party/compounder name — the compounder line reads 'Regenic Lab' only. Do NOT add any batch/BN/BUD line. STYLE: clean, premium, clinical pharmacy, sharp focus, high detail, sRGB. Portrait 832x1418.",
+    "cad": "CAD source of truth: config/cad/T5_hero.json (regenic Norwood-Ludwig template T5 — peptide-pen navy carry case, closed). Metafields swap per SKU; this config carries the T5 example SKU (Tirzepatide 5MG/2ML pen)."
+  },
+  "reference": { "image": "reference/t5-target.png", "optional": true },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "2:3",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": { "name": "higgsfield", "model": "gpt_image_2" }
+}
