@@ -1,0 +1,145 @@
+{
+  "schema_version": "graph-v1",
+  "id": "joga-hairbands-product-hero-exec-graph",
+  "metadata": {
+    "compiled_from": "compile-artifacts-v1:joga-hairbands-product-hero",
+    "compile_hash": "0e55dde989dbcd5d46c9b6d57aa51ebfca9a982b0f611d56536fba7cf33bf2bf",
+    "execution_id": "joga-hairbands-product-hero"
+  },
+  "nodes": [
+    {
+      "id": "load",
+      "type": "artifacts.load",
+      "params": {},
+      "ports": {
+        "out": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve_refs",
+      "type": "reference.resolve",
+      "params": {
+        "adapter": "local",
+        "reference": {
+          "image": "reference/flatlay.png",
+          "optional": true
+        }
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        },
+        "out": {
+          "refs": {
+            "type": "image_path"
+          }
+        }
+      }
+    },
+    {
+      "id": "generate",
+      "type": "engine.generate",
+      "params": {
+        "model": "nano_banana_2",
+        "provider": "higgsfield"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "refs": {
+            "type": "image_path"
+          }
+        },
+        "out": {
+          "results": {
+            "type": "engine_results"
+          }
+        }
+      }
+    },
+    {
+      "id": "persist",
+      "type": "output.persist",
+      "params": {
+        "imgtype": "hero",
+        "out_dir": null,
+        "adapter": "local"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "results": {
+            "type": "engine_results"
+          }
+        },
+        "out": {
+          "files": {
+            "type": "file_list"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "resolve_refs",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "generate",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "persist",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "resolve_refs",
+        "port": "refs"
+      },
+      "to": {
+        "node": "generate",
+        "port": "refs"
+      }
+    },
+    {
+      "from": {
+        "node": "generate",
+        "port": "results"
+      },
+      "to": {
+        "node": "persist",
+        "port": "results"
+      }
+    }
+  ]
+}

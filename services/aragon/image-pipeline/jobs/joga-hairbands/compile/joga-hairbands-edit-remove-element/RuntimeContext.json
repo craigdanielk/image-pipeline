@@ -1,0 +1,18 @@
+{
+  "schema_version": "runtime-context-v1",
+  "job_id": "joga-hairbands-edit-remove-element",
+  "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands",
+  "persist_context": {
+    "id": "joga-hairbands-edit-remove-element",
+    "_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands",
+    "output": {
+      "imgtype": "edit",
+      "resolution": "2k",
+      "count": 1
+    },
+    "engine": {
+      "name": "higgsfield",
+      "model": "nano_banana_2"
+    }
+  }
+}

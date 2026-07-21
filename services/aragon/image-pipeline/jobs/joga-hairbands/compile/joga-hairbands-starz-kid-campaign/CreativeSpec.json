@@ -1,0 +1,15 @@
+{
+  "schema_version": "creative-spec-v1",
+  "id": "joga-hairbands-starz-kid-campaign-creative",
+  "product_spec_id": "joga-hairbands-starz-kid-campaign-product",
+  "campaign_id": "joga-hairbands",
+  "prompt_template": "Studio lifestyle photograph for the JOGA Starz Kid campaign: a young athlete aged 10-13 wearing a royal-blue JOGA hairband, the product clearly visible on the head. The band region must remain unoccluded and read as royal blue with the white JOGA wordmark legible (scene lock: band_visibility). Eye-level medium-close camera, soft key and fill lighting, energetic youth-athletics mood, studio lifestyle style.",
+  "negative_template": null,
+  "default_subject": {
+    "campaign": "Starz Kid",
+    "audience": "youth_athletics",
+    "mood": "energetic"
+  },
+  "default_composition": "subject centered, band readable, chest mark optional",
+  "default_background": "neutral studio grey backdrop"
+}

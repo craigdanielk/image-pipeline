@@ -1,0 +1,26 @@
+[
+  {
+    "schema_version": "edit-spec-v1",
+    "id": "joga-hairbands-edit-logo-fix-edit",
+    "creative_spec_id": "joga-hairbands-edit-logo-fix-creative",
+    "operation": "replace_mark",
+    "parent_asset_id": "asset:path:{'image': 'reference/parent-shot-1-base.png', 'optional': True}",
+    "parent_run_id": null,
+    "constraints": [
+      {
+        "rule": "surgical_block",
+        "value": "ONLY CHANGE — chest branding:\n1. Remove completely any white swoosh, Joma J, or wrong chest mark.\n2. Apply the stacked JO/GA chest logo from reference image 2 (yellow), small on the chest at sternum height, scale ~0.9, crisp and undistorted.\n\nDo not crop the product. Do not distort the logo."
+      }
+    ],
+    "exclusions": [
+      "joma_j",
+      "white_swoosh",
+      "crop_product",
+      "distort_logo"
+    ],
+    "provenance": {
+      "compiled_from": "job-v1",
+      "source_job_path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands/edit-logo-fix.job.json"
+    }
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "schema_version": "execution-request-v1",
+  "id": "joga-hairbands-edit-subject-swap",
+  "subject": {
+    "view": "kid hero on pitch, royal blue hairband with white JOGA, both hands at temples adjusting band, smiling, dark stadium bokeh — match reference image 1 exactly"
+  },
+  "reference": [
+    {
+      "image": "reference/parent-shot-1-base.png",
+      "optional": true
+    },
+    {
+      "image": "reference/flatlay.png",
+      "optional": true
+    },
+    {
+      "image": "reference/starz-s-crest-blue.png",
+      "optional": true
+    }
+  ],
+  "output": {
+    "imgtype": "edit",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2"
+  },
+  "dry_run": true,
+  "parent_run_id": null,
+  "provenance": {
+    "compiled_from": "job-v1",
+    "source_job_path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands/edit-subject-swap.job.json"
+  }
+}

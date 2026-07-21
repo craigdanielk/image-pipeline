@@ -1,0 +1,25 @@
+[
+  {
+    "schema_version": "edit-spec-v1",
+    "id": "joga-hairbands-edit-remove-element-edit",
+    "creative_spec_id": "joga-hairbands-edit-remove-element-creative",
+    "operation": "remove_element",
+    "parent_asset_id": "asset:path:{'image': 'reference/parent-shot-1-base.png', 'optional': True}",
+    "parent_run_id": null,
+    "constraints": [
+      {
+        "rule": "surgical_block",
+        "value": "ONLY CHANGES:\n1. Remove completely the Joma J element from the jersey chest.\n2. Remove completely the white swoosh element from the jersey chest.\n3. Reconstruct plain royal-blue jersey fabric with natural weave and lighting where the removed elements were.\n\nDo not crop the product. Do not alter anything else."
+      }
+    ],
+    "exclusions": [
+      "joma_j",
+      "white_swoosh",
+      "crop_product"
+    ],
+    "provenance": {
+      "compiled_from": "job-v1",
+      "source_job_path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands/edit-remove-element.job.json"
+    }
+  }
+]

@@ -1,0 +1,155 @@
+{
+  "schema_version": "graph-v1",
+  "id": "joga-hairbands-edit-subject-swap-exec-graph",
+  "metadata": {
+    "compiled_from": "compile-artifacts-v1:joga-hairbands-edit-subject-swap",
+    "compile_hash": "3d4af6e75107da61802c8289834bab13e5477c886711dd4ce84eeba0f28045c8",
+    "execution_id": "joga-hairbands-edit-subject-swap"
+  },
+  "nodes": [
+    {
+      "id": "load",
+      "type": "artifacts.load",
+      "params": {},
+      "ports": {
+        "out": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve_refs",
+      "type": "reference.resolve",
+      "params": {
+        "adapter": "local",
+        "reference": [
+          {
+            "image": "reference/parent-shot-1-base.png",
+            "optional": true
+          },
+          {
+            "image": "reference/flatlay.png",
+            "optional": true
+          },
+          {
+            "image": "reference/starz-s-crest-blue.png",
+            "optional": true
+          }
+        ]
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        },
+        "out": {
+          "refs": {
+            "type": "image_path_list"
+          }
+        }
+      }
+    },
+    {
+      "id": "generate",
+      "type": "engine.generate",
+      "params": {
+        "model": "nano_banana_2",
+        "provider": "higgsfield"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "refs": {
+            "type": "image_path_list"
+          }
+        },
+        "out": {
+          "results": {
+            "type": "engine_results"
+          }
+        }
+      }
+    },
+    {
+      "id": "persist",
+      "type": "output.persist",
+      "params": {
+        "imgtype": "edit",
+        "out_dir": null,
+        "adapter": "local"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "results": {
+            "type": "engine_results"
+          }
+        },
+        "out": {
+          "files": {
+            "type": "file_list"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "resolve_refs",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "generate",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "persist",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "resolve_refs",
+        "port": "refs"
+      },
+      "to": {
+        "node": "generate",
+        "port": "refs"
+      }
+    },
+    {
+      "from": {
+        "node": "generate",
+        "port": "results"
+      },
+      "to": {
+        "node": "persist",
+        "port": "results"
+      }
+    }
+  ]
+}

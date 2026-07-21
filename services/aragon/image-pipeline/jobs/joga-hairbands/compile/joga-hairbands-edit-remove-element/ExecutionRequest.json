@@ -1,0 +1,28 @@
+{
+  "schema_version": "execution-request-v1",
+  "id": "joga-hairbands-edit-remove-element",
+  "subject": {
+    "operation": "remove_element"
+  },
+  "reference": [
+    {
+      "image": "reference/parent-shot-1-base.png",
+      "optional": true
+    }
+  ],
+  "output": {
+    "imgtype": "edit",
+    "resolution": "2k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2"
+  },
+  "dry_run": true,
+  "parent_run_id": null,
+  "provenance": {
+    "compiled_from": "job-v1",
+    "source_job_path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands/edit-remove-element.job.json"
+  }
+}

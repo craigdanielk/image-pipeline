@@ -1,0 +1,45 @@
+{
+  "schema_version": "compile-manifest-v1",
+  "job_id": "joga-hairbands-starz-kid-campaign",
+  "lowering_version": "job-v1@1",
+  "dry_run": true,
+  "source": {
+    "kind": "job-v1",
+    "path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands/starz-kid-campaign.job.json"
+  },
+  "artifacts": {
+    "ProductSpec.json": {
+      "content_hash": "60d9bb1f6454c174dc4e66902561d7dc5b61d944991502061802c23a1f62dc44",
+      "schema_version": "product-spec-v1"
+    },
+    "CreativeSpec.json": {
+      "content_hash": "cd8bbe43c54097d399d8df314cfd6b135780db5d9b6f9ae9e94bcaab7a265da7",
+      "schema_version": "creative-spec-v1"
+    },
+    "EditSpecs.json": {
+      "content_hash": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    "ExecutionRequest.json": {
+      "content_hash": "4c7839df61f92714ccb7855992d303e439d74f323179e8667f4cb97411306957",
+      "schema_version": "execution-request-v1"
+    },
+    "ProviderPrompt.json": {
+      "content_hash": "2ebf633c31652de1a9c3e31fef63b0e61667cbddbc1f55e9943b877dd16fff70",
+      "schema_version": "provider-prompt-v1"
+    },
+    "ProviderExecutionPlan.json": {
+      "content_hash": "8585cb16d84de94fe6e24a3fb252087a0a89a33cdd8a5c2d5c1c333e1253b15b",
+      "schema_version": "provider-execution-plan-v1"
+    },
+    "graph.json": {
+      "content_hash": "23ff43a616436b2c75d243966741a87dbd1b93c2b22bd6460314fc5265359ac7",
+      "schema_version": "graph-v1"
+    },
+    "RuntimeContext.json": {
+      "content_hash": "0b0922471dd5250698650317148aa6cbac418acefb4702856e7206a78b36ae5f",
+      "schema_version": "runtime-context-v1"
+    }
+  },
+  "compile_hash": "86a2700978127971df0b86d0250c929670e1c6c14b32c7a1601bcb9755c77e46",
+  "manifest_hash": "590b8cf64538d9a8f5d599d5b671989c2c3873efe2c2980525a81226b8c207ad"
+}

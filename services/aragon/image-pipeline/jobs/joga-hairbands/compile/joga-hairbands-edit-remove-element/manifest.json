@@ -1,0 +1,45 @@
+{
+  "schema_version": "compile-manifest-v1",
+  "job_id": "joga-hairbands-edit-remove-element",
+  "lowering_version": "job-v1@1",
+  "dry_run": true,
+  "source": {
+    "kind": "job-v1",
+    "path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands/edit-remove-element.job.json"
+  },
+  "artifacts": {
+    "ProductSpec.json": {
+      "content_hash": "576322eb61893ea80da8eb21e6a09051fee249de2530accf796f5fc20f77d2ac",
+      "schema_version": "product-spec-v1"
+    },
+    "CreativeSpec.json": {
+      "content_hash": "e90f51da25e5549211c47e6a65f53c5f83e520cb89055afe503880ae6be204c1",
+      "schema_version": "creative-spec-v1"
+    },
+    "EditSpecs.json": {
+      "content_hash": "9d3085b794f271c8cf8da15d1b032db3700f6a814367558dc57417038844e999"
+    },
+    "ExecutionRequest.json": {
+      "content_hash": "41a164011433f8482f669b96cfd143d2f57fa4e8db607c9843645b613730069d",
+      "schema_version": "execution-request-v1"
+    },
+    "ProviderPrompt.json": {
+      "content_hash": "4c2ca5d0947a682c1f279cb843226e78cb814735c274e232ac4eab0c5a6d7556",
+      "schema_version": "provider-prompt-v1"
+    },
+    "ProviderExecutionPlan.json": {
+      "content_hash": "a4d8f7555fbb70f7b6fe9a19f9bd7974f7f28bc6784ec7cd2acbcabf3be265bc",
+      "schema_version": "provider-execution-plan-v1"
+    },
+    "graph.json": {
+      "content_hash": "920d5d76ac9d105d866681e131732832b81172e7a03edd9d85b6f4c753822e09",
+      "schema_version": "graph-v1"
+    },
+    "RuntimeContext.json": {
+      "content_hash": "eec710f6044b7135d554288088a094539433b29ef9c5990fde82b86121d0f972",
+      "schema_version": "runtime-context-v1"
+    }
+  },
+  "compile_hash": "ed4a9f3240e6afdb5877d21d2c525b6188cb3426335c606a8f86ec85a95ce6b8",
+  "manifest_hash": "eadabcfe0d42c4aefe215b511b2a391febccf06e4db7f23f05b9e4b3199c58fc"
+}

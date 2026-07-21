@@ -1,0 +1,13 @@
+{
+  "schema_version": "creative-spec-v1",
+  "id": "joga-hairbands-edit-subject-swap-creative",
+  "product_spec_id": "joga-hairbands-edit-subject-swap-product",
+  "campaign_id": "joga-hairbands",
+  "prompt_template": "Re-render this exact image from reference image 1. Lock the exact camera angle, crop, pose, hand placement at temples, hairband position, blue band colour, lighting, and background bokeh.\n\nONLY CHANGES:\n1. Replace the model with a CHILD aged 10-13 — short brown hair (NOT bald), smooth skin, no facial hair, child-proportioned face and hands in the same pose.\n2. Jersey chest mark: use the STARZ S-crest from reference image 3 (blue) — small on chest. NO JOGA wordmark on jersey, NO crown, NO GA badge.\n\nMatch hairband product geometry from reference image 2 (royal blue band, white JOGA on band):\n\n{cad}\n\nVIEW: {view}.",
+  "negative_template": "adult model, bald child, facial hair, JOGA wordmark on jersey, crown badge, GA badge",
+  "default_subject": {
+    "view": "kid hero on pitch, royal blue hairband with white JOGA, both hands at temples adjusting band, smiling, dark stadium bokeh — match reference image 1 exactly"
+  },
+  "default_composition": "",
+  "default_background": ""
+}

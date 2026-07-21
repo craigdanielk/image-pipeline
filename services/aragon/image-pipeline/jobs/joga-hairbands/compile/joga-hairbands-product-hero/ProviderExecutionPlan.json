@@ -1,0 +1,37 @@
+{
+  "schema_version": "provider-execution-plan-v1",
+  "id": "joga-hairbands-product-hero-plan",
+  "provider_prompt_id": "0e55dde989dbcd5d46c9b6d57aa51ebfca9a982b0f611d56536fba7cf33bf2bf",
+  "provider": "higgsfield",
+  "model": "nano_banana_2",
+  "method": "cost_estimate",
+  "params": {
+    "aspect_ratio": "1:1",
+    "resolution": "2k"
+  },
+  "uploads": [],
+  "media_inputs": [],
+  "retries": {
+    "max_attempts": 3,
+    "backoff": "exponential"
+  },
+  "masks": [],
+  "metadata": {
+    "capability_registry_version": "v1-inline",
+    "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands",
+    "accepts_reference": true,
+    "content_hash": "e2adb94d10781d94f89651f17de79eff49b61e0c48adbf906c0503059b8016c3"
+  },
+  "prompt": {
+    "positive": "Photorealistic studio product photograph of a royal-blue elastic athletic hairband: a continuous woven elastic loop, 25mm wide band, ~480mm circumference, matte finish, bilateral symmetry, with the white JOGA wordmark centered on the band face. Preserve exact band geometry, material and proportions from the reference image. Clean e-commerce product shot, sharp focus on the woven texture and the wordmark. band laid flat, slight three-quarter angle, wordmark legible and unoccluded. Background: neutral studio grey, seamless, soft gradient.",
+    "negative": null
+  },
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "count": 1,
+    "background": "neutral studio grey, seamless, soft gradient",
+    "composition": "band laid flat, slight three-quarter angle, wordmark legible and unoccluded"
+  }
+}

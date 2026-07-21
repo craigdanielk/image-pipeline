@@ -1,0 +1,7 @@
+{
+  "schema_version": "product-spec-v1",
+  "id": "joga-hairbands-starz-kid-campaign-product",
+  "name": "joga-hairbands-starz-kid-campaign",
+  "immutable": true,
+  "geometry_text": "Campaign source of truth: knowledge/campaigns/starz-kid.json (creative-spec-v2, id starz-kid-hairbands) over knowledge/products/hairbands.json. Scene locks: band_region unoccluded, band_color royal_blue."
+}

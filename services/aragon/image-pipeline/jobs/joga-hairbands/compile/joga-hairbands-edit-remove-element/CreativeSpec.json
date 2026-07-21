@@ -1,0 +1,13 @@
+{
+  "schema_version": "creative-spec-v1",
+  "id": "joga-hairbands-edit-remove-element-creative",
+  "product_spec_id": "joga-hairbands-edit-remove-element-product",
+  "campaign_id": "joga-hairbands",
+  "prompt_template": "Re-render reference image 1 in place. Lock the child, hairband, hands, pose, lighting, background and kit colours exactly.\n\nONLY CHANGES:\n1. Remove completely the Joma J element from the jersey chest.\n2. Remove completely the white swoosh element from the jersey chest.\n3. Reconstruct plain royal-blue jersey fabric with natural weave and lighting where the removed elements were.\n\nDo not crop the product. Do not alter anything else.",
+  "negative_template": "joma_j, white_swoosh, crop_product",
+  "default_subject": {
+    "operation": "remove_element"
+  },
+  "default_composition": "",
+  "default_background": ""
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": "creative-spec-v1",
+  "id": "joga-hairbands-product-hero-creative",
+  "product_spec_id": "joga-hairbands-product-hero-product",
+  "campaign_id": "joga-hairbands",
+  "prompt_template": "Photorealistic studio product photograph of a royal-blue elastic athletic hairband: a continuous woven elastic loop, 25mm wide band, ~480mm circumference, matte finish, bilateral symmetry, with the white JOGA wordmark centered on the band face. Preserve exact band geometry, material and proportions from the reference image. Clean e-commerce product shot, sharp focus on the woven texture and the wordmark.",
+  "negative_template": null,
+  "default_subject": {
+    "product_name": "JOGA hairband",
+    "brand": "JOGA"
+  },
+  "default_composition": "band laid flat, slight three-quarter angle, wordmark legible and unoccluded",
+  "default_background": "neutral studio grey, seamless, soft gradient"
+}

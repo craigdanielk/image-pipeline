@@ -1,0 +1,27 @@
+{
+  "schema_version": "provider-prompt-v1",
+  "positive": "Photorealistic studio product photograph of a royal-blue elastic athletic hairband: a continuous woven elastic loop, 25mm wide band, ~480mm circumference, matte finish, bilateral symmetry, with the white JOGA wordmark centered on the band face. Preserve exact band geometry, material and proportions from the reference image. Clean e-commerce product shot, sharp focus on the woven texture and the wordmark. band laid flat, slight three-quarter angle, wordmark legible and unoccluded. Background: neutral studio grey, seamless, soft gradient.",
+  "negative": null,
+  "metadata": {
+    "execution_id": "joga-hairbands-product-hero",
+    "product_spec_id": "joga-hairbands-product-hero-product",
+    "creative_spec_id": "joga-hairbands-product-hero-creative",
+    "edit_spec_ids": [],
+    "placeholders_resolved": {
+      "product_name": "JOGA hairband",
+      "brand": "JOGA",
+      "composition": "band laid flat, slight three-quarter angle, wordmark legible and unoccluded",
+      "background": "neutral studio grey, seamless, soft gradient",
+      "cad": "Product source of truth: knowledge/products/hairbands.json (product-spec-v2, immutable). Geometry: torus loop, royal_blue woven elastic, width 25mm, circumference 480mm. Brand asset joga-band-wordmark placed band_center. Constraints: preserve geometry, material, proportions."
+    },
+    "composition": "band laid flat, slight three-quarter angle, wordmark legible and unoccluded",
+    "background": "neutral studio grey, seamless, soft gradient",
+    "content_hash": "0e55dde989dbcd5d46c9b6d57aa51ebfca9a982b0f611d56536fba7cf33bf2bf"
+  },
+  "input_assets": {
+    "references": [
+      "reference/flatlay.png"
+    ],
+    "input_images": []
+  }
+}

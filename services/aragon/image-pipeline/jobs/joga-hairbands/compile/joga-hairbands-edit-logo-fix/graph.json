@@ -1,0 +1,151 @@
+{
+  "schema_version": "graph-v1",
+  "id": "joga-hairbands-edit-logo-fix-exec-graph",
+  "metadata": {
+    "compiled_from": "compile-artifacts-v1:joga-hairbands-edit-logo-fix",
+    "compile_hash": "5fe0c78376ad07b683646e2a303025b067afdbf32ee6f5b90bb5c6eabe56a55b",
+    "execution_id": "joga-hairbands-edit-logo-fix"
+  },
+  "nodes": [
+    {
+      "id": "load",
+      "type": "artifacts.load",
+      "params": {},
+      "ports": {
+        "out": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        }
+      }
+    },
+    {
+      "id": "resolve_refs",
+      "type": "reference.resolve",
+      "params": {
+        "adapter": "local",
+        "reference": [
+          {
+            "image": "reference/parent-shot-1-base.png",
+            "optional": true
+          },
+          {
+            "image": "reference/joga-chest-logo-stacked-yellow.png",
+            "optional": true
+          }
+        ]
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          }
+        },
+        "out": {
+          "refs": {
+            "type": "image_path_list"
+          }
+        }
+      }
+    },
+    {
+      "id": "generate",
+      "type": "engine.generate",
+      "params": {
+        "model": "nano_banana_2",
+        "provider": "higgsfield"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "refs": {
+            "type": "image_path_list"
+          }
+        },
+        "out": {
+          "results": {
+            "type": "engine_results"
+          }
+        }
+      }
+    },
+    {
+      "id": "persist",
+      "type": "output.persist",
+      "params": {
+        "imgtype": "edit",
+        "out_dir": null,
+        "adapter": "local"
+      },
+      "ports": {
+        "in": {
+          "artifacts": {
+            "type": "compile_artifacts"
+          },
+          "results": {
+            "type": "engine_results"
+          }
+        },
+        "out": {
+          "files": {
+            "type": "file_list"
+          }
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "resolve_refs",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "generate",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "load",
+        "port": "artifacts"
+      },
+      "to": {
+        "node": "persist",
+        "port": "artifacts"
+      }
+    },
+    {
+      "from": {
+        "node": "resolve_refs",
+        "port": "refs"
+      },
+      "to": {
+        "node": "generate",
+        "port": "refs"
+      }
+    },
+    {
+      "from": {
+        "node": "generate",
+        "port": "results"
+      },
+      "to": {
+        "node": "persist",
+        "port": "results"
+      }
+    }
+  ]
+}

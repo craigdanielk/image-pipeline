@@ -1,0 +1,34 @@
+{
+  "schema_version": "provider-execution-plan-v1",
+  "id": "joga-hairbands-edit-logo-fix-plan",
+  "provider_prompt_id": "5fe0c78376ad07b683646e2a303025b067afdbf32ee6f5b90bb5c6eabe56a55b",
+  "provider": "higgsfield",
+  "model": "nano_banana_2",
+  "method": "cost_estimate",
+  "params": {
+    "resolution": "2k",
+    "_negative_appended": true
+  },
+  "uploads": [],
+  "media_inputs": [],
+  "retries": {
+    "max_attempts": 3,
+    "backoff": "exponential"
+  },
+  "masks": [],
+  "metadata": {
+    "capability_registry_version": "v1-inline",
+    "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands",
+    "accepts_reference": true,
+    "content_hash": "3bbc0fd673f2ac37f4b246f0a5e5f5258c73cea6d58216a227d1491745faae18"
+  },
+  "prompt": {
+    "positive": "Re-render reference image 1 in place. Lock the child, hairband, hands, pose, lighting, background and kit colours exactly.\n\nONLY CHANGE — chest branding:\n1. Remove completely any white swoosh, Joma J, or wrong chest mark.\n2. Apply the stacked JO/GA chest logo from reference image 2 (yellow), small on the chest at sternum height, scale ~0.9, crisp and undistorted.\n\nDo not crop the product. Do not distort the logo.",
+    "negative": "joma_j, white_swoosh, crop_product, distort_logo, joma_j, white_swoosh, crop_product, distort_logo"
+  },
+  "output": {
+    "imgtype": "edit",
+    "resolution": "2k",
+    "count": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "schema_version": "product-spec-v1",
+  "id": "joga-hairbands-product-hero-product",
+  "name": "joga-hairbands-product-hero",
+  "immutable": true,
+  "geometry_text": "Product source of truth: knowledge/products/hairbands.json (product-spec-v2, immutable). Geometry: torus loop, royal_blue woven elastic, width 25mm, circumference 480mm. Brand asset joga-band-wordmark placed band_center. Constraints: preserve geometry, material, proportions."
+}

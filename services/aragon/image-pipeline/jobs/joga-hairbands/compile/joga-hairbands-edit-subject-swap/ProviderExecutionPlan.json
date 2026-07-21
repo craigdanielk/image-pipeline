@@ -1,0 +1,34 @@
+{
+  "schema_version": "provider-execution-plan-v1",
+  "id": "joga-hairbands-edit-subject-swap-plan",
+  "provider_prompt_id": "3d4af6e75107da61802c8289834bab13e5477c886711dd4ce84eeba0f28045c8",
+  "provider": "higgsfield",
+  "model": "nano_banana_2",
+  "method": "cost_estimate",
+  "params": {
+    "resolution": "2k",
+    "_negative_appended": true
+  },
+  "uploads": [],
+  "media_inputs": [],
+  "retries": {
+    "max_attempts": 3,
+    "backoff": "exponential"
+  },
+  "masks": [],
+  "metadata": {
+    "capability_registry_version": "v1-inline",
+    "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-9f81572b0b2d/services/aragon/image-pipeline/jobs/joga-hairbands",
+    "accepts_reference": true,
+    "content_hash": "81cd65956d6c33c338c6f18440c83b70ad7f92f0069ffd7a907cbd936b09b263"
+  },
+  "prompt": {
+    "positive": "Re-render this exact image from reference image 1. Lock the exact camera angle, crop, pose, hand placement at temples, hairband position, blue band colour, lighting, and background bokeh.\n\nONLY CHANGES:\n1. Replace the model with a CHILD aged 10-13 — short brown hair (NOT bald), smooth skin, no facial hair, child-proportioned face and hands in the same pose.\n2. Jersey chest mark: use the STARZ S-crest from reference image 3 (blue) — small on chest. NO JOGA wordmark on jersey, NO crown, NO GA badge.\n\nMatch hairband product geometry from reference image 2 (royal blue band, white JOGA on band):\n\nElastic athletic hairband, continuous woven loop, royal blue, matte finish, 25mm band width, ~480mm circumference, white JOGA wordmark centered on the band face. Preserve geometry, material and proportions (source: knowledge/products/hairbands.json).\n\nVIEW: kid hero on pitch, royal blue hairband with white JOGA, both hands at temples adjusting band, smiling, dark stadium bokeh — match reference image 1 exactly.",
+    "negative": "adult model, bald child, facial hair, JOGA wordmark on jersey, crown badge, GA badge, adult model, bald child, facial hair, JOGA wordmark on jersey, crown badge, GA badge"
+  },
+  "output": {
+    "imgtype": "edit",
+    "resolution": "2k",
+    "count": 1
+  }
+}
