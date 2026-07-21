@@ -21,6 +21,6 @@
   "parent_run_id": null,
   "provenance": {
     "compiled_from": "job-v1",
-    "source_job_path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images/kid-hero.job.json"
+    "source_job_path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-ec608fc93fdd/services/aragon/image-pipeline/jobs/starz-kid-images/kid-hero.job.json"
   }
 }

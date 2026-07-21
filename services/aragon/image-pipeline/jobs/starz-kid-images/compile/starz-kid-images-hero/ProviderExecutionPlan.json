@@ -18,9 +18,9 @@
   "masks": [],
   "metadata": {
     "capability_registry_version": "v1-inline",
-    "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images",
+    "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-ec608fc93fdd/services/aragon/image-pipeline/jobs/starz-kid-images",
     "accepts_reference": true,
-    "content_hash": "e6cd42cf6193477e50f7bbe60db5d75779bdeb3ac7c62828d49b74b49e1e256a"
+    "content_hash": "8082c86f8a86362a366fb2a05a0c9bd58cdf135db3e29abffc09c11bc91c8e12"
   },
   "prompt": {
     "positive": "Studio product photograph.\n\nA bright kids' athletic sneaker, chunky sole, velcro strap.\n\nVIEW: three-quarter hero angle on a seamless studio backdrop.",

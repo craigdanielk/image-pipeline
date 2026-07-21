@@ -5,7 +5,7 @@
   "dry_run": true,
   "source": {
     "kind": "job-v1",
-    "path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images/kid-hero.job.json"
+    "path": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-ec608fc93fdd/services/aragon/image-pipeline/jobs/starz-kid-images/kid-hero.job.json"
   },
   "artifacts": {
     "ProductSpec.json": {
@@ -20,7 +20,7 @@
       "content_hash": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
     },
     "ExecutionRequest.json": {
-      "content_hash": "0c825ccc48f13f1ad56f516473f5d5cf6c5218f4b94dcd0096ba9e3752a7d210",
+      "content_hash": "5b43c85847a1aa654caa81bc722cac1d0bfcc6023f826aa8ece85ac30701462e",
       "schema_version": "execution-request-v1"
     },
     "ProviderPrompt.json": {
@@ -28,7 +28,7 @@
       "schema_version": "provider-prompt-v1"
     },
     "ProviderExecutionPlan.json": {
-      "content_hash": "6b2466bcec2909ce1dab3dcd01c22de8262a7e1dae0cad4e8eea8e8a0cedab71",
+      "content_hash": "27685b094a3e4e78460fed1dcb646a50b52492b67398f9374a34d5ba2fe8f681",
       "schema_version": "provider-execution-plan-v1"
     },
     "graph.json": {
@@ -36,10 +36,10 @@
       "schema_version": "graph-v1"
     },
     "RuntimeContext.json": {
-      "content_hash": "18e06077a7a5b01e14637ef5b6ba9a602ffae2cc304f44a14d738ae3a15ca204",
+      "content_hash": "696c4a76ccf4ebcc965e12b1dbba017dbcda6b88a2c8dad25395205d2e70a68d",
       "schema_version": "runtime-context-v1"
     }
   },
   "compile_hash": "fd53f31bc738c69ff0fe85196a52f29548c6cd64d6367eca2b7572b986be82db",
-  "manifest_hash": "ff1d2ea99e8d668336069b9c1e262e7af0decec5918c065dbd6391db348fa53f"
+  "manifest_hash": "78a90989d9b0887a0d8439833035a353baedc19e85c96aeb9f8e8f5ef1b9a188"
 }

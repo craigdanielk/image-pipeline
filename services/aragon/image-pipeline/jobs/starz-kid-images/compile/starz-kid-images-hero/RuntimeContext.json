@@ -1,10 +1,10 @@
 {
   "schema_version": "runtime-context-v1",
   "job_id": "starz-kid-images-hero",
-  "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images",
+  "job_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-ec608fc93fdd/services/aragon/image-pipeline/jobs/starz-kid-images",
   "persist_context": {
     "id": "starz-kid-images-hero",
-    "_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-92b4bfb7f159/jobs/starz-kid-images",
+    "_dir": "/Users/craigkunte/.local/state/sdk-executor/worktrees/sdk-executor-ec608fc93fdd/services/aragon/image-pipeline/jobs/starz-kid-images",
     "output": {
       "imgtype": "hero",
       "aspect_ratio": "4:3",
