@@ -2,15 +2,103 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://aragon.services/image-pipeline/job.schema.json",
   "title": "ImagePipeline Job Spec",
-  "description": "The universal, provider-agnostic contract for one image-generation job. This is the public API: the same JobSpec drives the CLI today and an HTTP endpoint later. 'Any person's image + prompt' = a JobSpec with reference=<their upload> and spec.prompt_template=<theirs>.",
+  "description": "The universal, provider-agnostic contract for one media-generation job. This is the public API: the same JobSpec drives the CLI today and an HTTP endpoint later. 'Any person's image + prompt' = a JobSpec with reference=<their upload> and spec.prompt_template=<theirs>. As of job-v2 the same contract also carries motion (media_type: video), either compiled deterministically by Remotion or generated — see the motion object.",
   "type": "object",
-  "required": ["schema_version", "id", "spec", "engine"],
+  "required": ["schema_version", "id"],
   "additionalProperties": false,
+  "allOf": [
+    {
+      "description": "An image job — media_type absent or 'image' — requires spec + engine exactly as job-v1 did. This is the conditional that keeps every existing v1 job valid while letting a Remotion job, which has no prompt and no generative backend, omit both.",
+      "if": {
+        "required": ["media_type"],
+        "properties": { "media_type": { "const": "video" } }
+      },
+      "then": { "required": ["motion"] },
+      "else": { "required": ["spec", "engine"] }
+    },
+    {
+      "description": "A generative video is the image contract with a duration: it still names a prompt and a backend.",
+      "if": {
+        "required": ["media_type", "motion"],
+        "properties": {
+          "media_type": { "const": "video" },
+          "motion": { "required": ["engine"], "properties": { "engine": { "const": "generative" } } }
+        }
+      },
+      "then": { "required": ["spec", "engine"] }
+    },
+    {
+      "description": "A Remotion render is fully described by its composition and its props; the remotion object is where that lives.",
+      "if": {
+        "required": ["media_type", "motion"],
+        "properties": {
+          "media_type": { "const": "video" },
+          "motion": { "required": ["engine"], "properties": { "engine": { "const": "remotion" } } }
+        }
+      },
+      "then": { "required": ["remotion"] }
+    }
+  ],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "job-v1",
-      "description": "Contract version. Bump only on breaking changes."
+      "enum": ["job-v1", "job-v2"],
+      "description": "Contract version. job-v1 is still accepted verbatim: v2 only ADDS the optional media_type discriminator and the motion/remotion objects, so every v1 job on disk validates unchanged. Bump only on breaking changes — this was not one."
+    },
+    "media_type": {
+      "type": "string",
+      "enum": ["image", "video"],
+      "default": "image",
+      "description": "The discriminator, and it DEFAULTS: absent means image. That default is the whole back-compat mechanism — a v1 job file is a v2 image job with the field elided, not a job that needs migrating."
+    },
+    "motion": {
+      "type": "object",
+      "description": "Required when media_type == 'video'. Engine policy (docs/census/2026-08-17-motion-engine.md §2): Remotion is canonical for deterministic UI/product motion — 77% of the reference's distinct pieces — because it renders the string it is given and re-renders per breakpoint for the cost of the compute. 'generative' is for atmospheric backdrops only, where nothing is verifiable so non-determinism is harmless.",
+      "required": ["engine", "duration_frames", "width", "height", "container"],
+      "additionalProperties": false,
+      "properties": {
+        "engine":          { "type": "string", "enum": ["remotion", "generative"], "description": "Which of the two paths. Authoritative per job, not per tenant." },
+        "duration_frames": { "type": "integer", "minimum": 1, "description": "Authoritative for Remotion; derived from the model's duration for generative." },
+        "fps":             { "type": "integer", "minimum": 1, "default": 30 },
+        "width":           { "type": "integer", "minimum": 1, "description": "A per-breakpoint cut is a SECOND job with the same composition_id and different dimensions — the desktop/mobile pattern the reference uses on every tab video." },
+        "height":          { "type": "integer", "minimum": 1 },
+        "container":       { "type": "string", "enum": ["mp4", "webm", "png-sequence"] },
+        "loop":            { "type": "boolean", "default": false, "description": "Flags the atmospheric case. No catalogued generative model advertises seamless looping, so a true value on a generative job means a loop-point pass is still owed." }
+      }
+    },
+    "remotion": {
+      "type": "object",
+      "description": "Required when motion.engine == 'remotion'. Everything a deterministic render needs and nothing it does not: no network fetch, no clock, no font URL.",
+      "required": ["entry", "composition_id", "props"],
+      "additionalProperties": false,
+      "properties": {
+        "entry":          { "type": "string", "description": "Path to the registered root, e.g. 'motion/src/index.ts'." },
+        "composition_id": { "type": "string", "description": "e.g. 'CapeCryptoProductRail'." },
+        "props": {
+          "type": "object",
+          "description": "The compiled props — INCLUDING the token subset, so a palette change alters the props, alters job_hash, and invalidates the cached render. That is the mechanism, not a convention.",
+          "additionalProperties": true
+        },
+        "props_provenance": {
+          "type": "array",
+          "description": "Carries provenance into the media artefact, so a string rendered on a frame traces back to a declared field. 'default' is not a permitted source: sourced or empty, never invented.",
+          "items": {
+            "type": "object",
+            "required": ["slot", "field_key", "source"],
+            "additionalProperties": false,
+            "properties": {
+              "slot":      { "type": "string" },
+              "field_key": { "type": "string" },
+              "source":    { "type": "string", "enum": ["harvested", "phase0"] }
+            }
+          }
+        },
+        "font_files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "LOCAL paths. A font referenced by URL is a network dependency and breaks portable determinism — the property that licenses using job_hash as a cache key at all."
+        }
+      }
     },
     "id": {
       "type": "string",
