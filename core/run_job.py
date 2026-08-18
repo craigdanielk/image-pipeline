@@ -134,7 +134,91 @@ def _run_one(job_path, intake="cli", dry_run=True, track=False, product_slug=Non
     return result
 
 
+# AURELIX-CAPABILITY — this file declares a capability under `--describe`.
+#
+# image-pipeline is a SEPARATE repository from aurelix-ag; no import may reach
+# it. The dict below is a literal, validated by `lib.capability.validate` when
+# the register is compiled. This is the instrument that SPENDS MONEY.
+CAPABILITY = {
+    "id": "aurelix.generator.image-pipeline",
+    "name": "Creative compiler runner — compile a job-v1 and execute it through the provider",
+    "kind": "generator",
+    "invocation": "python3 core/run_job.py <job>.job.json [--dry-run] [--concurrency N] [--track]",
+    "preconditions": [
+        "python3 3.9+ (core is dep-free)",
+        "the `higgsfield` CLI on PATH — present at ~/.npm-global/bin/higgsfield on this machine, 2026-08-18",
+        "an AUTHENTICATED higgsfield session. The credential is that CLI's own login, NOT an env var: there is "
+        "deliberately no API key anywhere in this repo, and .env.example carries only SUPABASE_* plus a note "
+        "that the AI drafting path uses the local `claude` CLI subscription",
+        "a Higgsfield credit balance for a real run. --dry-run needs no credits but DOES need the same "
+        "authenticated session, because it shells to `higgsfield generate cost <model> --prompt ... --json`",
+        "--track additionally needs .env with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
+    ],
+    "inputs": [
+        "one or more job-v1 .job.json paths (or '-' for stdin, alone)",
+        "the compile/ bundle it produces itself from each job",
+        "reference images the job names, uploaded to the provider on a real run",
+    ],
+    "outputs": [
+        "compile/<job-id>/ — the full artifact directory (written on dry-run too)",
+        "generated images written by the output_local adapter to the job's output dir",
+        "stdout: engine/model, reference list, compile_dir, compile_hash, the resolved prompt, and either "
+        "the DRY RUN cost estimate JSON or the saved file paths",
+        "with --track, rows mirrored into Supabase per db/SCHEMA.md",
+    ],
+    "outcome": "actual generated media for a job spec — or, with --dry-run, the provider's own priced cost "
+               "estimate for that exact resolved prompt",
+    "exit_contract": {
+        "0": "every job compiled and executed (or was priced) without raising",
+        "1": "SystemExit from a failed job in the fan-out ('N of M job(s) failed'), from combining '-' with "
+             "other paths, or any uncaught exception — a provider RuntimeError, a non-completed generation, "
+             "an unreadable job file",
+        "2": "argparse usage error (no positional job path, unknown flag)",
+    },
+    "measures": [
+        "the provider's real priced cost for the resolved prompt, under --dry-run",
+        "the compile_hash, so an identical job is recognisably the same work",
+        "whether the provider actually completed: a job returning without status=='completed' or without a "
+        "result_url raises rather than being recorded as done",
+    ],
+    "cannot_see": [
+        "whether the image is any good — on-model, on-brand, usable, or the shot that was asked for. There is "
+        "no visual gate anywhere in this repo; the operator UI's approve/reject gallery is a human deciding",
+        "whether --dry-run is free of side effects at the provider. It is free of CREDITS, but it is NOT "
+        "offline: `cost()` shells to `higgsfield generate cost ... --json`, a live authenticated call to a "
+        "paid provider's API. Treat it as a network operation against a billed account, not as a local estimate",
+        "the credit balance. Nothing checks it before spending; a run fails at the provider rather than "
+        "refusing up front",
+        "cape-crypto. Measured 2026-08-18: 76 .job.json in this repo, 85 across tenants/, ZERO cape-crypto — "
+        "and there never will be one on disk, because aurelix-ag's commission-media.py writes the spec to a "
+        "TemporaryDirectory before shelling here. The intended tenant has no persisted job library, so nothing "
+        "about Cape Crypto's imagery is reviewable, re-runnable or diffable from this repo",
+        "the Aurelix budget. commission-media.py owns the cache and the spend decision; this runner generates "
+        "whatever spec it is handed, so a caller with no budget check spends without being told no",
+        "Remotion motion jobs. A media_type=video job with motion.engine=='remotion' is rendered by "
+        "aurelix-ag/web-builder/motion/, never here, so 'the pipeline ran' does not mean the motion did",
+        "whether the generated file ever reaches a site. output_local writes to disk; there is no CDN, Drive "
+        "or webhook adapter (CLAUDE.md known gap 3), so delivery is a manual step this instrument cannot report on",
+    ],
+    "reachable_from": [
+        "aurelix-ag/web-builder/scripts/quality/commission-media.py:_run_pipeline — subprocess "
+        "[sys.executable, $IMAGE_PIPELINE_ROOT/core/run_job.py, <tmp job file>] (+ --dry-run), "
+        "cwd=IMAGE_PIPELINE_ROOT. This is the ONLY executable call site measured anywhere",
+        "README.md:26/:99, WORKFLOW.md:46-48, SKILL.md, ADAPTERS.md — documentation, not call sites",
+        "NOT reached from ui/server.py: the UI shells to compile_job.py and run_graph.py, never to this file",
+    ],
+    "cost": "MONEY. A real run bills Higgsfield credits per generated image against the CLI's authenticated "
+            "account; there is no ceiling in this repo and no balance check. --dry-run costs no credits but "
+            "still makes a live authenticated `higgsfield generate cost` call. NOT_RUN in this survey for that "
+            "reason: exercising it would require `higgsfield` to be logged in and would hit a billed provider's "
+            "API, so only --describe was executed.",
+}
+
+
 def main(argv=None):
+    if "--describe" in (sys.argv[1:] if argv is None else list(argv)):
+        print(json.dumps(CAPABILITY, indent=2))
+        raise SystemExit(0)
     ap = argparse.ArgumentParser(description="Compile and run image-pipeline JobSpecs.")
     ap.add_argument("job", nargs="+", help="path(s) to .job.json files (or '-' for stdin, alone only)")
     ap.add_argument("--dry-run", action="store_true", help="cost estimate only; no credits, no files")

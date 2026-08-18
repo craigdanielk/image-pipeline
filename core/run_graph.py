@@ -434,7 +434,78 @@ def run_job_path(
     )
 
 
+# AURELIX-CAPABILITY — this file declares a capability under `--describe`.
+#
+# Separate repository from aurelix-ag; no import may reach it. The dict below is
+# a literal, validated by `lib.capability.validate` at register-compile time.
+CAPABILITY = {
+    "id": "aurelix.harness.image-graph-runtime",
+    "name": "Graph runtime — execute a compiled graph.json node by node",
+    "kind": "harness",
+    "invocation": "python3 core/run_graph.py <compile-dir | job.json> [--dry-run] [--node <id>]",
+    "preconditions": [
+        "python3 3.9+",
+        "the target is either a compile/ directory containing manifest.json, or a job-v1 .job.json which this "
+        "will compile first (the one place the 'runtime never compiles' rule is relaxed, as a convenience)",
+        "the `higgsfield` CLI on PATH and AUTHENTICATED via its own login — no API key env var exists in this repo",
+        "--track needs .env with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
+    ],
+    "inputs": [
+        "a compile/ directory's manifest.json, graph.json and runtime bundle — resolved references and an "
+        "ExecutionPlan, never cad.md and never job-v1 semantics",
+        "--node to run one node and its ancestors only",
+        "--idempotency-key to make a re-run cache-safe",
+    ],
+    "outputs": [
+        "generated media via the output adapter",
+        "graph run state persisted through graph_persistence, and Supabase graph_run rows under --track",
+        "stdout: the full run result as indented JSON",
+    ],
+    "outcome": "which nodes of a compiled graph ran, which were reused, and whether the run as a whole "
+               "succeeded — the execute half of 'the runtime never compiles, the compiler never executes'",
+    "exit_contract": {
+        "0": "the run completed; the result JSON was printed",
+        "1": "SystemExit(1) when the result carries status=='failed'; also SystemExit(str(exc)) re-raised from "
+             "a node failure inside the runtime, and any uncaught exception",
+        "2": "argparse usage error (missing the positional target, unknown flag)",
+    },
+    "measures": [
+        "per-node execution and reuse across a graph, so a partial re-run does not redo satisfied nodes",
+        "run lineage: --parent-run-id and --idempotency-key are recorded, so a re-run is attributable",
+        "node-level failure — it stops on the failing node rather than reporting a whole-graph success",
+    ],
+    "cannot_see": [
+        "anything about job-v1 or cad.md, by design. It executes from manifest.json only, so a wrong creative "
+        "decision that compiled cleanly executes faithfully and expensively",
+        "image quality. No visual gate exists in this repo; a completed node is a node the provider said "
+        "finished, nothing more",
+        "cost before it spends, except under --dry-run — and --dry-run is NOT offline: it reaches "
+        "`higgsfield generate cost` through the same authenticated CLI session, a live call to a billed account",
+        "the credit balance; nothing refuses a run for lack of budget",
+        "cape-crypto. Zero cape-crypto jobs exist in this repo (measured 2026-08-18) and aurelix-ag reaches "
+        "the creative system through core/run_job.py, never through this file, so no Aurelix tenant has ever "
+        "executed a graph here",
+        "Remotion motion, which aurelix-ag renders in web-builder/motion/ and never routes through a graph",
+        "whether output reached anywhere. output_local writes to disk only; there is no delivery adapter",
+    ],
+    "reachable_from": [
+        "ui/server.py:1310, :1526, :1563 — _run_core('run_graph.py', ...) subprocess from the operator UI",
+        "ui/server.py:74 imports run_graph and calls run_graph.run_graph_async directly (:1798) — the module, "
+        "not this CLI",
+        "core/run_job.py imports run_graph and calls run_graph.run_graph() in-process",
+        "README.md:32 — documentation, not a call site",
+        "NOT reached from aurelix-ag: its only seam is commission-media.py -> core/run_job.py",
+    ],
+    "cost": "MONEY on a real run — provider credits per generated node, no ceiling and no balance check in "
+            "this repo. --dry-run costs no credits but still makes a live authenticated provider cost call. "
+            "NOT_RUN in this survey: only --describe was executed.",
+}
+
+
 def main(argv: list[str] | None = None) -> dict[str, Any]:
+    if "--describe" in (sys.argv[1:] if argv is None else list(argv)):
+        print(json.dumps(CAPABILITY, indent=2))
+        raise SystemExit(0)
     ap = argparse.ArgumentParser(description="Compile (if job-v1) then execute from compile/.")
     ap.add_argument(
         "target",
