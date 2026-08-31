@@ -1,0 +1,21 @@
+{
+  "schema": "git-oracle-pipeline-v1",
+  "tenant_slug": "north-star",
+  "tenant_id": "00000000-0000-0000-0000-000000000001",
+  "control_tower_root": "$HOME/Developer/GitHub/control-tower",
+  "default_branch": "main",
+  "push_mode": "pr",
+  "merge_drain": false,
+  "installed_at": "2026-08-31T08:37:03.820639+00:00",
+  "entrypoints": {
+    "chain": "$HOME/Developer/GitHub/control-tower/tenants/north-star/scripts/chain_runner.sh",
+    "step": "$HOME/Developer/GitHub/control-tower/tenants/north-star/scripts/brief-oracle-step.sh",
+    "core_chain": "$HOME/Developer/GitHub/control-tower/scripts/ops/git-oracle-pipeline/chain_runner.sh",
+    "core_step": "$HOME/Developer/GitHub/control-tower/scripts/ops/git-oracle-pipeline/brief_oracle_step.sh",
+    "land_check": "$HOME/Developer/GitHub/control-tower/scripts/ops/git-oracle-pipeline/check_brief_landed.py"
+  },
+  "requires": {
+    "run_brief": "$HOME/Developer/GitHub/control-tower/tenants/north-star/scripts/run-brief.sh",
+    "verify_brief": "$HOME/Developer/GitHub/control-tower/tenants/north-star/scripts/verify-brief.sh"
+  }
+}

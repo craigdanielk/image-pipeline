@@ -108,3 +108,22 @@ Programme work: frontier task → scribe brief → dry-run → exec → verify �
 
 <!-- manual-executor-v1 -->
 
+## Git Oracle Pipeline
+<!-- git-oracle-pipeline-v1 -->
+
+Sequential **exec → land gate → verify** chain for programme work. Do not call
+`sdk_executor.py` directly — use repo delegates.
+
+| Action | Command |
+|--------|---------|
+| One brief (exec+verify) | `./scripts/brief-oracle-step.sh --brief-id N` |
+| Sequential chain | `./scripts/chain_runner.sh ID [ID...]` |
+| Exec only | `./scripts/run-brief.sh --brief-id N` |
+| Verify only | `./scripts/verify-brief.sh --brief-id N` |
+
+- Tenant: **north-star** (`00000000-0000-0000-0000-000000000001`)
+- Default branch: **main** · Push mode: **pr**
+- Manifest: `.git-oracle-pipeline/manifest.json`
+- Full contract: `docs/LANDING.md`
+
+<!-- git-oracle-pipeline-v1 -->

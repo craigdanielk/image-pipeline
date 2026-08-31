@@ -43,10 +43,23 @@ Default lane: **deepseek**. Override: `--lane grok|gemini|system`.
 | 3 | Preflight / proxy refused |
 | 4 | Claim gate refused (brief untouched) |
 
+## Git Oracle chain (sequential programmes)
+
+For ordered multi-brief runs, use the git-oracle pipeline (exec → land gate → verify):
+
+```bash
+tenants/north-star/scripts/brief-oracle-step.sh --brief-id N
+tenants/north-star/scripts/chain_runner.sh ID [ID...]
+```
+
+Docs: `tenants/north-star/docs/GIT_ORACLE_PIPELINE.md`. Install with
+`install_git_oracle_pipeline.py` (requires this package first).
+
 ## Reinstall
 
 ```bash
 python3 control_tower/scripts/ops/install_manual_executor.py --tenant north-star
+python3 control_tower/scripts/ops/install_git_oracle_pipeline.py --tenant north-star
 ```
 
 Installed by `install_manual_executor.py` — schema `manual-executor-v1`.
