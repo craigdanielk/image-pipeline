@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import ContextCanvas from "./ContextCanvas";
 import GlassNavRail from "./GlassNavRail";
-import { useAuth } from "../AuthContext";
 import { useCreatorMode } from "../CreatorModeContext";
 import { useTenant } from "../TenantContext";
 import { useWorkspace } from "../WorkspaceContext";
@@ -12,7 +11,6 @@ type Props = {
 };
 
 export default function GlassShell({ children }: Props) {
-  const { user, signOut } = useAuth();
   const { creatorMode, toggleMode } = useCreatorMode();
   const { workspace } = useWorkspace();
   const { tenants, tenant, setTenant } = useTenant();
@@ -62,22 +60,6 @@ export default function GlassShell({ children }: Props) {
                 <span id="developer-mode-hint" className="sr-only">
                   Shows Runs, Pipelines, and Workbench routes for debugging
                 </span>
-              </div>
-
-              {/* ── Auth section ── */}
-              <div className="glass-shell__user">
-                {user && (
-                  <span className="glass-shell__user-email" title={user.email ?? ""}>
-                    {user.email?.split("@")[0] ?? "User"}
-                  </span>
-                )}
-                <button
-                  className="btn btn--ghost btn--sm"
-                  onClick={signOut}
-                  title="Sign out"
-                >
-                  Sign out
-                </button>
               </div>
             </div>
           </header>

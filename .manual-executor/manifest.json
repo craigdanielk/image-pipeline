@@ -1,0 +1,15 @@
+{
+  "schema": "manual-executor-v1",
+  "tenant_slug": "north-star",
+  "tenant_id": "00000000-0000-0000-0000-000000000001",
+  "default_lane": "deepseek",
+  "sdk_executor_root": "/Users/craigkunte/Developer/GitHub/services/sdk-executor",
+  "control_tower_root": "/Users/craigkunte/Developer/GitHub/control-tower",
+  "installed_at": "2026-08-31T08:03:09.124330+00:00",
+  "entrypoints": {
+    "run": "/Users/craigkunte/Developer/GitHub/control-tower/tenants/north-star/scripts/run-brief.sh",
+    "verify": "/Users/craigkunte/Developer/GitHub/control-tower/tenants/north-star/scripts/verify-brief.sh",
+    "core_run": "/Users/craigkunte/Developer/GitHub/services/sdk-executor/scripts/manual-executor/run-brief-oneshot.sh",
+    "core_verify": "/Users/craigkunte/Developer/GitHub/services/sdk-executor/scripts/manual-executor/verify-brief-oneshot.sh"
+  }
+}
