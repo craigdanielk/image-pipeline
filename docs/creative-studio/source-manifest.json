@@ -1,0 +1,1010 @@
+{
+  "schema_version": "creative-studio-source-reconciliation-v1",
+  "recorded_date": "2026-10-30",
+  "repository": "craigdanielk/image-pipeline",
+  "local_path": "/Users/craigkunte/Developer/GitHub/services/image-pipeline",
+  "selected_source": "root core/, schemas/, ui/",
+  "head": "e98cf4bf3558f87279ca518d71ee58530f6cf039",
+  "github_main_comparison": {
+    "status": "identical",
+    "ahead_by": 0,
+    "behind_by": 0,
+    "observation_method": "connected GitHub compare_commits"
+  },
+  "extraction_commit": "70384410cef00984f46366677647aefe45f85bca",
+  "dirty_status": [
+    " M config/tenants.json",
+    " M core/adapters/engine_higgsfield.py",
+    " M jobs/primi-toughkey/cad.md",
+    "?? docs/superpowers/plans/",
+    "?? jobs/champion-grip/",
+    "?? jobs/primi-toughkey/hero-port-closeup.job.json",
+    "?? jobs/primi-toughkey/hero-port-mobile.job.json",
+    "?? jobs/primi-toughkey/hero-port-wide.job.json",
+    "?? jobs/regenic-assessment-scales/",
+    "?? jobs/trend-llewellyn-team/",
+    "?? jobs/trend-sender-headshots/"
+  ],
+  "tracked_diff_numstat": [
+    "5\t0\tconfig/tenants.json",
+    "46\t16\tcore/adapters/engine_higgsfield.py",
+    "10\t11\tjobs/primi-toughkey/cad.md"
+  ],
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "bytes": 1435,
+      "working_sha256": "ea1d56dc7b27528849aaeac9ed5826556bcace6ada12fc7779550987948f964f",
+      "head_sha256": "ea1d56dc7b27528849aaeac9ed5826556bcace6ada12fc7779550987948f964f",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1068,
+      "working_sha256": "2c4a4d1f7f6313993e3250a8d8422ba129582094135269b5507cc3cd9015ae07",
+      "head_sha256": "2c4a4d1f7f6313993e3250a8d8422ba129582094135269b5507cc3cd9015ae07",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "README.md",
+      "bytes": 3424,
+      "working_sha256": "b1e3daf40f833587d704459b397057d465da91b8e25e1a6bc2688c2514349ea1",
+      "head_sha256": "b1e3daf40f833587d704459b397057d465da91b8e25e1a6bc2688c2514349ea1",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "core/adapters/__init__.py",
+      "bytes": 1327,
+      "working_sha256": "bed4cdab39c506d407a75bf987362a6afd30f437ecca35a7e31d5a48a753742b",
+      "head_sha256": "bed4cdab39c506d407a75bf987362a6afd30f437ecca35a7e31d5a48a753742b",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/adapters/engine_higgsfield.py",
+      "bytes": 7881,
+      "working_sha256": "04fa50bfb165fcff6f937ecaae642a091788706f363771e90e73b0931d410b54",
+      "head_sha256": "9c5d91875f7c45be37e5a47d13df4fca8375f015b9b4ec3f7452c952f83cc731",
+      "working_matches_head": false,
+      "nested_present": true,
+      "nested_matches_working": false
+    },
+    {
+      "path": "core/adapters/intake_cli.py",
+      "bytes": 541,
+      "working_sha256": "c705ed3afcecdcac5c20cdc239e7322ffa051be76e0bc6b19419496608267f5c",
+      "head_sha256": "c705ed3afcecdcac5c20cdc239e7322ffa051be76e0bc6b19419496608267f5c",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/adapters/output_local.py",
+      "bytes": 1343,
+      "working_sha256": "05f633caa0ef0d4c9c6f94cd30252ac0c4c5c96e955c62da2202cfc9cefd89ab",
+      "head_sha256": "05f633caa0ef0d4c9c6f94cd30252ac0c4c5c96e955c62da2202cfc9cefd89ab",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/adapters/reference_local.py",
+      "bytes": 2211,
+      "working_sha256": "43bfb35d95c4ee6bfc477c51bb5a2bfec0e4dc68cc78f7cdc9553760db0d3933",
+      "head_sha256": "43bfb35d95c4ee6bfc477c51bb5a2bfec0e4dc68cc78f7cdc9553760db0d3933",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/capability_resolver.py",
+      "bytes": 5176,
+      "working_sha256": "31ba0327ac46e6cb3a37a0d390528d0e2931bfb26cf4961041a75d7a724ec5dc",
+      "head_sha256": "31ba0327ac46e6cb3a37a0d390528d0e2931bfb26cf4961041a75d7a724ec5dc",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/compile_bundle.py",
+      "bytes": 8946,
+      "working_sha256": "139ab771066ea6b7298e92917af4eb486b17a4b9f926173c68112a421160d427",
+      "head_sha256": "139ab771066ea6b7298e92917af4eb486b17a4b9f926173c68112a421160d427",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/compile_job.py",
+      "bytes": 6436,
+      "working_sha256": "2ce6fa967aad87e10c7f5498d82b79e4d6dd475aff3ce387c35613b3af61c216",
+      "head_sha256": "2ce6fa967aad87e10c7f5498d82b79e4d6dd475aff3ce387c35613b3af61c216",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": false
+    },
+    {
+      "path": "core/compile_specs_v2.py",
+      "bytes": 1588,
+      "working_sha256": "e062799dfa55fd6a8a87adb3c113a71ea25d0bbf97ccebe743de9df4ce95c347",
+      "head_sha256": "e062799dfa55fd6a8a87adb3c113a71ea25d0bbf97ccebe743de9df4ce95c347",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/compile_validator.py",
+      "bytes": 2059,
+      "working_sha256": "4eb41e5ce974121cabe236524e27be2b2bd9e4b42dc3c8c625506bb37f7157b3",
+      "head_sha256": "4eb41e5ce974121cabe236524e27be2b2bd9e4b42dc3c8c625506bb37f7157b3",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/graph_compiler.py",
+      "bytes": 7105,
+      "working_sha256": "9cb3bdbaeaa1a6da0c9ea7d9c2d815568c38c142ed5a2921a2e51b69a3c19e9b",
+      "head_sha256": "9cb3bdbaeaa1a6da0c9ea7d9c2d815568c38c142ed5a2921a2e51b69a3c19e9b",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/graph_ir.py",
+      "bytes": 12282,
+      "working_sha256": "f8ba625f59df1c5fef6d877c62056781ebd60a51a6f3a92cdb4229afe1aafbd1",
+      "head_sha256": "f8ba625f59df1c5fef6d877c62056781ebd60a51a6f3a92cdb4229afe1aafbd1",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/graph_persistence.py",
+      "bytes": 6582,
+      "working_sha256": "97ea2aeaf7c2a951143cc32d15967e2c5709aa3b8f8438c317650a33e5393a3b",
+      "head_sha256": "97ea2aeaf7c2a951143cc32d15967e2c5709aa3b8f8438c317650a33e5393a3b",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/graph_runtime.py",
+      "bytes": 6092,
+      "working_sha256": "cbca894dc56aee314e115394924563d989911903f87d6002f81d0c9d26ef2b6f",
+      "head_sha256": "cbca894dc56aee314e115394924563d989911903f87d6002f81d0c9d26ef2b6f",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/job.schema.json",
+      "bytes": 10842,
+      "working_sha256": "257c5aec5f0fe992b2f39a197602b8a80b4651bf8175643c7b39c3a0352bdc0a",
+      "head_sha256": "257c5aec5f0fe992b2f39a197602b8a80b4651bf8175643c7b39c3a0352bdc0a",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": false
+    },
+    {
+      "path": "core/job_compiler.py",
+      "bytes": 10330,
+      "working_sha256": "b95d4b8304d98dc2d349e51600bdc5741cf165b04418d713dbcf04724a2b809b",
+      "head_sha256": "b95d4b8304d98dc2d349e51600bdc5741cf165b04418d713dbcf04724a2b809b",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/jobspec.py",
+      "bytes": 3222,
+      "working_sha256": "d94845834c2407386a18ced769f4ca7ba0ae06fb29e96e47ec547909d5cba0bf",
+      "head_sha256": "d94845834c2407386a18ced769f4ca7ba0ae06fb29e96e47ec547909d5cba0bf",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/knowledge_loader.py",
+      "bytes": 2061,
+      "working_sha256": "6cf3fd2489bcc1a4c7a8ad9dd115e134c117201cada0c43b89814dc282e483bb",
+      "head_sha256": "6cf3fd2489bcc1a4c7a8ad9dd115e134c117201cada0c43b89814dc282e483bb",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/knowledge_store.py",
+      "bytes": 9407,
+      "working_sha256": "0415503f8caa2d957a621c30ab8cbccd35dac75fee3597490ac5d069342e5fb3",
+      "head_sha256": "0415503f8caa2d957a621c30ab8cbccd35dac75fee3597490ac5d069342e5fb3",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/node_registry.py",
+      "bytes": 20121,
+      "working_sha256": "5dd810362a1266ae8f2e432c2364c38523926a40da17dd34f893e2c1b1d5b043",
+      "head_sha256": "5dd810362a1266ae8f2e432c2364c38523926a40da17dd34f893e2c1b1d5b043",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/prompt_compiler.py",
+      "bytes": 7140,
+      "working_sha256": "d74e4ee770fad32a00390dc9d4ed25a8237b3bb672cced0ea41dd8fb718cf9c8",
+      "head_sha256": "d74e4ee770fad32a00390dc9d4ed25a8237b3bb672cced0ea41dd8fb718cf9c8",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/prompt_compiler_v2.py",
+      "bytes": 6705,
+      "working_sha256": "2765cad116108e3f40a49672770bb180ed16809449ac69de55d8fe326e9341bc",
+      "head_sha256": "2765cad116108e3f40a49672770bb180ed16809449ac69de55d8fe326e9341bc",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/run_graph.py",
+      "bytes": 20751,
+      "working_sha256": "cac8000c23c24dd670c63dba24fe361c17d361d5dbe649b9a5a0bc1419f62888",
+      "head_sha256": "cac8000c23c24dd670c63dba24fe361c17d361d5dbe649b9a5a0bc1419f62888",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": false
+    },
+    {
+      "path": "core/run_job.py",
+      "bytes": 13174,
+      "working_sha256": "7424b3d1cf62e74b808f2aafbea50b28cd3a7992297e0bd78c074f15222f777f",
+      "head_sha256": "7424b3d1cf62e74b808f2aafbea50b28cd3a7992297e0bd78c074f15222f777f",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": false
+    },
+    {
+      "path": "core/spec_compiler.py",
+      "bytes": 2118,
+      "working_sha256": "9306cb87be60c321d4f09262ee2beb2aa2110f1a6ba36ede7b58c72e3f710ae4",
+      "head_sha256": "9306cb87be60c321d4f09262ee2beb2aa2110f1a6ba36ede7b58c72e3f710ae4",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/spec_extractor.py",
+      "bytes": 14021,
+      "working_sha256": "ba67627dc5cd449db8897359e5754f45f4719a02019d21626702a138e1eeed47",
+      "head_sha256": "ba67627dc5cd449db8897359e5754f45f4719a02019d21626702a138e1eeed47",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/spec_validator.py",
+      "bytes": 4889,
+      "working_sha256": "99363d665c04082f91a20ce7d60441fd841661a8a88b526878fee34c8e95ed31",
+      "head_sha256": "99363d665c04082f91a20ce7d60441fd841661a8a88b526878fee34c8e95ed31",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/spec_validator_v2.py",
+      "bytes": 6462,
+      "working_sha256": "31d434de080c76c4d4eaf731084eb3776b3e11ea420147cb43c14d54cd1654f6",
+      "head_sha256": "31d434de080c76c4d4eaf731084eb3776b3e11ea420147cb43c14d54cd1654f6",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/state_reconciler.py",
+      "bytes": 7590,
+      "working_sha256": "098a66f0aa2990dc4572f4af344d00f23e1206d8ee7d844d5a00090bb0f32a60",
+      "head_sha256": "098a66f0aa2990dc4572f4af344d00f23e1206d8ee7d844d5a00090bb0f32a60",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "core/tracking.py",
+      "bytes": 13989,
+      "working_sha256": "2bac27cf7aa3e66d01b9bcc147830f6aad4c08d38073635409d38d85250575f1",
+      "head_sha256": "2bac27cf7aa3e66d01b9bcc147830f6aad4c08d38073635409d38d85250575f1",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/compile-manifest-v1.schema.json",
+      "bytes": 1367,
+      "working_sha256": "aaf70e679c48a0797ad8f762507beab48e05e9e3d7e180d54af267bf3df81dbb",
+      "head_sha256": "aaf70e679c48a0797ad8f762507beab48e05e9e3d7e180d54af267bf3df81dbb",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/creative-spec-v1.schema.json",
+      "bytes": 1760,
+      "working_sha256": "f8886188a11b5d0dfa3777f253de9c8818bb5f4e3b04960c3a017ee413079f98",
+      "head_sha256": "f8886188a11b5d0dfa3777f253de9c8818bb5f4e3b04960c3a017ee413079f98",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/creative-spec-v2.schema.json",
+      "bytes": 2006,
+      "working_sha256": "39a6e1c1da1bb25c6f7f583a71d9e5cd1015e80ff4820d7800a686bc0f0c72d1",
+      "head_sha256": "39a6e1c1da1bb25c6f7f583a71d9e5cd1015e80ff4820d7800a686bc0f0c72d1",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/edit-spec-v1.schema.json",
+      "bytes": 3310,
+      "working_sha256": "e4c6eaa67bfffdbe73e7b8b40269e2ee7f0f8ee7fec0946ae95541f01f9df5e0",
+      "head_sha256": "e4c6eaa67bfffdbe73e7b8b40269e2ee7f0f8ee7fec0946ae95541f01f9df5e0",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/edit-spec-v2.schema.json",
+      "bytes": 2635,
+      "working_sha256": "059b366ed775b9dbeb5feda8d4021c1a9b320d9e44cdffb30a42cc9eb0881340",
+      "head_sha256": "059b366ed775b9dbeb5feda8d4021c1a9b320d9e44cdffb30a42cc9eb0881340",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/cad-with-scene-locks.md",
+      "bytes": 822,
+      "working_sha256": "4a9e58136833dfc20cb3975eff4f53fa49c889dc7d5f81277498c60b9944c6ba",
+      "head_sha256": "4a9e58136833dfc20cb3975eff4f53fa49c889dc7d5f81277498c60b9944c6ba",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/creative-spec-primikey-usba.json",
+      "bytes": 1432,
+      "working_sha256": "a4402d7bd6eb856dd8b6bf13e36fb09ed34db075e550a34a0809d8976510f543",
+      "head_sha256": "a4402d7bd6eb856dd8b6bf13e36fb09ed34db075e550a34a0809d8976510f543",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/edit-spec-hairbands-logo-fix.json",
+      "bytes": 1033,
+      "working_sha256": "062d92d953766da429f6e4820fa85669777bc1c74c2e8cef4e9e08dfe3ae499b",
+      "head_sha256": "062d92d953766da429f6e4820fa85669777bc1c74c2e8cef4e9e08dfe3ae499b",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/edit-spec-v2-hairbands-logo-fix.json",
+      "bytes": 1045,
+      "working_sha256": "a0cda4ac3a7c97888232377116f947b57c826ab3a6c4b6b9ebb315b9a96f7659",
+      "head_sha256": "a0cda4ac3a7c97888232377116f947b57c826ab3a6c4b6b9ebb315b9a96f7659",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/execution-request-hairbands-logo-fix.json",
+      "bytes": 541,
+      "working_sha256": "a2cabc32ce07865e583d2cb0f96fc3424814c92c7b08d77abf0a7876635326d4",
+      "head_sha256": "a2cabc32ce07865e583d2cb0f96fc3424814c92c7b08d77abf0a7876635326d4",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/execution-request-primikey-scene-float-a.json",
+      "bytes": 893,
+      "working_sha256": "74485c0ab5e8a83698f8811a8be1eaf4852cbd196ec31421f2400252700f4b24",
+      "head_sha256": "74485c0ab5e8a83698f8811a8be1eaf4852cbd196ec31421f2400252700f4b24",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/graph-v1-linear-pipeline.json",
+      "bytes": 1821,
+      "working_sha256": "05cbf18681f5821fb6851dd207b2e53a1529a03436de9b5dd051ebedd83f3f12",
+      "head_sha256": "05cbf18681f5821fb6851dd207b2e53a1529a03436de9b5dd051ebedd83f3f12",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/product-spec-primikey-usba.json",
+      "bytes": 2075,
+      "working_sha256": "4d821bfb042ae50c459657aaf8440f9617fdb5179154c1156f186688471047b5",
+      "head_sha256": "4d821bfb042ae50c459657aaf8440f9617fdb5179154c1156f186688471047b5",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/examples/provider-prompt-primikey-scene-float-a.json",
+      "bytes": 3326,
+      "working_sha256": "fa8db0b4784fdbcbccf02a6be7e4f7dbe81440b535739192cdb6496252cfafc7",
+      "head_sha256": "fa8db0b4784fdbcbccf02a6be7e4f7dbe81440b535739192cdb6496252cfafc7",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/execution-request-v1.schema.json",
+      "bytes": 2704,
+      "working_sha256": "207b5e91fb0d82daa9e50add07921563864790bf15caaa862e15edef20f8c4cd",
+      "head_sha256": "207b5e91fb0d82daa9e50add07921563864790bf15caaa862e15edef20f8c4cd",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/graph-v1.schema.json",
+      "bytes": 3345,
+      "working_sha256": "1ee273ce9571316ef9b7f236fd5cb6c2dd6d2680d8d9f788d906bbdf71484aab",
+      "head_sha256": "1ee273ce9571316ef9b7f236fd5cb6c2dd6d2680d8d9f788d906bbdf71484aab",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/artifacts-load-out.schema.json",
+      "bytes": 767,
+      "working_sha256": "21911124d3f37ae503d4ac4121c8a63ee6384931fa8738bb5e02d83c9f951149",
+      "head_sha256": "21911124d3f37ae503d4ac4121c8a63ee6384931fa8738bb5e02d83c9f951149",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/engine-generate-in.schema.json",
+      "bytes": 458,
+      "working_sha256": "ed929b568cd203f7ceb2cb055bcf761e85f0f936f96768c877152fc58f8eca80",
+      "head_sha256": "ed929b568cd203f7ceb2cb055bcf761e85f0f936f96768c877152fc58f8eca80",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/engine-generate-out.schema.json",
+      "bytes": 448,
+      "working_sha256": "60b4fe506279698f3be69e499efdb8a9d0230abbb2ad8d152914cad7e3c6247e",
+      "head_sha256": "60b4fe506279698f3be69e499efdb8a9d0230abbb2ad8d152914cad7e3c6247e",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/intake-load-in.schema.json",
+      "bytes": 427,
+      "working_sha256": "2a4f9899825ab9d38292ed5e1cb80cb3b835df3567b9bccdfecb352b048c3181",
+      "head_sha256": "2a4f9899825ab9d38292ed5e1cb80cb3b835df3567b9bccdfecb352b048c3181",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/intake-load-out.schema.json",
+      "bytes": 595,
+      "working_sha256": "6a0a1d7798fd480ed8b8aa4d232be516217ab1da215b482aafe096febc628179",
+      "head_sha256": "6a0a1d7798fd480ed8b8aa4d232be516217ab1da215b482aafe096febc628179",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/jobspec-validate-in.schema.json",
+      "bytes": 246,
+      "working_sha256": "46343766f7ceb4a7e1b04f18f460330e1a4e2d3e5fc4b9b33b8acae2da334188",
+      "head_sha256": "46343766f7ceb4a7e1b04f18f460330e1a4e2d3e5fc4b9b33b8acae2da334188",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/jobspec-validate-out.schema.json",
+      "bytes": 248,
+      "working_sha256": "31b3e50c2fd29b379d4f719a2a2d11907296af02b3b60eb8eb0d55c2b1c8248a",
+      "head_sha256": "31b3e50c2fd29b379d4f719a2a2d11907296af02b3b60eb8eb0d55c2b1c8248a",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/output-persist-in.schema.json",
+      "bytes": 391,
+      "working_sha256": "94deda4f8ff357eb62bbc60f1f6faa6ef828977bc5de2c0ed1bea4c85342c4fd",
+      "head_sha256": "94deda4f8ff357eb62bbc60f1f6faa6ef828977bc5de2c0ed1bea4c85342c4fd",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/output-persist-out.schema.json",
+      "bytes": 323,
+      "working_sha256": "8ff00d365583ca84ccee9c249d40237ef6b8d589d30767257940e472cf5b4094",
+      "head_sha256": "8ff00d365583ca84ccee9c249d40237ef6b8d589d30767257940e472cf5b4094",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/prompt-build-in.schema.json",
+      "bytes": 238,
+      "working_sha256": "1f4a63c693f9bb6e5a7e4b86a8c20b250ddc953d804fa249f280285a676700f3",
+      "head_sha256": "1f4a63c693f9bb6e5a7e4b86a8c20b250ddc953d804fa249f280285a676700f3",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/prompt-build-out.schema.json",
+      "bytes": 341,
+      "working_sha256": "1c5ffb2ed5f90c82afb700f7d7268e332b86bd47517b0634b90bb7b51dd6475a",
+      "head_sha256": "1c5ffb2ed5f90c82afb700f7d7268e332b86bd47517b0634b90bb7b51dd6475a",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/reference-resolve-in.schema.json",
+      "bytes": 248,
+      "working_sha256": "6e8f02af6263bf7e4abf8d1c837ea114bf3c694296538321ad4a040dddcca7a3",
+      "head_sha256": "6e8f02af6263bf7e4abf8d1c837ea114bf3c694296538321ad4a040dddcca7a3",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/nodes/reference-resolve-out.schema.json",
+      "bytes": 337,
+      "working_sha256": "1ec02147536dc04502397c9ca402b732d4d7b894b7f51d12e0072399f94689e7",
+      "head_sha256": "1ec02147536dc04502397c9ca402b732d4d7b894b7f51d12e0072399f94689e7",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/product-spec-v1.schema.json",
+      "bytes": 2020,
+      "working_sha256": "6ecec93f17ba4c6a4d8c0b1f1a226a94fb444a4bb25c3aa6806cbda05f4f3280",
+      "head_sha256": "6ecec93f17ba4c6a4d8c0b1f1a226a94fb444a4bb25c3aa6806cbda05f4f3280",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/product-spec-v2.schema.json",
+      "bytes": 4431,
+      "working_sha256": "4b5feab2487c45ad32ff34e28588f130fbed880f612f4fcc58e5ef1249d2c2ea",
+      "head_sha256": "4b5feab2487c45ad32ff34e28588f130fbed880f612f4fcc58e5ef1249d2c2ea",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/provider-execution-plan-v1.schema.json",
+      "bytes": 2965,
+      "working_sha256": "0a0a1d2140d947eeb87836ec33104b0702634d6b67d168ff7a0b438b08e285b5",
+      "head_sha256": "0a0a1d2140d947eeb87836ec33104b0702634d6b67d168ff7a0b438b08e285b5",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "schemas/provider-prompt-v1.schema.json",
+      "bytes": 1753,
+      "working_sha256": "353dfd4baf1814f583799d995e77c57a72521d4e434311428950cf8b296e90b2",
+      "head_sha256": "353dfd4baf1814f583799d995e77c57a72521d4e434311428950cf8b296e90b2",
+      "working_matches_head": true,
+      "nested_present": true,
+      "nested_matches_working": true
+    },
+    {
+      "path": "ui/app/src/App.tsx",
+      "bytes": 3164,
+      "working_sha256": "23c25408f74c8d0f9372fb0bcf49088df1859f614b195d3361fc6681e48ae15a",
+      "head_sha256": "23c25408f74c8d0f9372fb0bcf49088df1859f614b195d3361fc6681e48ae15a",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/CompilerNode.tsx",
+      "bytes": 815,
+      "working_sha256": "b851c7984737640add596ade6c09ba87edbe91c13a304dc39fc17247fc9421ee",
+      "head_sha256": "b851c7984737640add596ade6c09ba87edbe91c13a304dc39fc17247fc9421ee",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/CreatorModeContext.tsx",
+      "bytes": 814,
+      "working_sha256": "cbeda82a891c63ffd347fd6a8e636df5ffa26a1909af14bd88342a4bd7a691a1",
+      "head_sha256": "cbeda82a891c63ffd347fd6a8e636df5ffa26a1909af14bd88342a4bd7a691a1",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/GraphCanvas.tsx",
+      "bytes": 1446,
+      "working_sha256": "656d9459abf26409b00db556ac64b7c49ba7a5bd2fcf20265a8249099a69b658",
+      "head_sha256": "656d9459abf26409b00db556ac64b7c49ba7a5bd2fcf20265a8249099a69b658",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/InspectorPanel.tsx",
+      "bytes": 2121,
+      "working_sha256": "2fe274d43063faeb00721abab70db7bf3667ea473b62f4fd85f4acaa587e930f",
+      "head_sha256": "2fe274d43063faeb00721abab70db7bf3667ea473b62f4fd85f4acaa587e930f",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/NewShotWizard.tsx",
+      "bytes": 9787,
+      "working_sha256": "6edf7da1e9dd5e863a660de34bb8bcb45cd24f2c42a9a58d495fb3fb876d95dc",
+      "head_sha256": "6edf7da1e9dd5e863a660de34bb8bcb45cd24f2c42a9a58d495fb3fb876d95dc",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/OutputStrip.tsx",
+      "bytes": 1085,
+      "working_sha256": "b812f1ee15083ddf63da64834311624407680e80904029f0e71dc204590ef416",
+      "head_sha256": "b812f1ee15083ddf63da64834311624407680e80904029f0e71dc204590ef416",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/ProductSidebar.tsx",
+      "bytes": 3372,
+      "working_sha256": "cf12c017e7a5313ff576c879cb94ed121209ee16e5fa7e6c82eaddf03bbf4e7a",
+      "head_sha256": "cf12c017e7a5313ff576c879cb94ed121209ee16e5fa7e6c82eaddf03bbf4e7a",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/RunBar.tsx",
+      "bytes": 1685,
+      "working_sha256": "aa104bb2e0839b4e66c01a9d68b74c7c2a0b903e316d2f6a2ea2c93c33073a73",
+      "head_sha256": "aa104bb2e0839b4e66c01a9d68b74c7c2a0b903e316d2f6a2ea2c93c33073a73",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/TenantContext.tsx",
+      "bytes": 1812,
+      "working_sha256": "4325f8edb203f36bb6f02c8d8dbe491b6653cd43515175cbf8a294a4fb282386",
+      "head_sha256": "4325f8edb203f36bb6f02c8d8dbe491b6653cd43515175cbf8a294a4fb282386",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/WorkspaceContext.tsx",
+      "bytes": 1235,
+      "working_sha256": "72b0bf8d72e2a52425f99db26cc024e9b5d6e60c8ab5293a4f2a15a7a130138c",
+      "head_sha256": "72b0bf8d72e2a52425f99db26cc024e9b5d6e60c8ab5293a4f2a15a7a130138c",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/api.ts",
+      "bytes": 1695,
+      "working_sha256": "e652baff70831c5df325dbae872cf74c32a998f5a98836c10d1bc93e3b299164",
+      "head_sha256": "e652baff70831c5df325dbae872cf74c32a998f5a98836c10d1bc93e3b299164",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/components/ArtifactGallery.tsx",
+      "bytes": 16084,
+      "working_sha256": "0875fd7da388444246d6358a0bd83feeaa7d11e6c375a1cfe45f7f59ca4718b3",
+      "head_sha256": "0875fd7da388444246d6358a0bd83feeaa7d11e6c375a1cfe45f7f59ca4718b3",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/components/BriefModal.tsx",
+      "bytes": 14204,
+      "working_sha256": "f2eb6e818860bfb1963ccfdb1b2b36ff761b51de36c09a0ed84af3b032da25ba",
+      "head_sha256": "f2eb6e818860bfb1963ccfdb1b2b36ff761b51de36c09a0ed84af3b032da25ba",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/components/ProductForm.tsx",
+      "bytes": 9856,
+      "working_sha256": "52216cc1fec723ccd7946f87e90914da1e121dcc0b14c6da23b51cdc20b78bce",
+      "head_sha256": "52216cc1fec723ccd7946f87e90914da1e121dcc0b14c6da23b51cdc20b78bce",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/design/ContextCanvas.tsx",
+      "bytes": 383,
+      "working_sha256": "a1deb08194cd663ffe8439e3617269b48359ce0dbad3d435785b57429b7a9956",
+      "head_sha256": "a1deb08194cd663ffe8439e3617269b48359ce0dbad3d435785b57429b7a9956",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/design/GlassCard.tsx",
+      "bytes": 497,
+      "working_sha256": "283090eae155ecb39a6c9a4b7c90fae46eab146170d719bf512f1a65f2b24bf5",
+      "head_sha256": "283090eae155ecb39a6c9a4b7c90fae46eab146170d719bf512f1a65f2b24bf5",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/design/GlassNavRail.tsx",
+      "bytes": 5639,
+      "working_sha256": "e0552e0530294288fb4d0292d3fffddd08b3758a314fb24e769fa22185746dca",
+      "head_sha256": "e0552e0530294288fb4d0292d3fffddd08b3758a314fb24e769fa22185746dca",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/design/GlassShell.tsx",
+      "bytes": 2568,
+      "working_sha256": "376cbccac84633ca5518a38d225b5adbce14916583342c89177463ff1004193b",
+      "head_sha256": "376cbccac84633ca5518a38d225b5adbce14916583342c89177463ff1004193b",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/design/glass.css",
+      "bytes": 20465,
+      "working_sha256": "7a3de7b9aa83667ff8e8f29aed404a71fa64e696df4e6281c69284fa434b9a37",
+      "head_sha256": "7a3de7b9aa83667ff8e8f29aed404a71fa64e696df4e6281c69284fa434b9a37",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/design/tokens.css",
+      "bytes": 4738,
+      "working_sha256": "045f0673ded0c5a8c6b972e689345aa54a0e3d37204a821b421ad5270d69df0b",
+      "head_sha256": "045f0673ded0c5a8c6b972e689345aa54a0e3d37204a821b421ad5270d69df0b",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/index.css",
+      "bytes": 30735,
+      "working_sha256": "fc8de0064c62b97a409bed69b91dc966bd219ee03ed6bb77a0c49296e81bb06f",
+      "head_sha256": "fc8de0064c62b97a409bed69b91dc966bd219ee03ed6bb77a0c49296e81bb06f",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/lib/emptyProductSpec.ts",
+      "bytes": 620,
+      "working_sha256": "74c91495e936f441788a5669883a6fc53df1a4faa74d4933a98c5cc6432a470d",
+      "head_sha256": "74c91495e936f441788a5669883a6fc53df1a4faa74d4933a98c5cc6432a470d",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/main.tsx",
+      "bytes": 289,
+      "working_sha256": "592d2cff0bd891c4cfdd33ce4a69049f6c56b0cbac5da5aeb2ff4b4a45549a25",
+      "head_sha256": "592d2cff0bd891c4cfdd33ce4a69049f6c56b0cbac5da5aeb2ff4b4a45549a25",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/AssetsPage.tsx",
+      "bytes": 1592,
+      "working_sha256": "66a498f2f8053fe53a8057aa6589f6b9617c89550e087497a0b5e64209e7028a",
+      "head_sha256": "66a498f2f8053fe53a8057aa6589f6b9617c89550e087497a0b5e64209e7028a",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/BoardPage.tsx",
+      "bytes": 76352,
+      "working_sha256": "58f6da3bf5929474cab3fc0c214153396b5434180bfa6e207473e7d638f3c9b5",
+      "head_sha256": "58f6da3bf5929474cab3fc0c214153396b5434180bfa6e207473e7d638f3c9b5",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/CampaignNewPage.tsx",
+      "bytes": 5378,
+      "working_sha256": "ef322be11f1e1478a4292a56e8cd6b6a84341a5fabb9d489a428baa117e25274",
+      "head_sha256": "ef322be11f1e1478a4292a56e8cd6b6a84341a5fabb9d489a428baa117e25274",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/CampaignsPage.tsx",
+      "bytes": 2883,
+      "working_sha256": "db91efb9ff14b9211da804feb493de834a2056a7d43bd729ee3e0c6dcc25fb40",
+      "head_sha256": "db91efb9ff14b9211da804feb493de834a2056a7d43bd729ee3e0c6dcc25fb40",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/Dashboard.tsx",
+      "bytes": 4989,
+      "working_sha256": "82281bb810989d27fc85d079a16082259dff8f2116dbb3227ae076dbc2fd24ff",
+      "head_sha256": "82281bb810989d27fc85d079a16082259dff8f2116dbb3227ae076dbc2fd24ff",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/GeneratePage.tsx",
+      "bytes": 7857,
+      "working_sha256": "18def05651828c354ea28963712d075bbefdbbc559e99228dbdddf151bc3616b",
+      "head_sha256": "18def05651828c354ea28963712d075bbefdbbc559e99228dbdddf151bc3616b",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/LegacyWorkbench.tsx",
+      "bytes": 8389,
+      "working_sha256": "3b2fc4cbd71e1056213236806891f89616a12e820bdb531323540c1635872c06",
+      "head_sha256": "3b2fc4cbd71e1056213236806891f89616a12e820bdb531323540c1635872c06",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/PipelinesPage.tsx",
+      "bytes": 758,
+      "working_sha256": "79a1ce3c8e67e57c2d45476ec19bfa8f995229497cd787a7ebdab9d7a9051839",
+      "head_sha256": "79a1ce3c8e67e57c2d45476ec19bfa8f995229497cd787a7ebdab9d7a9051839",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/ProductDetailPage.tsx",
+      "bytes": 7243,
+      "working_sha256": "d1a43f5cfb9af0c52730a9bead460b53e671efc4c5b9342e4859b4c69d83c29e",
+      "head_sha256": "d1a43f5cfb9af0c52730a9bead460b53e671efc4c5b9342e4859b4c69d83c29e",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/ProductNewPage.tsx",
+      "bytes": 9821,
+      "working_sha256": "04dbcefa5f48c654ca1ad9bb3a5963765ac8c4d71c6eaa3a58fc54a164e5c733",
+      "head_sha256": "04dbcefa5f48c654ca1ad9bb3a5963765ac8c4d71c6eaa3a58fc54a164e5c733",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/ProductsPage.tsx",
+      "bytes": 2336,
+      "working_sha256": "a78e1d154b953aabfbd773271324ead4264751c18d7f83bece1909194e914f9b",
+      "head_sha256": "a78e1d154b953aabfbd773271324ead4264751c18d7f83bece1909194e914f9b",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/RunsPage.tsx",
+      "bytes": 2490,
+      "working_sha256": "138e6f616d58b7acb82721e213f026a7516c57ab47ba670c5fae818cf00dcb6e",
+      "head_sha256": "138e6f616d58b7acb82721e213f026a7516c57ab47ba670c5fae818cf00dcb6e",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/pages/StubPage.tsx",
+      "bytes": 350,
+      "working_sha256": "06b725f16516f1c3fd6b5f8afa74acc3041e38274b3f38d69727df78c3033943",
+      "head_sha256": "06b725f16516f1c3fd6b5f8afa74acc3041e38274b3f38d69727df78c3033943",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/types.ts",
+      "bytes": 3072,
+      "working_sha256": "463d06149a3866da9a5b9f9a5389009b3250964276d54a8d9c43d21dcc51b441",
+      "head_sha256": "463d06149a3866da9a5b9f9a5389009b3250964276d54a8d9c43d21dcc51b441",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/app/src/vite-env.d.ts",
+      "bytes": 38,
+      "working_sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "head_sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/artifact_registry.py",
+      "bytes": 18565,
+      "working_sha256": "af5eecdf14bc7ee384c300a8d3014791d9401463ead20dc0eec3c7c826b5ce02",
+      "head_sha256": "af5eecdf14bc7ee384c300a8d3014791d9401463ead20dc0eec3c7c826b5ce02",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/cloud_store.py",
+      "bytes": 12304,
+      "working_sha256": "27956c9fe198952268c7b4b2da068e11c985d10620ccb59ac58e790ae9440511",
+      "head_sha256": "27956c9fe198952268c7b4b2da068e11c985d10620ccb59ac58e790ae9440511",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    },
+    {
+      "path": "ui/server.py",
+      "bytes": 72410,
+      "working_sha256": "1effc640dd57d1f95e60cb931a119bbaf7312894cf4bccf5c29bc710e7801d5f",
+      "head_sha256": "1effc640dd57d1f95e60cb931a119bbaf7312894cf4bccf5c29bc710e7801d5f",
+      "working_matches_head": true,
+      "nested_present": false,
+      "nested_matches_working": null
+    }
+  ],
+  "tests_run": false,
+  "provider_calls": false,
+  "runtime_source_mutations": false
+}

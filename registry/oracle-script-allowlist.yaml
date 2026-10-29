@@ -1,0 +1,3 @@
+scripts:
+  - path: docs/creative-studio/source_manifest_report.py
+    note: "Creative Studio source reconciliation: read-only SHA-256 comparison of recorded root/historical files and committed baseline. No product imports, network, provider calls or writes."
