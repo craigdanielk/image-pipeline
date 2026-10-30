@@ -1,0 +1,10 @@
+{
+  "name": "Example Home Services Co",
+  "tagline": "Comfort, checked before the cold.",
+  "colours": [ { "hex": "#1F4E79", "role": "primary" }, { "hex": "#F2A900", "role": "accent" }, { "hex": "#FFFFFF", "role": "background" } ],
+  "fonts": [ { "family": "Inter", "role": "body", "licence": "OFL" }, { "family": "Source Serif 4", "role": "display", "licence": "OFL" } ],
+  "logo_url": "https://assets.example-home.test/brand/logo-primary.svg",
+  "tone": ["plain-spoken", "reassuring"],
+  "values": ["Upfront pricing", "On-time technicians"],
+  "source_version": { "authority": "marketing-os", "kind": "BrandKit", "artifact_id": "7d1f0c0e-8a59-4d3b-9b8e-0e7c1f9a2b31", "version": 1 }
+}

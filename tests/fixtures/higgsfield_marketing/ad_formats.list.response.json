@@ -1,0 +1,4 @@
+{ "items": [
+  { "id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11", "type": "headline", "name": "Headline" },
+  { "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d", "type": "special_offer", "name": "Special Offer" }
+] }
