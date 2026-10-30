@@ -1,0 +1,1262 @@
+{
+  "schema_version": "creative-studio-database-contract-v1",
+  "status": "design_only_do_not_apply",
+  "date": "2026-10-30",
+  "namespace": "cs_",
+  "public_schema": "public",
+  "private_schema": "cs_private",
+  "shared_identity": "auth.users",
+  "forbidden_runtime_tables": [
+    "mos_*",
+    "bci_*",
+    "tenants",
+    "briefs",
+    "tasks",
+    "system_config",
+    "execution_log",
+    "workspaces",
+    "products",
+    "artifacts"
+  ],
+  "notes": [
+    "All scoped parent references use composite (workspace_id,id) foreign keys. Only auth.users is a permitted foreign-key target outside cs_*.",
+    "VersionRef and AssetRef follow the sibling Creative Studio contracts packet; UUID and sha256 are not interchangeable.",
+    "Role/DDL creation belongs to CS-M2. No SQL in this artifact has been executed or tested.",
+    "Every table below carries created_at; immutable rows also carry created_by/runtime_principal_id and payload schema_version where relevant.",
+    "All public cs_* tables enable and force RLS; runtime roles never own tables or have BYPASSRLS.",
+    "No default grants are relied on; revoke PUBLIC, anon, authenticated domain-table grants.",
+    "The initial budget ceiling is zero. No media allowance is inferred from BCI or research budgets.",
+    "JSON/array-held local VersionRef and AssetRef values require insert-time same-workspace existence/revision/digest validation via a fixed kind-to-CS-table map; UUID arrays are not unverified foreign keys.",
+    "Every execution work item has exactly one durable owner: run/node or pre-run operation/step. Compile, Brand CI import and AI treatment authoring never require a fabricated recipe, execution plan or run.",
+    "Paid operations share the exact reservation/attempt/receipt/ledger contracts, with operation_id XOR run_id. Input/output version rows remain immutable and may be referenced by later independent operations/runs.",
+    "A SECURITY INVOKER insert validator enforces owner consistency between attempts, receipts, reservations and ledger; cost rows cannot reassign an operation charge to a run."
+  ],
+  "common_columns": {
+    "id": "uuid primary key",
+    "workspace_id": "uuid not null references public.cs_workspaces(id)",
+    "created_at": "timestamptz not null default now()",
+    "sha256": "text check lowercase hex length 64",
+    "revision": "integer check >0",
+    "money_micros": "bigint check >=0"
+  },
+  "roles": {
+    "cs_migration_owner": {
+      "runtime": false,
+      "ddl": true
+    },
+    "cs_api": {
+      "runtime": true,
+      "bypassrls": false,
+      "table_owner": false,
+      "connection": "transaction pooler TLS",
+      "scope": "actor/action/workspace RLS; no unrelated schemas; no ledger settlement"
+    },
+    "cs_worker": {
+      "runtime": true,
+      "bypassrls": false,
+      "table_owner": false,
+      "connection": "transaction pooler TLS",
+      "scope": "CS worker state + artifacts/receipts/ledger only; no membership/budget-policy mutations"
+    },
+    "authenticated": {
+      "domain_table_grants": [],
+      "storage": "exact upload intent/download grant or scoped CS machine principal"
+    },
+    "anon": {
+      "domain_table_grants": [],
+      "storage": []
+    }
+  },
+  "enums": {
+    "run_state": [
+      "queued",
+      "running",
+      "waiting_provider",
+      "needs_reconciliation",
+      "budget_blocked",
+      "authorization_blocked",
+      "cancel_requested",
+      "completed",
+      "failed",
+      "cancelled"
+    ],
+    "node_state": [
+      "pending",
+      "queued",
+      "running",
+      "waiting_provider",
+      "needs_reconciliation",
+      "budget_blocked",
+      "authorization_blocked",
+      "succeeded",
+      "failed",
+      "cancelled",
+      "skipped"
+    ],
+    "attempt_state": [
+      "prepared",
+      "dispatching",
+      "submitted",
+      "waiting_provider",
+      "ingesting",
+      "succeeded",
+      "failed",
+      "uncertain",
+      "cancel_requested",
+      "cancelled"
+    ],
+    "cost_state": [
+      "reserved",
+      "settled",
+      "unknown"
+    ],
+    "work_state": [
+      "queued",
+      "leased",
+      "retry_wait",
+      "done",
+      "dead",
+      "cancelled"
+    ],
+    "work_stage": [
+      "compile",
+      "prepare_reference",
+      "provider_submit",
+      "provider_reconcile_submission",
+      "provider_poll",
+      "provider_cancel",
+      "ingest_original",
+      "compose_image",
+      "normalize_video_segment",
+      "render_video_transition",
+      "mux_video",
+      "render_thumbnail",
+      "publish_export",
+      "deliver_handoff",
+      "import_brand_package",
+      "author_treatment",
+      "persist_treatment_draft"
+    ],
+    "credential_mode": [
+      "workspace_api",
+      "explicit_platform_allocation"
+    ],
+    "external_authority": [
+      "marketing-os",
+      "brand-ci-studio"
+    ],
+    "workspace_role": [
+      "producer",
+      "reviewer",
+      "viewer"
+    ],
+    "operation_kind": [
+      "compile",
+      "brand_package_import",
+      "treatment_authoring"
+    ],
+    "operation_state": [
+      "queued",
+      "running",
+      "waiting_provider",
+      "needs_reconciliation",
+      "budget_blocked",
+      "authorization_blocked",
+      "cancel_requested",
+      "completed",
+      "failed",
+      "cancelled"
+    ]
+  },
+  "tables": [
+    {
+      "name": "public.cs_accounts",
+      "scope": "account",
+      "columns": {
+        "owner_id": "uuid -> auth.users",
+        "name": "text",
+        "status": "active|suspended|closed"
+      },
+      "keys": [
+        "id PK"
+      ],
+      "behavior": "Native agency account; ownership changes through owner procedure"
+    },
+    {
+      "name": "public.cs_account_members",
+      "scope": "account",
+      "columns": {
+        "account_id": "uuid -> cs_accounts",
+        "user_id": "uuid -> auth.users",
+        "role": "owner|admin",
+        "revoked_at": "timestamptz nullable"
+      },
+      "keys": [
+        "PK(account_id,user_id)"
+      ],
+      "behavior": "Current native membership, no external MOS role cache"
+    },
+    {
+      "name": "public.cs_workspaces",
+      "scope": "workspace",
+      "columns": {
+        "account_id": "uuid -> cs_accounts",
+        "name": "text",
+        "mode": "native|external",
+        "status": "active|suspended|closed",
+        "policy_revision": "integer"
+      },
+      "keys": [
+        "id PK",
+        "UNIQUE(account_id,id)"
+      ],
+      "behavior": "Mode and account immutable after creation; mode external requires binding"
+    },
+    {
+      "name": "public.cs_workspace_members",
+      "scope": "workspace",
+      "columns": {
+        "workspace_id": "uuid",
+        "user_id": "uuid -> auth.users",
+        "role": "workspace_role",
+        "revoked_at": "timestamptz nullable"
+      },
+      "keys": [
+        "PK(workspace_id,user_id)"
+      ],
+      "behavior": "Native mode only; RLS uses current row"
+    },
+    {
+      "name": "public.cs_external_bindings",
+      "scope": "workspace",
+      "columns": {
+        "client_id": "uuid",
+        "authority": "text",
+        "external_workspace_id": "text",
+        "workspace_id": "uuid",
+        "status": "active|revoked",
+        "created_by": "uuid -> auth.users"
+      },
+      "keys": [
+        "UNIQUE(authority,client_id,external_workspace_id)",
+        "UNIQUE(workspace_id,authority)"
+      ],
+      "behavior": "Immutable mapping; no foreign FK to MOS/BCI"
+    },
+    {
+      "name": "cs_private.cs_service_clients",
+      "scope": "global-service",
+      "columns": {
+        "client_id": "uuid",
+        "authority": "text",
+        "public_keys": "jsonb",
+        "allowed_origin": "text",
+        "allowed_actions": "text[]",
+        "status": "active|revoked"
+      },
+      "keys": [
+        "id PK",
+        "UNIQUE(client_id)"
+      ],
+      "behavior": "Admin-only verified integration registrations"
+    },
+    {
+      "name": "cs_private.cs_service_nonces",
+      "scope": "service",
+      "columns": {
+        "client_id": "uuid",
+        "nonce_sha256": "text",
+        "expires_at": "timestamptz"
+      },
+      "keys": [
+        "PK(client_id,nonce_sha256)"
+      ],
+      "behavior": "Replay prevention; prune expired records after retention window"
+    },
+    {
+      "name": "public.cs_source_imports",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "authority": "text",
+        "source_ref": "VersionRef",
+        "payload": "jsonb",
+        "sha256": "text",
+        "approval_receipt_ref": "jsonb",
+        "rights": "jsonb",
+        "applicability_checked_at": "timestamptz"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,object_id,revision)"
+      ],
+      "behavior": "Immutable approved brand/campaign/source snapshot; foreign origin scope remains opaque"
+    },
+    {
+      "name": "public.cs_creative_request_versions",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "payload": "jsonb shared contract",
+        "sha256": "text",
+        "source_refs": "jsonb VersionRef[]",
+        "created_by": "uuid -> auth.users"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,object_id,revision)"
+      ],
+      "behavior": "Immutable complete creative request with approved source refs, required outputs, objective and exact copy"
+    },
+    {
+      "name": "public.cs_treatment_versions",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "payload": "jsonb shared contract",
+        "sha256": "text",
+        "source_refs": "jsonb VersionRef[]",
+        "created_by": "uuid -> auth.users",
+        "state": "draft|accepted",
+        "source_operation_id": "uuid nullable composite scoped FK to cs_operations"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,object_id,revision)"
+      ],
+      "behavior": "Immutable draft or accepted treatment revision. Authoring operation may insert draft only; explicit user acceptance inserts new accepted revision with actor/time. No runtime rewriting."
+    },
+    {
+      "name": "public.cs_recipe_versions",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "payload": "jsonb",
+        "sha256": "text",
+        "source_import_version_ids": "uuid[]",
+        "parent_version_id": "uuid nullable",
+        "creative_request_version_id": "uuid composite scoped FK to cs_creative_request_versions",
+        "treatment_version_id": "uuid composite scoped FK to cs_treatment_versions"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,object_id,revision)"
+      ],
+      "behavior": "Immutable shared guided/canvas source; version reference links use scoped junction table when relational"
+    },
+    {
+      "name": "public.cs_authoring_drafts",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "workspace_id": "uuid",
+        "created_by": "uuid -> auth.users",
+        "current_revision": "integer >0",
+        "sha256": "text",
+        "payload": "jsonb partial form/graph state",
+        "promoted_recipe_version_id": "uuid nullable",
+        "updated_at": "timestamptz"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)"
+      ],
+      "behavior": "Non-executable optimistic saved form/graph. Complete required refs before immutable promotion; compile rejects draft IDs."
+    },
+    {
+      "name": "public.cs_compile_plans",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "recipe_version_id": "uuid",
+        "compile_hash": "text",
+        "manifest_sha256": "text",
+        "manifest_asset_version_id": "uuid",
+        "catalogue_version_id": "uuid",
+        "compiler_revision": "text",
+        "runtime_contract_version": "text",
+        "price_snapshot": "jsonb",
+        "required_outputs": "jsonb",
+        "estimated_ceiling_micros": "bigint"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,compile_hash,compiler_revision,runtime_contract_version)"
+      ],
+      "behavior": "Immutable plan and graph manifest; transient signed URLs are not plan identity"
+    },
+    {
+      "name": "public.cs_operations",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "environment_id": "text",
+        "kind": "operation_kind",
+        "state": "operation_state",
+        "created_by": "uuid -> auth.users",
+        "idempotency_key": "uuid",
+        "request_sha256": "text",
+        "event_sequence": "bigint",
+        "input_refs": "jsonb VersionRef[]",
+        "result_refs": "jsonb VersionRef[]",
+        "result_asset_refs": "jsonb AssetRef[]",
+        "authorization_receipt": "jsonb",
+        "cost": "jsonb Cost nullable",
+        "error": "jsonb nullable",
+        "release_id": "text",
+        "completed_at": "timestamptz nullable",
+        "admission": "jsonb shared operation schema admission nullable; required for treatment_authoring",
+        "created_at": "timestamptz",
+        "updated_at": "timestamptz"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "UNIQUE(workspace_id,kind,idempotency_key)"
+      ],
+      "behavior": "Durable pre-run owner. No plan/run required. Public attempts and receipt_ids are derived scoped projections. Results attach only after immutable output persists. compile/import have admission and cost null and no paid attempts; treatment_authoring requires admission/cost and uses shared ledger. Completed authoring creates draft, never accepted treatment."
+    },
+    {
+      "name": "public.cs_operation_events",
+      "scope": "workspace",
+      "columns": {
+        "operation_id": "uuid composite FK to cs_operations",
+        "sequence": "bigint",
+        "kind": "text",
+        "payload": "jsonb",
+        "occurred_at": "timestamptz"
+      },
+      "keys": [
+        "PK(workspace_id,operation_id,sequence)"
+      ],
+      "behavior": "Append-only pre-run event log; sequence allocated under operation row lock independently of any run."
+    },
+    {
+      "name": "public.cs_runs",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "environment_id": "text",
+        "plan_version_id": "uuid",
+        "parent_run_id": "uuid nullable",
+        "requested_by": "uuid -> auth.users",
+        "state": "run_state",
+        "event_sequence": "bigint",
+        "authorization_receipt": "jsonb",
+        "cost_state": "cost_state",
+        "cancel_requested_at": "timestamptz nullable",
+        "failure_code": "text nullable",
+        "release_id": "text"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)"
+      ],
+      "behavior": "Mutable projection; last event receipt is authoritative"
+    },
+    {
+      "name": "public.cs_run_nodes",
+      "scope": "workspace",
+      "columns": {
+        "run_id": "uuid",
+        "node_id": "text",
+        "state": "node_state",
+        "input_hash": "text",
+        "attempt_number": "integer",
+        "output_refs": "jsonb",
+        "last_event_sequence": "bigint",
+        "reused_from_run_id": "uuid nullable"
+      },
+      "keys": [
+        "PK(workspace_id,run_id,node_id)"
+      ],
+      "behavior": "DAG projection; only fenced result may release downstream dependencies"
+    },
+    {
+      "name": "public.cs_attempts",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "run_id": "uuid nullable",
+        "node_id": "text nullable",
+        "attempt_number": "integer",
+        "provider": "text",
+        "provider_account_fingerprint": "text",
+        "credential_version_id": "uuid",
+        "request_hash": "text",
+        "provider_idempotency_key": "text",
+        "budget_reservation_id": "uuid",
+        "adapter_revision": "text",
+        "catalogue_version_id": "uuid",
+        "prepared_at": "timestamptz",
+        "operation_id": "uuid nullable",
+        "operation_step_key": "text nullable",
+        "step_input_sha256": "text nullable; required iff operation_id is not null"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "UNIQUE(workspace_id,run_id,node_id,attempt_number)",
+        "UNIQUE(provider,provider_account_fingerprint,provider_idempotency_key)",
+        "CHECK exactly one run_id+node_id OR operation_id+operation_step_key owner",
+        "UNIQUE(workspace_id,operation_id,operation_step_key,attempt_number)",
+        "FK(workspace_id,run_id,node_id) -> cs_run_nodes",
+        "FK(workspace_id,operation_id) -> cs_operations",
+        "CHECK operation_id IS NULL OR step_input_sha256 matches admitted immutable step input"
+      ],
+      "behavior": "Immutable paid-attempt admission; state/request_id are derived from append-only events/acceptance; applies equally to explicitly metered treatment authoring; provider state receipt never implies accepted treatment"
+    },
+    {
+      "name": "cs_private.cs_attempt_payloads",
+      "scope": "workspace",
+      "columns": {
+        "attempt_id": "uuid",
+        "ciphertext": "bytea",
+        "nonce": "bytea",
+        "key_version": "text",
+        "aad": "jsonb"
+      },
+      "keys": [
+        "PK(workspace_id,attempt_id)"
+      ],
+      "behavior": "Exact frozen endpoint/body/webhook/Hf-Expires-After for safe idempotent replay; encrypted signed input URLs"
+    },
+    {
+      "name": "public.cs_attempt_events",
+      "scope": "workspace",
+      "columns": {
+        "attempt_id": "uuid",
+        "sequence": "bigint",
+        "state": "attempt_state",
+        "reason_code": "text",
+        "provider_receipt_id": "uuid nullable",
+        "occurred_at": "timestamptz"
+      },
+      "keys": [
+        "PK(workspace_id,attempt_id,sequence)"
+      ],
+      "behavior": "Append-only state evidence; reject terminal regression"
+    },
+    {
+      "name": "public.cs_provider_receipts",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "attempt_id": "uuid",
+        "provider": "text",
+        "provider_account_fingerprint": "text",
+        "provider_request_id": "text nullable",
+        "kind": "acceptance|status|cancel|billing|reconciliation",
+        "source_event_key": "text",
+        "redacted_payload": "jsonb",
+        "raw_payload_ciphertext_ref": "uuid nullable",
+        "payload_sha256": "text",
+        "expires_at": "timestamptz nullable",
+        "run_id": "uuid nullable",
+        "operation_id": "uuid nullable",
+        "node_id": "text nullable",
+        "operation_step_key": "text nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "UNIQUE(provider,provider_account_fingerprint,source_event_key)",
+        "UNIQUE(provider,provider_account_fingerprint,provider_request_id) WHERE kind='acceptance'",
+        "FK(workspace_id,run_id) -> cs_runs(workspace_id,id)",
+        "FK(workspace_id,operation_id) -> cs_operations(workspace_id,id)",
+        "CHECK ((run_id IS NOT NULL AND node_id IS NOT NULL AND operation_id IS NULL AND operation_step_key IS NULL) OR (run_id IS NULL AND node_id IS NULL AND operation_id IS NOT NULL AND operation_step_key IS NOT NULL))",
+        "FK(workspace_id,run_id,node_id) -> cs_run_nodes(workspace_id,run_id,node_id)"
+      ],
+      "behavior": "Immutable; acceptance provider_request_id write-once and uniquely assigned to attempt; owner must equal linked attempt/reservation owner, enforced on insert"
+    },
+    {
+      "name": "cs_private.cs_webhook_inbox",
+      "scope": "service",
+      "columns": {
+        "provider": "text",
+        "provider_account_fingerprint": "text",
+        "webhook_id": "text",
+        "provider_request_id": "text",
+        "received_at": "timestamptz",
+        "signed_at": "timestamptz",
+        "body_sha256": "text",
+        "body_ciphertext": "bytea",
+        "state": "pending|reconciled|quarantined"
+      },
+      "keys": [
+        "UNIQUE(provider,provider_account_fingerprint,webhook_id)"
+      ],
+      "behavior": "Verified raw delivery stored before 2xx; missing request mapping quarantined"
+    },
+    {
+      "name": "public.cs_work_items",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "environment_id": "text",
+        "run_id": "uuid nullable composite scoped FK",
+        "node_id": "text nullable composite FK with run_id",
+        "stage": "work_stage",
+        "stage_revision": "integer",
+        "dedupe_key": "text",
+        "due_at": "timestamptz",
+        "state": "work_state",
+        "attempt_count": "integer",
+        "lease_owner": "text nullable",
+        "lease_token": "uuid nullable",
+        "lease_until": "timestamptz nullable",
+        "fencing_token": "bigint default 0",
+        "heartbeat_at": "timestamptz nullable",
+        "payload_ref": "jsonb",
+        "deadline_at": "timestamptz nullable",
+        "operation_id": "uuid nullable composite FK to cs_operations",
+        "operation_step_key": "text nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "UNIQUE(environment_id,dedupe_key)",
+        "INDEX(environment_id,due_at) WHERE state in queued,retry_wait",
+        "CHECK ((run_id IS NOT NULL AND node_id IS NOT NULL AND operation_id IS NULL AND operation_step_key IS NULL) OR (run_id IS NULL AND node_id IS NULL AND operation_id IS NOT NULL AND operation_step_key IS NOT NULL))",
+        "FK(workspace_id,run_id,node_id) -> cs_run_nodes(workspace_id,run_id,node_id)",
+        "FK(workspace_id,operation_id) -> cs_operations(workspace_id,id)"
+      ],
+      "behavior": "Lease source of truth; SKIP LOCKED claim + heartbeat/finalize CAS; exactly one run/node or pre-run operation/step owner, no fabricated run for compile/import/authoring"
+    },
+    {
+      "name": "public.cs_stage_results",
+      "scope": "workspace",
+      "columns": {
+        "work_item_id": "uuid",
+        "fencing_token": "bigint",
+        "result_kind": "text",
+        "input_sha256": "text",
+        "output_refs": "jsonb",
+        "receipt_sha256": "text",
+        "release_id": "text"
+      },
+      "keys": [
+        "UNIQUE(work_item_id,fencing_token,result_kind)"
+      ],
+      "behavior": "Immutable local-stage completion evidence"
+    },
+    {
+      "name": "public.cs_idempotency",
+      "scope": "workspace",
+      "columns": {
+        "operation": "text",
+        "key": "text",
+        "request_sha256": "text",
+        "result_ref": "jsonb",
+        "expires_at": "timestamptz nullable"
+      },
+      "keys": [
+        "PK(workspace_id,operation,key)"
+      ],
+      "behavior": "No expiry for billed-run identity during retention; mismatched same key =409"
+    },
+    {
+      "name": "public.cs_provider_catalogue_versions",
+      "scope": "global-service",
+      "columns": {
+        "id": "uuid",
+        "provider": "text",
+        "endpoint": "text",
+        "model_id": "text",
+        "schema_version": "text",
+        "input_schema": "jsonb",
+        "output_schema": "jsonb",
+        "capabilities": "jsonb",
+        "idempotency_mode": "supported_exact_replay|unsupported|unknown",
+        "price_snapshot": "jsonb",
+        "source_urls": "text[]",
+        "observed_at": "timestamptz",
+        "expires_at": "timestamptz",
+        "sha256": "text",
+        "provider_channel": "model_api|llm_api",
+        "operation_kinds": "text[] allowed run generation / treatment_authoring"
+      },
+      "keys": [
+        "id PK",
+        "UNIQUE(provider,model_id,sha256)"
+      ],
+      "behavior": "Immutable server-owned allowlist; stale/unknown capability refused for new admissions; text authoring endpoint has its own idempotency capability, never inherits Higgsfield generation semantics"
+    },
+    {
+      "name": "cs_private.cs_credentials",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "version_id": "uuid",
+        "provider": "text",
+        "provider_account_fingerprint": "text",
+        "mode": "credential_mode",
+        "ciphertext": "bytea",
+        "nonce": "bytea",
+        "encryption_key_version": "text",
+        "status": "active|revoked",
+        "api_access_confirmed_at": "timestamptz nullable"
+      },
+      "keys": [
+        "PK(version_id)",
+        "UNIQUE(workspace_id,id,version_id)"
+      ],
+      "behavior": "Versioned credential material; account fingerprint never secret; no local CLI fallback"
+    },
+    {
+      "name": "public.cs_budget_policies",
+      "scope": "account",
+      "columns": {
+        "account_id": "uuid",
+        "workspace_id": "uuid nullable",
+        "revision": "integer",
+        "window_seconds": "integer",
+        "ceiling_micros": "bigint default 0",
+        "per_run_ceiling_micros": "bigint default 0",
+        "authorization_ref": "jsonb",
+        "effective_at": "timestamptz",
+        "expires_at": "timestamptz nullable",
+        "per_operation_ceiling_micros": "bigint default 0"
+      },
+      "keys": [
+        "UNIQUE NULLS NOT DISTINCT(account_id,workspace_id,revision)"
+      ],
+      "behavior": "Owner-approved versioned policy; initial zero ceiling; no worker updates"
+    },
+    {
+      "name": "public.cs_budget_reservations",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "account_id": "uuid",
+        "run_id": "uuid nullable",
+        "attempt_id": "uuid nullable",
+        "ceiling_micros": "bigint",
+        "state": "reserved|settled|unknown|released",
+        "policy_revision": "integer",
+        "settled_micros": "bigint nullable",
+        "operation_id": "uuid nullable",
+        "node_id": "text nullable",
+        "operation_step_key": "text nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "FK(workspace_id,run_id) -> cs_runs(workspace_id,id)",
+        "FK(workspace_id,operation_id) -> cs_operations(workspace_id,id)",
+        "CHECK ((run_id IS NOT NULL AND node_id IS NOT NULL AND operation_id IS NULL AND operation_step_key IS NULL) OR (run_id IS NULL AND node_id IS NULL AND operation_id IS NOT NULL AND operation_step_key IS NOT NULL))",
+        "FK(workspace_id,run_id,node_id) -> cs_run_nodes(workspace_id,run_id,node_id)"
+      ],
+      "behavior": "Projection of append-only ledger; account lock protects availability; owner must equal linked attempt/reservation owner, enforced on insert"
+    },
+    {
+      "name": "public.cs_cost_ledger",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "account_id": "uuid",
+        "reservation_id": "uuid",
+        "attempt_id": "uuid nullable",
+        "entry_type": "reserve|settle|release|unknown|adjust",
+        "amount_micros": "bigint",
+        "provider_units": "numeric nullable",
+        "provider_currency": "text nullable",
+        "conversion_snapshot": "jsonb nullable",
+        "source_receipt_id": "uuid nullable",
+        "source_event_key": "text",
+        "run_id": "uuid nullable",
+        "operation_id": "uuid nullable",
+        "node_id": "text nullable",
+        "operation_step_key": "text nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(account_id,source_event_key)",
+        "FK(workspace_id,run_id) -> cs_runs(workspace_id,id)",
+        "FK(workspace_id,operation_id) -> cs_operations(workspace_id,id)",
+        "CHECK ((run_id IS NOT NULL AND node_id IS NOT NULL AND operation_id IS NULL AND operation_step_key IS NULL) OR (run_id IS NULL AND node_id IS NULL AND operation_id IS NOT NULL AND operation_step_key IS NOT NULL))",
+        "FK(workspace_id,run_id,node_id) -> cs_run_nodes(workspace_id,run_id,node_id)"
+      ],
+      "behavior": "Immutable, deduplicated financial evidence; unresolved hold not a zero cost; owner must equal linked attempt/reservation owner, enforced on insert"
+    },
+    {
+      "name": "public.cs_assets",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "label": "text",
+        "kind": "source|generated|composition|export|preview|intermediate",
+        "status": "active|withdrawn",
+        "latest_version_id": "uuid nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)"
+      ],
+      "behavior": "Logical asset; immutable versions contain actual bytes"
+    },
+    {
+      "name": "public.cs_asset_versions",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "asset_id": "uuid",
+        "revision": "integer",
+        "environment_id": "text",
+        "storage_key": "text",
+        "sha256": "text",
+        "mime_type": "text",
+        "size_bytes": "bigint",
+        "width": "integer nullable",
+        "height": "integer nullable",
+        "duration_ms": "integer nullable",
+        "fps_num": "integer nullable",
+        "fps_den": "integer nullable",
+        "source_refs": "jsonb",
+        "rights": "jsonb",
+        "run_id": "uuid nullable",
+        "node_id": "text nullable",
+        "attempt_id": "uuid nullable",
+        "operation_id": "uuid nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "UNIQUE(workspace_id,asset_id,revision)",
+        "UNIQUE(environment_id,storage_key)"
+      ],
+      "behavior": "Immutable; only validated/owned bytes; no signed URL as identity; generated/imported provenance has at most one run_id or operation_id; direct user upload has neither, linked upload intent"
+    },
+    {
+      "name": "public.cs_composition_versions",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "payload": "jsonb",
+        "sha256": "text",
+        "input_asset_refs": "jsonb",
+        "renderer_revision": "text"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,object_id,revision)"
+      ],
+      "behavior": "Immutable ordered layers/timeline/captions/audio; no user executable commands"
+    },
+    {
+      "name": "public.cs_exports",
+      "scope": "workspace",
+      "columns": {
+        "object_id": "uuid",
+        "version_id": "uuid",
+        "revision": "integer",
+        "composition_version_id": "uuid",
+        "asset_version_id": "uuid",
+        "plan_version_id": "uuid",
+        "run_id": "uuid",
+        "provenance": "jsonb",
+        "sha256": "text"
+      },
+      "keys": [
+        "PK(workspace_id,version_id)",
+        "UNIQUE(workspace_id,object_id,revision)"
+      ],
+      "behavior": "Immutable downloadable artifact and exact lineage"
+    },
+    {
+      "name": "public.cs_review_receipts",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "export_version_id": "uuid",
+        "decision": "approved|returned|revoked",
+        "actor_id": "uuid -> auth.users",
+        "bound_refs": "jsonb",
+        "rationale": "text",
+        "supersedes_receipt_id": "uuid nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)"
+      ],
+      "behavior": "Immutable internal review; MOS retains final delivery/publishing authority"
+    },
+    {
+      "name": "public.cs_handoffs",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "destination_authority": "text",
+        "external_workspace_id": "text",
+        "export_version_id": "uuid",
+        "idempotency_key": "text",
+        "request_hash": "text",
+        "state": "queued|delivering|received|needs_reconciliation|failed",
+        "receipt_ref": "jsonb nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(workspace_id,id)",
+        "UNIQUE(workspace_id,destination_authority,idempotency_key)"
+      ],
+      "behavior": "Idempotent authenticated API handoff; never direct MOS table write"
+    },
+    {
+      "name": "public.cs_run_events",
+      "scope": "workspace",
+      "columns": {
+        "run_id": "uuid",
+        "sequence": "bigint",
+        "kind": "text",
+        "payload": "jsonb",
+        "occurred_at": "timestamptz"
+      },
+      "keys": [
+        "PK(workspace_id,run_id,sequence)"
+      ],
+      "behavior": "Append-only ordered UI/recovery history; redacted payload"
+    },
+    {
+      "name": "public.cs_audit_events",
+      "scope": "workspace-or-account",
+      "columns": {
+        "id": "uuid",
+        "workspace_id": "uuid nullable",
+        "account_id": "uuid",
+        "actor_id": "uuid nullable",
+        "runtime_principal": "text nullable",
+        "action": "text",
+        "input_sha256": "text",
+        "affected_refs": "jsonb",
+        "receipt_refs": "jsonb"
+      },
+      "keys": [
+        "id PK"
+      ],
+      "behavior": "Append-only ownership/mutation evidence, no raw keys/prompts/URLs"
+    },
+    {
+      "name": "cs_private.cs_upload_intents",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "actor_id": "uuid -> auth.users",
+        "environment_id": "text",
+        "exact_storage_key": "text",
+        "max_bytes": "bigint",
+        "expected_mime": "text",
+        "expires_at": "timestamptz",
+        "finalized_at": "timestamptz nullable"
+      },
+      "keys": [
+        "PK(id)",
+        "UNIQUE(environment_id,exact_storage_key)"
+      ],
+      "behavior": "Authenticated Storage INSERT only to exact unexpired path; no upsert"
+    },
+    {
+      "name": "cs_private.cs_download_grants",
+      "scope": "workspace",
+      "columns": {
+        "id": "uuid",
+        "actor_id": "uuid -> auth.users",
+        "exact_storage_key": "text",
+        "expires_at": "timestamptz",
+        "operation": "download"
+      },
+      "keys": [
+        "PK(id)",
+        "INDEX(actor_id,exact_storage_key,expires_at)"
+      ],
+      "behavior": "API-authorized <=60s capability for <=300s signed object download"
+    },
+    {
+      "name": "cs_private.cs_runtime_principals",
+      "scope": "service",
+      "columns": {
+        "user_id": "uuid -> auth.users",
+        "environment_id": "text",
+        "role": "storage_worker",
+        "status": "active|revoked"
+      },
+      "keys": [
+        "PK(user_id,environment_id)"
+      ],
+      "behavior": "Allows background Storage only in service bucket/registered environment"
+    },
+    {
+      "name": "cs_private.cs_runtime_limits",
+      "scope": "service",
+      "columns": {
+        "environment_id": "text",
+        "admission_enabled": "boolean default false",
+        "dispatch_enabled": "boolean default false",
+        "paid_provider_enabled": "boolean default false",
+        "heavy_slots": "integer default 1",
+        "active_run_limit": "integer default 2",
+        "max_dispatch_batch": "integer default 2",
+        "revision": "integer"
+      },
+      "keys": [
+        "PK(environment_id)"
+      ],
+      "behavior": "Owner-controlled operating policy; separate from budgets"
+    },
+    {
+      "name": "cs_private.cs_dispatch_receipts",
+      "scope": "service",
+      "columns": {
+        "id": "uuid",
+        "environment_id": "text",
+        "release_id": "text",
+        "worker_url": "text",
+        "work_item_id": "uuid",
+        "requested_at": "timestamptz",
+        "http_request_id": "bigint nullable",
+        "state": "sent|claimed|expired|failed"
+      },
+      "keys": [
+        "PK(id)",
+        "INDEX(environment_id,requested_at)"
+      ],
+      "behavior": "Dispatch telemetry only; never completion truth"
+    }
+  ],
+  "queue": {
+    "extension": "pgmq",
+    "name": "cs_ready_v1",
+    "message": {
+      "work_item_id": "uuid",
+      "environment_id": "text",
+      "contract_version": "1"
+    },
+    "source_of_truth": "public.cs_work_items",
+    "visibility_seconds": 360,
+    "archive_after": "committed lease claim",
+    "redelivery": "safe duplicate notifications; no assumed exactly-once provider side effect",
+    "reconcile_seconds": 60
+  },
+  "procedure_contracts": [
+    {
+      "name": "cs_admit_run",
+      "role": "cs_api",
+      "atomic": [
+        "authorize actor/scope/action",
+        "lock budget account",
+        "idempotency lookup/conflict",
+        "validate plan/catalogue/limits/credential",
+        "reserve ceiling",
+        "insert run/nodes/work/idempotency/event",
+        "enqueue IDs"
+      ]
+    },
+    {
+      "name": "cs_claim_work",
+      "role": "cs_worker",
+      "atomic": [
+        "filter environment/worker contract",
+        "FOR UPDATE SKIP LOCKED",
+        "increment fence",
+        "new lease token",
+        "set 360s lease"
+      ],
+      "output": "work item plus exactly-one verified run/node or operation/step scope and internal lease"
+    },
+    {
+      "name": "cs_heartbeat_work",
+      "role": "cs_worker",
+      "precondition": "token+fence match; state leased; lease unexpired; stage deadline not exceeded",
+      "effect": "record heartbeat_at; hard lease stays claim_time+360 seconds; never revive expired lease"
+    },
+    {
+      "name": "cs_finish_work",
+      "role": "cs_worker",
+      "precondition": "token+fence match and lease unexpired",
+      "atomic": [
+        "insert stage receipt/assets/result artifacts",
+        "allocate owner event sequence under run OR operation row lock",
+        "CAS current item done",
+        "schedule next ready work under same owner",
+        "complete operation only after all exact immutable results persist"
+      ]
+    },
+    {
+      "name": "cs_prepare_attempt",
+      "role": "cs_worker",
+      "atomic": [
+        "validate same-owner reserved budget/authorization for run OR treatment_authoring operation",
+        "freeze transport ciphertext",
+        "insert immutable admission/event before network call"
+      ],
+      "output": "attempt ID and provider idempotency key"
+    },
+    {
+      "name": "cs_mark_dispatching",
+      "role": "cs_worker",
+      "precondition": "valid leased provider_submit and prepared attempt",
+      "effect": "append dispatching event before network call"
+    },
+    {
+      "name": "cs_record_acceptance",
+      "role": "cs_worker",
+      "atomic": [
+        "provider account/request uniqueness",
+        "request ID write-once",
+        "append receipt/event",
+        "schedule poll"
+      ],
+      "duplicate": "same receipt idempotent"
+    },
+    {
+      "name": "cs_settle_cost",
+      "role": "cs_worker",
+      "precondition": "documented charge/no-charge evidence for same provider attempt",
+      "atomic": [
+        "lock account/reservation and require same run OR operation owner",
+        "unique source event",
+        "append ledger settlement",
+        "update reservation projection"
+      ],
+      "on_missing_evidence": "unknown, retain hold"
+    },
+    {
+      "name": "cs_create_upload_intent",
+      "role": "cs_api",
+      "precondition": "current upload authority",
+      "effect": "exact key/user/size/MIME capability with expiry"
+    },
+    {
+      "name": "cs_create_download_grant",
+      "role": "cs_api",
+      "precondition": "current read authority and stored immutable version",
+      "effect": "<=60s exact-object grant"
+    },
+    {
+      "name": "cs_storage_allowed",
+      "role": "authenticated via storage RLS",
+      "security": "narrow SECURITY DEFINER in unexposed cs_private, fixed search_path, auth.uid check, explicit grants",
+      "input": "bucket/name/operation",
+      "effect": "boolean exact intent/grant or scoped machine-principal match"
+    },
+    {
+      "name": "cs_dispatch_due",
+      "role": "scheduler only",
+      "effect": "bounded due items to exact trusted worker URL using unique Vault worker secret; respects runtime flags"
+    },
+    {
+      "name": "cs_reconcile_due",
+      "role": "scheduler only",
+      "effect": "recover wakeups/stale local leases; route ambiguous paid dispatches to reconciliation, never blind resubmit"
+    },
+    {
+      "name": "cs_save_authoring_draft",
+      "role": "cs_api",
+      "precondition": "current workspace producer action and matching expected_revision",
+      "effect": "save non-executable partial form/graph with incremented revision/hash"
+    },
+    {
+      "name": "cs_promote_authoring_draft",
+      "role": "cs_api",
+      "precondition": "all source/version refs valid; complete recipe contract; optimistic revision match",
+      "effect": "immutable source/treatment/recipe versions; compile remains separate"
+    },
+    {
+      "name": "cs_admit_compile",
+      "role": "cs_api",
+      "precondition": "exact immutable cs-recipe-v1 VersionRef, no draft or partial payload",
+      "effect": "atomically insert cs_operations(kind=compile), operation event, idempotency receipt and operation-owned compile work item; return202+Location; no plan or run created yet, no provider budget"
+    },
+    {
+      "name": "cs_admit_brand_import",
+      "role": "cs_api",
+      "precondition": "current workspace producer/import authority, exact approved BCI package reference and request hash",
+      "atomic": [
+        "idempotency conflict check",
+        "insert cs_operations(kind=brand_package_import)",
+        "append operation admission event",
+        "insert operation-owned import_brand_package work",
+        "enqueue ID"
+      ],
+      "effect": "return202 operation; verify package/files/hash/rights through authenticated BCI API and attach immutable source-import result only after persistence; no fake run"
+    },
+    {
+      "name": "cs_admit_treatment_authoring",
+      "role": "cs_api",
+      "precondition": "explicit paid user action, valid creative request/policy refs, intended workspace text-model credential and approved nonzero budget",
+      "atomic": [
+        "authorize request context",
+        "lock account budget",
+        "idempotency conflict check",
+        "validate model/price/capability snapshot",
+        "insert cs_operations(kind=treatment_authoring)",
+        "reserve ceiling with operation_id owner",
+        "insert operation-owned author_treatment work/event",
+        "enqueue ID"
+      ],
+      "effect": "return202 operation; never create accepted treatment, recipe, plan or run"
+    },
+    {
+      "name": "cs_finish_operation",
+      "role": "cs_worker",
+      "precondition": "valid fenced operation-owned work; all declared result artifacts durable and contract-valid",
+      "atomic": [
+        "attach exact result refs",
+        "append owner event sequence",
+        "set completed timestamp/state"
+      ],
+      "effect": "compile yields execution plan; import yields source/brand package ref; authoring yields draft treatment ref"
+    },
+    {
+      "name": "cs_get_operation",
+      "role": "cs_api",
+      "precondition": "current workspace read authority",
+      "effect": "scoped cs-operation-v1 projection with derived attempts/receipt_ids and ordered events, admission/cost/results; completed result refs immutable; no lease or secret payload"
+    },
+    {
+      "name": "cs_request_cancel_operation",
+      "role": "cs_api",
+      "precondition": "current workspace producer authority and matching expected_event_sequence",
+      "effect": "append operation cancel request, prevent new paid dispatch, retain accepted provider reconciliation and unresolved holds"
+    },
+    {
+      "name": "cs_reconcile_operation",
+      "role": "cs_api",
+      "precondition": "current authorized support/producer action, matching expected_event_sequence, exact provider receipt or bounded supported replay evidence",
+      "effect": "schedule operation-owned reconciliation; does not create a new paid intent or release unknown cost without evidence"
+    }
+  ],
+  "storage": {
+    "bucket": "creative-studio",
+    "public": false,
+    "file_size_limit": 50000000,
+    "application_object_limit": 45000000,
+    "key_template": "{environment_id}/{workspace_id}/{asset_id}/{asset_version_id}/{sha256}.{extension}",
+    "upsert": false,
+    "raw_media_in_api_body": false,
+    "download_grant_seconds": 60,
+    "signed_download_seconds": 300,
+    "orphan_gc_after_hours": 24
+  },
+  "sql_generation_requirements": [
+    "CREATE ROLE runtime roles without superuser/createrole/createdb/bypassrls; verify grants do not inherit unrelated roles",
+    "explicitly grant table/procedure privileges and enable/force RLS",
+    "scope every asset/version/run/attempt foreign key by workspace",
+    "immutable table mutation rejection and ledger uniqueness",
+    "admission/claim/finalize procedures in transactions",
+    "no shared project-wide default-privilege changes",
+    "no unscoped security-definer functions or PUBLIC execute",
+    "no migration execution or testing during CS-M1"
+  ]
+}

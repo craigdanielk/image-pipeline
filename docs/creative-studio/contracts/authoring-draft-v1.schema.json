@@ -1,0 +1,342 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/authoring-draft-v1.schema.json",
+  "title": "Non-executable authoring draft v1",
+  "$comment": "Mutable optimistic authoring session; pending_fields are JSON-Pointer keyed form values with a total serialized draft limit of256KiB and nesting depth16. They are not source truth and cannot be executed. Compile/run/export accept only immutable canonical refs. Promotion requires a validated request, accepted treatment and valid typed recipe, persists immutable outputs atomically and records promoted_recipe. No AI call or implicit approval occurs on promotion.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-authoring-draft-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "updated_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "step": {
+      "type": "string",
+      "enum": [
+        "brand",
+        "campaign",
+        "references",
+        "direction",
+        "outputs",
+        "recipe"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "editing",
+        "promoted",
+        "archived"
+      ]
+    },
+    "base_recipe": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "selections": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brand_package": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offering": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "audiences": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        },
+        "concept": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "treatment": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "brand_package",
+        "offering",
+        "audiences",
+        "concept",
+        "request",
+        "treatment"
+      ]
+    },
+    "pending_fields": {
+      "type": "object",
+      "maxProperties": 200,
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^/",
+        "maxLength": 300
+      },
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "null",
+          "array",
+          "object"
+        ]
+      }
+    },
+    "working_nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "asset.load",
+              "image.generate",
+              "video.generate",
+              "image.edit",
+              "image.transform",
+              "image.compose",
+              "video.assemble",
+              "export.render"
+            ]
+          },
+          "pending_config": {
+            "type": "object",
+            "maxProperties": 100
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "port": {
+                  "$ref": "common.schema.json#/$defs/slug"
+                },
+                "ordinal": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 99
+                },
+                "source": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "asset"
+                        },
+                        "asset": {
+                          "$ref": "common.schema.json#/$defs/asset_ref"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "asset"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "node"
+                        },
+                        "node_id": {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        },
+                        "output_port": {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "node_id",
+                        "output_port"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "port",
+                "ordinal",
+                "source"
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "pending_config",
+          "inputs"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "authoring_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "last_view": {
+          "type": "string",
+          "enum": [
+            "guided",
+            "canvas"
+          ]
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "$ref": "common.schema.json#/$defs/slug"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "node_id",
+              "x",
+              "y"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "collapsed_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "last_view",
+        "positions",
+        "collapsed_node_ids"
+      ]
+    },
+    "promoted_recipe": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "revision",
+    "sha256",
+    "created_by",
+    "created_at",
+    "updated_at",
+    "name",
+    "step",
+    "status",
+    "base_recipe",
+    "selections",
+    "pending_fields",
+    "working_nodes",
+    "authoring_view",
+    "promoted_recipe"
+  ]
+}

@@ -1,0 +1,443 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/run-event-v1.schema.json",
+  "title": "Run event v1",
+  "$comment": "Append-only event transport. Event type payloads are constrained by the transition table in contract.md; no credentials, provider signed URLs, full prompts or raw provider responses may enter this public stream. Poll and SSE resume from sequence; the database snapshot is authoritative.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-run-event-v1"
+    },
+    "event_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "occurred_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "run.admitted",
+        "node.state_changed",
+        "attempt.prepared",
+        "attempt.dispatched",
+        "attempt.provider_bound",
+        "attempt.uncertain",
+        "asset.persisted",
+        "cost.reconciled",
+        "run.state_changed",
+        "run.cancel_requested"
+      ]
+    },
+    "node_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempt_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "data": {
+      "type": "object",
+      "maxProperties": 30
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "workspace_id",
+    "run_id",
+    "sequence",
+    "occurred_at",
+    "type",
+    "node_id",
+    "attempt_id",
+    "data",
+    "sha256"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "run.admitted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "plan": {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              },
+              "compile_hash": {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              "reservation_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              },
+              "reserved_micros": {
+                "$ref": "common.schema.json#/$defs/money_micros"
+              }
+            },
+            "required": [
+              "plan",
+              "compile_hash",
+              "reservation_id",
+              "reserved_micros"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "node.state_changed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "previous": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "next": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "error": {
+                "anyOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/error"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "previous",
+              "next",
+              "error"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "attempt.prepared"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "attempt_number": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              },
+              "node_input_sha256": {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              "reservation_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              }
+            },
+            "required": [
+              "attempt_number",
+              "node_input_sha256",
+              "reservation_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "attempt.dispatched"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "request_sha256": {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              "dispatch_envelope_sha256": {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              "replay_count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              }
+            },
+            "required": [
+              "request_sha256",
+              "dispatch_envelope_sha256",
+              "replay_count"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "attempt.provider_bound"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "provider_request_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            },
+            "required": [
+              "provider",
+              "provider_request_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "attempt.uncertain"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "error": {
+                "$ref": "common.schema.json#/$defs/error"
+              },
+              "may_have_been_charged": {
+                "const": true
+              },
+              "same_intent_replay_allowed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "error",
+              "may_have_been_charged",
+              "same_intent_replay_allowed"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "asset.persisted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "asset": {
+                "$ref": "common.schema.json#/$defs/asset_ref"
+              },
+              "output_port": {
+                "$ref": "common.schema.json#/$defs/slug"
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "asset",
+              "output_port",
+              "size_bytes"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "cost.reconciled"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cost": {
+                "$ref": "common.schema.json#/$defs/cost"
+              },
+              "receipt_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              }
+            },
+            "required": [
+              "cost",
+              "receipt_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "run.state_changed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "previous": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "next": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "error": {
+                "anyOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/error"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "previous",
+              "next",
+              "error"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "run.cancel_requested"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "actor_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            },
+            "required": [
+              "actor_id",
+              "reason"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

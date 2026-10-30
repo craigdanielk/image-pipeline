@@ -1,0 +1,385 @@
+{
+  "schema_version": "creative-studio-deployment-contract-v1",
+  "status": "design_only",
+  "date": "2026-10-30",
+  "milestone_order": [
+    "CS-M1 architecture",
+    "CS-M2 build/deploy",
+    "CS-M3 all testing and paid acceptance"
+  ],
+  "source": {
+    "repository": "craigdanielk/image-pipeline",
+    "root": "/Users/craigkunte/Developer/GitHub/services/image-pipeline",
+    "observed_head": "e98cf4bf3558f87279ca518d71ee58530f6cf039",
+    "preserve_dirty_changes": true,
+    "nested_history": "services/aragon/image-pipeline"
+  },
+  "chosen_platform": {
+    "web_api": "Vercel static CDN + standard Python Functions",
+    "durable_state": "existing shared Supabase Postgres",
+    "queue": "existing pgmq extension, new CS-only queue",
+    "scheduler": "existing pg_cron+pg_net, new CS-only jobs",
+    "media_storage": "new private creative-studio bucket in existing Supabase project",
+    "compiler_compute": "api/worker.py Python 3.12 Function importing existing core",
+    "ffmpeg_compute": "same bounded Python worker child process with pinned Linux ffmpeg/ffprobe",
+    "always_on_worker": false,
+    "new_recurring_subscription": false,
+    "provider_wait": "persist next due poll/webhook in DB; return HTTP"
+  },
+  "existing_bindings": {
+    "vercel_team_id": "team_n1rMtzqnARnlXX4LEA8eYlKR",
+    "vercel_team_slug": "craigs-projects-a8e1637a",
+    "creative_studio_project_id": null,
+    "proposed_project_name": "creative-studio",
+    "supabase_project_ref": "wwimngjmnuuitowujnif",
+    "supabase_region": "eu-north-1",
+    "bci_project_id": "prj_PqNZly5E833w9d62Lwe4ROb6gdWE",
+    "bci_alias": "https://brand-ci-studio.vercel.app"
+  },
+  "unobserved_capacity": [
+    "Vercel account plan",
+    "Vercel remaining compute/storage/egress allowance",
+    "Supabase remaining storage/egress/headroom",
+    "new project's exact region/Fluid configuration"
+  ],
+  "entrypoints": [
+    {
+      "path": "api/index.py",
+      "kind": "ASGI FastAPI",
+      "handler_module": "service.api",
+      "max_duration_seconds": 60,
+      "app_deadline_seconds": 45,
+      "public_route": "/api/v1/:path*",
+      "auth": "Supabase JWT plus current workspace authority"
+    },
+    {
+      "path": "api/webhook.py",
+      "kind": "ASGI FastAPI",
+      "handler_module": "service.webhook",
+      "max_duration_seconds": 30,
+      "app_deadline_seconds": 8,
+      "public_route": "/api/hooks/higgsfield/:credential_binding_id",
+      "auth": "Standard Webhooks raw-body signature + account binding; no unsigned fallback"
+    },
+    {
+      "path": "api/worker.py",
+      "kind": "ASGI or BaseHTTPRequestHandler bounded endpoint",
+      "handler_module": "service.worker",
+      "max_duration_seconds": 300,
+      "app_deadline_seconds": 240,
+      "public_route": "/api/internal/worker",
+      "auth": "CS worker secret from scheduler Vault; exact release/environment checks"
+    }
+  ],
+  "vercel_configuration_design": {
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "framework": "vite",
+    "installCommand": "npm --prefix ui/app ci",
+    "buildCommand": "npm --prefix ui/app run build",
+    "outputDirectory": "ui/app/dist",
+    "regions": [
+      "arn1"
+    ],
+    "functions": {
+      "api/index.py": {
+        "maxDuration": 60,
+        "excludeFiles": "{services/**,jobs/**,out/**,compile/**,tests/**,ui/app/node_modules/**,ui/app/src/**,.env*,**/__pycache__/**,.venv/**}"
+      },
+      "api/webhook.py": {
+        "maxDuration": 30,
+        "excludeFiles": "{services/**,jobs/**,out/**,compile/**,tests/**,ui/app/**,.env*,**/__pycache__/**,.venv/**}"
+      },
+      "api/worker.py": {
+        "maxDuration": 300,
+        "excludeFiles": "{services/**,jobs/**,out/**,compile/**,tests/**,ui/app/**,.env*,**/__pycache__/**,.venv/**}"
+      }
+    },
+    "rewrites": [
+      {
+        "source": "/api/v1/:path*",
+        "destination": "/api/index"
+      },
+      {
+        "source": "/api/hooks/higgsfield/:path*",
+        "destination": "/api/webhook"
+      },
+      {
+        "source": "/api/internal/worker",
+        "destination": "/api/worker"
+      },
+      {
+        "source": "/((?!api/).*)",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "configuration_notes": [
+    "The Vercel object is design material, not a ready-to-deploy file; M2 generates exact packaging/routing for the selected FastAPI adapter and preserves request path using trusted original URL routing.",
+    "Pin Python to 3.12 through pyproject.toml/.python-version; pin frontend/runtime dependencies in lockfiles.",
+    "Confirm region availability and keep service near eu-north-1; record selected region.",
+    "Explicit static output + Python API configuration avoids serving ui/server.py. No production filesystem path endpoints.",
+    "No beta large-functions or containers are required. Standard worker bundle must remain <500MB.",
+    "Deployment protections must permit provider access to production webhook alias while application data remains authenticated; do not generate or publish bypass links."
+  ],
+  "limits": {
+    "api_json_bytes": 2097152,
+    "webhook_body_bytes": 262144,
+    "compile_nodes": 128,
+    "paid_nodes_per_plan": 32,
+    "compile_deadline_seconds": 30,
+    "worker_seconds": 240,
+    "platform_worker_seconds": 300,
+    "ffmpeg_seconds": 210,
+    "lease_seconds": 360,
+    "heartbeat_seconds": 30,
+    "scratch_bytes": 400000000,
+    "decoded_media_bytes": 1342177280,
+    "heavy_workers_global": 1,
+    "active_runs_per_workspace": 2,
+    "paid_dispatches_per_workspace": 1,
+    "upload_bytes": 45000000,
+    "bucket_file_bytes": 50000000,
+    "video_seconds": 30,
+    "shots": 6,
+    "shot_seconds": 10,
+    "render_segment_seconds": 5,
+    "video_width": 1080,
+    "video_height": 1920,
+    "fps": 30,
+    "video_target_bps": 4000000,
+    "video_max_bps": 6000000,
+    "audio_max_bps": 192000,
+    "static_longest_edge": 4096,
+    "static_max_megapixels": 32,
+    "composition_layers": 16,
+    "transition_max_frames": 30
+  },
+  "initial_feature_flags": {
+    "CS_ADMISSION_ENABLED": false,
+    "CS_DISPATCH_ENABLED": false,
+    "CS_PAID_PROVIDER_ENABLED": false
+  },
+  "environment": [
+    {
+      "name": "SUPABASE_URL",
+      "secret": false,
+      "consumers": [
+        "api",
+        "worker",
+        "web-config"
+      ],
+      "observed_value": "https://wwimngjmnuuitowujnif.supabase.co"
+    },
+    {
+      "name": "SUPABASE_PUBLISHABLE_KEY",
+      "secret": false,
+      "consumers": [
+        "api",
+        "worker",
+        "web-config"
+      ],
+      "value": null
+    },
+    {
+      "name": "CS_API_DATABASE_URL",
+      "secret": true,
+      "consumers": [
+        "api"
+      ],
+      "constraint": "cs_api transaction-pooler role only"
+    },
+    {
+      "name": "CS_WORKER_DATABASE_URL",
+      "secret": true,
+      "consumers": [
+        "worker"
+      ],
+      "constraint": "cs_worker transaction-pooler role only"
+    },
+    {
+      "name": "CS_WORKER_SECRET",
+      "secret": true,
+      "consumers": [
+        "worker"
+      ],
+      "constraint": "distinct from BCI and provider credentials; Vault copy used by scheduler"
+    },
+    {
+      "name": "CS_CREDENTIAL_ENCRYPTION_KEY_V1",
+      "secret": true,
+      "consumers": [
+        "api",
+        "worker"
+      ],
+      "constraint": "AES256GCM key; no JWT signing key reuse"
+    },
+    {
+      "name": "CS_STORAGE_WORKER_ID",
+      "secret": false,
+      "consumers": [
+        "worker"
+      ],
+      "value": null
+    },
+    {
+      "name": "CS_STORAGE_WORKER_CREDENTIAL",
+      "secret": true,
+      "consumers": [
+        "worker"
+      ],
+      "constraint": "dedicated Auth principal; only CS Storage RLS permissions"
+    },
+    {
+      "name": "CS_ENVIRONMENT_ID",
+      "secret": false,
+      "consumers": [
+        "api",
+        "worker"
+      ]
+    },
+    {
+      "name": "CS_RELEASE_ID",
+      "secret": false,
+      "consumers": [
+        "api",
+        "worker"
+      ]
+    },
+    {
+      "name": "CS_ALLOWED_ORIGINS",
+      "secret": false,
+      "consumers": [
+        "api"
+      ],
+      "constraint": "exact production origins; no credentialed wildcard"
+    },
+    {
+      "name": "CS_MOS_CLIENT_PUBLIC_KEYS",
+      "secret": false,
+      "consumers": [
+        "api"
+      ],
+      "constraint": "registered integration keys with kid and expiry"
+    },
+    {
+      "name": "CS_BCI_API_ORIGIN",
+      "secret": false,
+      "consumers": [
+        "api",
+        "worker"
+      ],
+      "constraint": "exact approved Brand CI service origin"
+    },
+    {
+      "name": "CS_PROVIDER_WEBHOOK_SECRETS",
+      "secret": true,
+      "consumers": [
+        "webhook"
+      ],
+      "constraint": "prefer encrypted account-scoped records; never global implicit workspace fallback"
+    }
+  ],
+  "forbidden_runtime_secrets": [
+    "shared SUPABASE_SERVICE_ROLE_KEY inherited from local compiler",
+    "machine Higgsfield CLI session",
+    "MOS/BCI worker secrets",
+    "CPOS credentials",
+    "shared Supabase JWT signing secret"
+  ],
+  "scheduler": {
+    "dispatch_every_seconds": 15,
+    "reconcile_every_seconds": 60,
+    "queue": "cs_ready_v1",
+    "vault_secret_name": "cs_studio_worker_secret_v1",
+    "execute_if": "dispatch flag enabled AND due work AND free bounded slot",
+    "request_body": "opaque work-item hint/environment/release; no provider keys or payload",
+    "http_response_not_completion": true
+  },
+  "paid_provider": {
+    "initial_budget_micros": 0,
+    "budget_authorization_required": true,
+    "credential_mode": "explicit intended workspace Model API",
+    "submit_timeout_seconds": 30,
+    "status_timeout_seconds": 30,
+    "status_poll_backoff_seconds": [
+      15,
+      30,
+      60
+    ],
+    "status_jitter": true,
+    "max_safe_same_intent_replays": 3,
+    "max_generic_paid_retries": 0,
+    "idempotency_key_frozen": true,
+    "unknown_charge_retains_reservation": true,
+    "webhook_signature": "Standard Webhooks",
+    "webhook_timestamp_tolerance_seconds": 300
+  },
+  "release": {
+    "cs_m2": "build and deployment receipts, no tests or provider generation",
+    "cs_m3": "all behavioural/security/performance/provider-backed verification after CS-B5",
+    "schema_strategy": "additive expand/contract",
+    "rollback": "compatible recorded Vercel deployment + dispatcher release target; no down migration; reconcile pending provider state",
+    "provider_activation": "separate explicit media budget and intended credential after assembled build"
+  },
+  "sources": [
+    "https://vercel.com/docs/functions/limitations",
+    "https://vercel.com/docs/functions/runtimes/python",
+    "https://vercel.com/docs/functions/runtimes",
+    "https://supabase.com/docs/guides/cron",
+    "https://supabase.com/docs/guides/queues",
+    "https://docs.higgsfield.ai/docs/concepts/idempotency",
+    "https://docs.higgsfield.ai/docs/how-to/webhooks",
+    "https://github.com/linebender/resvg/releases/tag/v0.49.0",
+    "https://ffmpeg.org/download.html",
+    "https://ffmpeg.org/legal.html",
+    "https://ffmpeg.org/ffmpeg-filters.html#xfade"
+  ],
+  "rendering": {
+    "typography": "resvg 0.49.0",
+    "resvg_linux_x86_64_archive_sha256": "216637e75e909e53e3098b0875cd5f7da2fdc8b4359771b4a29b539afff9d3f5",
+    "resvg_source_archive_sha256": "a1b167d575d0be44e303c76b46fe0aefc5c5748a46979ebae6a7dc3276c2ce8c",
+    "system_fonts": false,
+    "font_source": "approved immutable font AssetRefs only; explicit --use-font-file",
+    "font_fallback": "refuse missing glyph/face or unsupported layout; no silent substitution",
+    "font_inspection": "version-locked FontTools in M2",
+    "ffmpeg_source_version": "9.0.2",
+    "ffmpeg_distribution": "source-built Linux x86_64 binary, signed source provenance, exact build recipe and hashes recorded in M2",
+    "ffmpeg_external_libraries": [
+      "libx264",
+      "libwebp"
+    ],
+    "ffmpeg_enable_nonfree": false,
+    "ffmpeg_license_handling": "GPL-enabled libx264 binary; preserve applicable notices and corresponding source/build recipe",
+    "transitions": {
+      "allowed": [
+        "cut",
+        "crossfade"
+      ],
+      "crossfade_frames": [
+        1,
+        30
+      ],
+      "stage": "render_video_transition",
+      "method": "render normalized outgoing tail and incoming head; omit overlap handles from bodies; stream-copy final body/transition/body concat",
+      "closed_gop": true,
+      "audio": "same frame timeline, bounded final audio mix"
+    },
+    "runtime_verified": false
+  },
+  "pre_run_operations": {
+    "contract": "cs-operation-v1",
+    "kinds": [
+      "compile",
+      "brand_package_import",
+      "treatment_authoring"
+    ],
+    "endpoint": "GET /api/v1/workspaces/{workspace_id}/operations/{operation_id}",
+    "compile_admission": "POST W/plans ->202 operation, Location W/operations/{id}; completed operation result_refs includes plan",
+    "worker_parent": "exactly one run_id+node_id OR operation_id+operation_step_key",
+    "paid_authoring": "explicit action ->same ledger/attempt receipts under operation_id, draft treatment only; no fake plan/run",
+    "local_operations_no_media_cost": [
+      "compile",
+      "brand_package_import"
+    ]
+  }
+}

@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/mos-handoff-v1.schema.json",
+  "title": "Creative Studio to MOS handoff v1",
+  "$comment": "CS sends an immutable export set with exact MOS-owned source versions. MOS verifies scope and downloads/hash-checks through CS API, persists mos_asset_versions and rights/lineage, then returns a receipt. No publish approval is transferred from Creative Studio or Brand CI.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-mos-handoff-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "idempotency_key": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "const": "marketing-os"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "concept": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "placement": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "copy_versions": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "minItems": 1,
+          "maxItems": 30
+        },
+        "destination": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "claim_set": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "policy": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        }
+      },
+      "required": [
+        "authority",
+        "workspace_id",
+        "concept",
+        "placement",
+        "copy_versions",
+        "destination",
+        "claim_set",
+        "policy"
+      ]
+    },
+    "exports": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/version_ref"
+      },
+      "minItems": 1,
+      "maxItems": 40
+    },
+    "brand_package": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "creative_request": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "cost": {
+      "$ref": "common.schema.json#/$defs/cost"
+    },
+    "requires_mos_review": {
+      "const": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "idempotency_key",
+    "target",
+    "exports",
+    "brand_package",
+    "creative_request",
+    "cost",
+    "requires_mos_review"
+  ]
+}

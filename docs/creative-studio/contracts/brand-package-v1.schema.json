@@ -1,0 +1,435 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/brand-package-v1.schema.json",
+  "title": "Approved Brand CI package v1",
+  "$comment": "workspace_id is the Brand CI account, not a MOS or Creative Studio workspace. Export only the exact currently approved BCI version. All refs must resolve inside this account/brand, rights remain independent of guide approval. Package export must not synthesize missing permission or usable font files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "brand-package-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "authority": {
+      "const": "brand-ci-studio"
+    },
+    "brand_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "brand_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bci_version_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "bci_revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "document_digest": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "document_digest_algorithm": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "document_jcs_sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "approval_receipt_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "guide_document": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "approved_pdf": {
+          "$ref": "common.schema.json#/$defs/asset_ref"
+        },
+        "document_created_by": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        }
+      },
+      "required": [
+        "bci_version_id",
+        "bci_revision",
+        "document_digest",
+        "document_digest_algorithm",
+        "document_jcs_sha256",
+        "approval_receipt_id",
+        "guide_document",
+        "approved_pdf",
+        "document_created_by"
+      ]
+    },
+    "approval": {
+      "$ref": "common.schema.json#/$defs/approval"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/asset_record"
+      },
+      "minItems": 1,
+      "maxItems": 200
+    },
+    "logos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "asset": {
+            "$ref": "common.schema.json#/$defs/asset_ref"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "secondary",
+              "mark",
+              "monochrome",
+              "reversed"
+            ]
+          },
+          "allowed_backgrounds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "min_width_px": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4000
+          },
+          "clear_space_ratio": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "allow_crop": {
+            "const": false
+          },
+          "allow_distort": {
+            "const": false
+          }
+        },
+        "required": [
+          "id",
+          "asset",
+          "role",
+          "allowed_backgrounds",
+          "min_width_px",
+          "clear_space_ratio",
+          "allow_crop",
+          "allow_distort"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 20
+    },
+    "palette": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "token",
+          "hex",
+          "role"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 60
+    },
+    "typography": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "family": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "font_assets": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/asset_ref"
+            },
+            "minItems": 1,
+            "maxItems": 20
+          },
+          "weights": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 100,
+              "maximum": 900
+            },
+            "minItems": 1,
+            "maxItems": 9
+          },
+          "fallback_family": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "family",
+          "role",
+          "font_assets",
+          "weights",
+          "fallback_family"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 20
+    },
+    "imagery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "principles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 40
+        },
+        "reference_assets": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/asset_ref"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "prohibited": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 40
+        }
+      },
+      "required": [
+        "principles",
+        "reference_assets",
+        "prohibited"
+      ]
+    },
+    "voice": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "principles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 1,
+          "maxItems": 40
+        },
+        "preferred_terms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "prohibited_terms": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "principles",
+        "preferred_terms",
+        "prohibited_terms"
+      ]
+    },
+    "usage_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "instruction": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "required",
+              "recommended"
+            ]
+          },
+          "source_path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "instruction",
+          "severity",
+          "source_path"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "unresolved_decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "blocks_compile": {
+            "type": "boolean"
+          },
+          "affected_asset_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "blocks_compile",
+          "affected_asset_ids"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 100
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "authority",
+    "brand_id",
+    "brand_name",
+    "source",
+    "approval",
+    "assets",
+    "logos",
+    "palette",
+    "typography",
+    "imagery",
+    "voice",
+    "usage_rules",
+    "unresolved_decisions"
+  ]
+}

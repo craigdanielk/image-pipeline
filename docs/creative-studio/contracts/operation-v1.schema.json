@@ -1,0 +1,445 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/operation-v1.schema.json",
+  "title": "Durable pre-run operation v1",
+  "$comment": "Mutable safe snapshot for compile, package import or paid treatment authoring before any plan/run exists. Identity and canonical admitted request are immutable. State is backed by own append-only event_sequence. Work items/attempts/reservations/receipts have exactly one scoped owner: operation+step OR run+node. Completed compile yields execution-plan VersionRef; import yields exact package reference and mirrored assets; treatment yields a draft treatment only, never implicit acceptance. No credential, signed provider URL or raw request body is exposed.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-operation-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "compile",
+        "brand_package_import",
+        "treatment_authoring"
+      ]
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "running",
+        "waiting_provider",
+        "needs_reconciliation",
+        "budget_blocked",
+        "authorization_blocked",
+        "cancel_requested",
+        "completed",
+        "failed",
+        "cancelled"
+      ]
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "updated_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "idempotency_key": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "request_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "event_sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "input_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/version_ref"
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "result_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/version_ref"
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "result_asset_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/asset_ref"
+      },
+      "minItems": 0,
+      "maxItems": 200
+    },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "attempt_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "prepared",
+              "dispatching",
+              "submitted",
+              "waiting_provider",
+              "ingesting",
+              "succeeded",
+              "failed",
+              "uncertain",
+              "cancel_requested",
+              "cancelled"
+            ]
+          },
+          "created_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          },
+          "updated_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          },
+          "request_sha256": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "idempotency_key": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "budget_reservation_id": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider_request_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "transport_bindings_sha256": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dispatched_at": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/asset_ref"
+            },
+            "minItems": 0,
+            "maxItems": 40
+          },
+          "receipt_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          },
+          "cost": {
+            "$ref": "common.schema.json#/$defs/cost"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/error"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "replay_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "provider_account_binding_id": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "dispatch_envelope_sha256": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "operation_step_key": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "step_input_sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          }
+        },
+        "required": [
+          "id",
+          "attempt_number",
+          "state",
+          "created_at",
+          "updated_at",
+          "request_sha256",
+          "idempotency_key",
+          "budget_reservation_id",
+          "provider",
+          "provider_request_id",
+          "transport_bindings_sha256",
+          "dispatched_at",
+          "outputs",
+          "receipt_ids",
+          "cost",
+          "error",
+          "replay_count",
+          "provider_account_binding_id",
+          "dispatch_envelope_sha256",
+          "operation_step_key",
+          "step_input_sha256"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "receipt_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/uuid"
+      },
+      "minItems": 0,
+      "maxItems": 500
+    },
+    "admission": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "budget": {
+              "$ref": "common.schema.json#/$defs/budget"
+            },
+            "accepted_maximum_micros": {
+              "$ref": "common.schema.json#/$defs/money_micros"
+            },
+            "reservation_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "eligibility_receipt_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              },
+              "minItems": 1,
+              "maxItems": 100
+            }
+          },
+          "required": [
+            "budget",
+            "accepted_maximum_micros",
+            "reservation_id",
+            "eligibility_receipt_ids"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cost": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/cost"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/error"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "kind",
+    "state",
+    "created_by",
+    "created_at",
+    "updated_at",
+    "idempotency_key",
+    "request_sha256",
+    "event_sequence",
+    "input_refs",
+    "result_refs",
+    "result_asset_refs",
+    "attempts",
+    "receipt_ids",
+    "admission",
+    "cost",
+    "error"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "treatment_authoring"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "admission": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "budget": {
+                "$ref": "common.schema.json#/$defs/budget"
+              },
+              "accepted_maximum_micros": {
+                "$ref": "common.schema.json#/$defs/money_micros"
+              },
+              "reservation_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              },
+              "eligibility_receipt_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.schema.json#/$defs/uuid"
+                },
+                "minItems": 1,
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "budget",
+              "accepted_maximum_micros",
+              "reservation_id",
+              "eligibility_receipt_ids"
+            ]
+          },
+          "cost": {
+            "$ref": "common.schema.json#/$defs/cost"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "compile",
+              "brand_package_import"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "admission": {
+            "type": "null"
+          },
+          "cost": {
+            "type": "null"
+          },
+          "attempts": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "completed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result_refs": {
+            "minItems": 1
+          },
+          "error": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

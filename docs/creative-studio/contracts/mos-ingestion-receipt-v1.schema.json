@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/mos-ingestion-receipt-v1.schema.json",
+  "title": "MOS ingestion receipt v1",
+  "$comment": "Receipt returned by MOS; workspace_id is MOS scope. Created atomically with MOS-owned ingestion idempotency binding and lineage rows. Partial transfer failure returns explicit per-item status and does not issue this complete receipt; retries reuse already ingested exact exports.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-mos-ingestion-receipt-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "handoff_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "handoff_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "idempotency_key": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "export": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "export_asset": {
+            "$ref": "common.schema.json#/$defs/asset_ref"
+          },
+          "mos_asset_version": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "stored_bytes_sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          },
+          "mos_rights_receipt_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "minItems": 1,
+            "maxItems": 300
+          },
+          "mos_copy_versions": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "minItems": 1,
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "export",
+          "export_asset",
+          "mos_asset_version",
+          "stored_bytes_sha256",
+          "mos_rights_receipt_ids",
+          "mos_copy_versions"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 40
+    },
+    "review_status": {
+      "const": "pending"
+    },
+    "publication_eligible": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "handoff_id",
+    "handoff_sha256",
+    "idempotency_key",
+    "items",
+    "review_status",
+    "publication_eligible"
+  ]
+}

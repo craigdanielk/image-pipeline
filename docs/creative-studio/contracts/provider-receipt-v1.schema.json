@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/provider-receipt-v1.schema.json",
+  "title": "Provider receipt v1",
+  "$comment": "Immutable evidence, distinct from a run snapshot. Raw receipt bytes and provider URLs remain protected internal records. Webhook receipts require a verified signature; authenticated polling can have signature_verified false. A terminal generation status without billing evidence has charge amount null, never inferred zero. Operator reconciliation names an actor and rationale. Exactly one owner: run_id+node_id or operation_id+operation_step_key, with same workspace and attempt owner enforced relationally. Paid treatment uses the same receipt and charge rules without a fake run.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-provider-receipt-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "run_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "node_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "attempt_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "observed_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "provider_account_binding_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "provider_request_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "acceptance",
+        "status",
+        "webhook",
+        "output",
+        "billing",
+        "reconciliation"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "accepted",
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "nsfw",
+        "cancelled",
+        "unknown"
+      ]
+    },
+    "provider_event_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "dispatch_envelope_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "raw_receipt_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "output_assets": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/asset_ref"
+      },
+      "minItems": 0,
+      "maxItems": 40
+    },
+    "charge": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "const": "USD"
+        },
+        "amount_micros": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/money_micros"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "enum": [
+            "provider_billing",
+            "provider_no_charge",
+            "operator_reconciliation",
+            "unknown"
+          ]
+        },
+        "billing_reference": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "currency",
+        "amount_micros",
+        "evidence",
+        "billing_reference"
+      ]
+    },
+    "signature_verified": {
+      "type": "boolean"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "authenticated_response",
+        "verified_webhook",
+        "operator"
+      ]
+    },
+    "actor_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "note": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "operation_id": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "operation_step_key": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "run_id",
+    "node_id",
+    "attempt_id",
+    "observed_at",
+    "sha256",
+    "provider",
+    "provider_account_binding_id",
+    "provider_request_id",
+    "kind",
+    "status",
+    "provider_event_id",
+    "dispatch_envelope_sha256",
+    "raw_receipt_sha256",
+    "output_assets",
+    "charge",
+    "signature_verified",
+    "source",
+    "actor_id",
+    "note",
+    "operation_id",
+    "operation_step_key"
+  ],
+  "oneOf": [
+    {
+      "properties": {
+        "run_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "node_id": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "operation_id": {
+          "type": "null"
+        },
+        "operation_step_key": {
+          "type": "null"
+        }
+      }
+    },
+    {
+      "properties": {
+        "run_id": {
+          "type": "null"
+        },
+        "node_id": {
+          "type": "null"
+        },
+        "operation_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "operation_step_key": {
+          "$ref": "common.schema.json#/$defs/slug"
+        }
+      }
+    }
+  ]
+}

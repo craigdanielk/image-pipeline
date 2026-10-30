@@ -1,0 +1,685 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/recipe-v1.schema.json",
+  "title": "Shared guided/canvas recipe v1",
+  "$comment": "One source graph for both views. Node IDs are stable across revisions and never array indexes. The semantic graph is a typed DAG; schema cannot enforce graph reachability or port cardinality. Provider-specific parameters must validate against the frozen catalogue entry, never arbitrary passthrough. authoring_view is excluded only from compile semantics, not artifact integrity hash.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-recipe-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "request": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "treatment": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "template": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "asset.load",
+              "image.generate",
+              "video.generate",
+              "image.edit",
+              "image.transform",
+              "image.compose",
+              "video.assemble",
+              "export.render"
+            ]
+          },
+          "config": {},
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "port": {
+                  "$ref": "common.schema.json#/$defs/slug"
+                },
+                "ordinal": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 99
+                },
+                "source": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "asset"
+                        },
+                        "asset": {
+                          "$ref": "common.schema.json#/$defs/asset_ref"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "asset"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "const": "node"
+                        },
+                        "node_id": {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        },
+                        "output_port": {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "node_id",
+                        "output_port"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "port",
+                "ordinal",
+                "source"
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "config",
+          "inputs"
+        ],
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "asset.load"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "asset": {
+                      "$ref": "common.schema.json#/$defs/asset_ref"
+                    }
+                  },
+                  "required": [
+                    "asset"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "image.generate"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "format_id": {
+                      "$ref": "common.schema.json#/$defs/slug"
+                    },
+                    "treatment_shot_id": {
+                      "anyOf": [
+                        {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "provider_selection": {
+                      "$ref": "common.schema.json#/$defs/provider_selection"
+                    },
+                    "prompt_override": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 7000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "seed": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4294967295
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "endpoint_parameters": {
+                      "type": "object",
+                      "maxProperties": 40
+                    },
+                    "reference_roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "input_port": {
+                            "$ref": "common.schema.json#/$defs/slug"
+                          },
+                          "role": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 80
+                          }
+                        },
+                        "required": [
+                          "input_port",
+                          "role"
+                        ]
+                      },
+                      "minItems": 0,
+                      "maxItems": 20
+                    }
+                  },
+                  "required": [
+                    "format_id",
+                    "treatment_shot_id",
+                    "provider_selection",
+                    "prompt_override",
+                    "seed",
+                    "endpoint_parameters",
+                    "reference_roles"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "video.generate"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "format_id": {
+                      "$ref": "common.schema.json#/$defs/slug"
+                    },
+                    "treatment_shot_id": {
+                      "anyOf": [
+                        {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "provider_selection": {
+                      "$ref": "common.schema.json#/$defs/provider_selection"
+                    },
+                    "prompt_override": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 7000
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "seed": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4294967295
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "endpoint_parameters": {
+                      "type": "object",
+                      "maxProperties": 40
+                    },
+                    "reference_roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "input_port": {
+                            "$ref": "common.schema.json#/$defs/slug"
+                          },
+                          "role": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 80
+                          }
+                        },
+                        "required": [
+                          "input_port",
+                          "role"
+                        ]
+                      },
+                      "minItems": 0,
+                      "maxItems": 20
+                    }
+                  },
+                  "required": [
+                    "format_id",
+                    "treatment_shot_id",
+                    "provider_selection",
+                    "prompt_override",
+                    "seed",
+                    "endpoint_parameters",
+                    "reference_roles"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "image.edit"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "enum": [
+                        "inpaint",
+                        "outpaint",
+                        "replace_subject",
+                        "remove_element",
+                        "background_replace"
+                      ]
+                    },
+                    "instruction": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 7000
+                    },
+                    "provider_selection": {
+                      "$ref": "common.schema.json#/$defs/provider_selection"
+                    },
+                    "mask_input_port": {
+                      "anyOf": [
+                        {
+                          "$ref": "common.schema.json#/$defs/slug"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "preserve": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      },
+                      "minItems": 0,
+                      "maxItems": 50
+                    },
+                    "format_id": {
+                      "$ref": "common.schema.json#/$defs/slug"
+                    },
+                    "endpoint_parameters": {
+                      "type": "object",
+                      "maxProperties": 40
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "instruction",
+                    "provider_selection",
+                    "mask_input_port",
+                    "preserve",
+                    "format_id",
+                    "endpoint_parameters"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "image.transform"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "enum": [
+                        "crop_resize",
+                        "upscale"
+                      ]
+                    },
+                    "format_id": {
+                      "$ref": "common.schema.json#/$defs/slug"
+                    },
+                    "crop": {
+                      "anyOf": [
+                        {
+                          "$ref": "common.schema.json#/$defs/crop"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "provider_selection": {
+                      "anyOf": [
+                        {
+                          "$ref": "common.schema.json#/$defs/provider_selection"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "operation",
+                    "format_id",
+                    "crop",
+                    "provider_selection"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "image.compose"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "composition": {
+                      "$ref": "common.schema.json#/$defs/version_ref"
+                    },
+                    "artboard_id": {
+                      "$ref": "common.schema.json#/$defs/slug"
+                    }
+                  },
+                  "required": [
+                    "composition",
+                    "artboard_id"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "video.assemble"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "composition": {
+                      "$ref": "common.schema.json#/$defs/version_ref"
+                    }
+                  },
+                  "required": [
+                    "composition"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "export.render"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "config": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "composition": {
+                      "$ref": "common.schema.json#/$defs/version_ref"
+                    },
+                    "format_id": {
+                      "$ref": "common.schema.json#/$defs/slug"
+                    }
+                  },
+                  "required": [
+                    "composition",
+                    "format_id"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "format_id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "node_id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "output_port": {
+            "$ref": "common.schema.json#/$defs/slug"
+          }
+        },
+        "required": [
+          "id",
+          "format_id",
+          "node_id",
+          "output_port"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 40
+    },
+    "composition": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "authoring_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "last_view": {
+          "type": "string",
+          "enum": [
+            "guided",
+            "canvas"
+          ]
+        },
+        "positions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "node_id": {
+                "$ref": "common.schema.json#/$defs/slug"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "node_id",
+              "x",
+              "y"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "collapsed_node_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "last_view",
+        "positions",
+        "collapsed_node_ids"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "request",
+    "treatment",
+    "template",
+    "nodes",
+    "outputs",
+    "composition",
+    "authoring_view"
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/dispatch-envelope-v1.schema.json",
+  "title": "Internal frozen provider dispatch v1",
+  "$comment": "Internal secret-adjacent record; signed URLs never reach public API/SSE/logs. sha256 is the whole saved artifact hash excluding only itself. dispatch_sha256 is the contract.md dispatch tuple hash; run.attempts.dispatch_envelope_sha256 refers to it. No raw credential is stored. Account, endpoint, body, webhook, expiry and key are immutable after dispatch.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-dispatch-envelope-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "attempt_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "provider_account_binding_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "catalogue_entry_id": {
+      "$ref": "common.schema.json#/$defs/slug"
+    },
+    "endpoint": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://",
+      "maxLength": 4096
+    },
+    "method": {
+      "const": "POST"
+    },
+    "idempotency_key": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "body": {
+      "type": "object",
+      "maxProperties": 100
+    },
+    "webhook_url": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "maxLength": 4096
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "expires_after_header": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "media_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "asset": {
+            "$ref": "common.schema.json#/$defs/asset_ref"
+          },
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 99
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://",
+                "maxLength": 8192
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provider_media_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "asset",
+          "field",
+          "ordinal",
+          "url",
+          "provider_media_id",
+          "expires_at"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 50
+    },
+    "credential_binding_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "dispatch_sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "workspace_id",
+    "attempt_id",
+    "created_at",
+    "sha256",
+    "provider_account_binding_id",
+    "catalogue_entry_id",
+    "endpoint",
+    "method",
+    "idempotency_key",
+    "body",
+    "webhook_url",
+    "expires_after_header",
+    "media_bindings",
+    "credential_binding_id",
+    "dispatch_sha256"
+  ]
+}

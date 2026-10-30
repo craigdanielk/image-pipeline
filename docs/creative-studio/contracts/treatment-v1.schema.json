@@ -1,0 +1,320 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/treatment-v1.schema.json",
+  "title": "Frozen creative treatment v1",
+  "$comment": "Only accepted treatment revisions may compile. AI drafting is an explicit separate step and its output is saved before acceptance; compilation and reruns never invoke AI to rewrite this treatment. Shot durations total at most 900 frames and each at most 300.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-treatment-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "source_request": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "accepted",
+        "returned"
+      ]
+    },
+    "accepted_by": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "accepted_at": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "authorship": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "human",
+            "assistant",
+            "legacy_import"
+          ]
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prompt_template": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "raw_response_sha256": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempt_id": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "model_id",
+        "prompt_template",
+        "raw_response_sha256",
+        "operation_id",
+        "attempt_id"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "assistant"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              },
+              "attempt_id": {
+                "$ref": "common.schema.json#/$defs/uuid"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "direction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "scene": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 7000
+        },
+        "style": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "lighting": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "camera": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "composition": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "negative": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "summary",
+        "scene",
+        "style",
+        "lighting",
+        "camera",
+        "composition",
+        "negative"
+      ]
+    },
+    "shots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "duration_frames": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 300
+          },
+          "spoken_copy_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/slug"
+            },
+            "minItems": 0,
+            "maxItems": 30
+          },
+          "visible_copy_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/slug"
+            },
+            "minItems": 0,
+            "maxItems": 30
+          },
+          "reference_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/slug"
+            },
+            "minItems": 0,
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "id",
+          "description",
+          "duration_frames",
+          "spoken_copy_ids",
+          "visible_copy_ids",
+          "reference_ids"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 6
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/version_ref"
+      },
+      "minItems": 0,
+      "maxItems": 100
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "source_request",
+    "status",
+    "accepted_by",
+    "accepted_at",
+    "authorship",
+    "direction",
+    "shots",
+    "sources"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "accepted"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "accepted_by": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "accepted_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          }
+        }
+      }
+    }
+  ]
+}

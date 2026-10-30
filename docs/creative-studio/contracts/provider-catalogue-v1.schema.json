@@ -1,0 +1,487 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/provider-catalogue-v1.schema.json",
+  "title": "Provider catalogue v1",
+  "$comment": "This is the catalogue contract, not a claim that any provider endpoint or price is currently supported. Only operator-enabled entries with complete endpoint-specific schemas and current pricing may compile. Browser controls and server routing consume this same immutable revision. Catalogue is published read-only into each workspace scope.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-provider-catalogue-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "model_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 160
+          },
+          "adapter_version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "operation": {
+            "type": "string",
+            "enum": [
+              "image_generate",
+              "image_edit",
+              "video_generate",
+              "image_upscale"
+            ]
+          },
+          "endpoint_key": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "verified_at": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          },
+          "valid_until": {
+            "$ref": "common.schema.json#/$defs/timestamp"
+          },
+          "documentation_url": {
+            "$ref": "common.schema.json#/$defs/uri"
+          },
+          "submit": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "method": {
+                "const": "POST"
+              },
+              "origin": {
+                "type": "string",
+                "pattern": "^https://[^/]+$"
+              },
+              "path_template": {
+                "type": "string",
+                "pattern": "^/",
+                "maxLength": 1000
+              }
+            },
+            "required": [
+              "method",
+              "origin",
+              "path_template"
+            ]
+          },
+          "request_schema": {
+            "type": "object",
+            "required": [
+              "$schema"
+            ],
+            "properties": {
+              "$schema": {
+                "const": "https://json-schema.org/draft/2020-12/schema"
+              }
+            },
+            "maxProperties": 100
+          },
+          "request_schema_sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          },
+          "reference_roles": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "role": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "field": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "mime_types": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "minItems": 1,
+                  "maxItems": 30
+                },
+                "min_count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                },
+                "max_count": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 20
+                }
+              },
+              "required": [
+                "role",
+                "field",
+                "mime_types",
+                "min_count",
+                "max_count"
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 20
+          },
+          "outputs": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mime_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "minItems": 1,
+                "maxItems": 20
+              },
+              "aspect_ratios": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 30
+                },
+                "minItems": 1,
+                "maxItems": 30
+              },
+              "max_width_px": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384
+              },
+              "max_height_px": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 16384
+              },
+              "min_duration_ms": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "max_duration_ms": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "mime_types",
+              "aspect_ratios",
+              "max_width_px",
+              "max_height_px",
+              "min_duration_ms",
+              "max_duration_ms"
+            ]
+          },
+          "controls": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "negative_prompt": {
+                "type": "boolean"
+              },
+              "seed": {
+                "type": "boolean"
+              },
+              "mask": {
+                "type": "boolean"
+              },
+              "start_frame": {
+                "type": "boolean"
+              },
+              "end_frame": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "negative_prompt",
+              "seed",
+              "mask",
+              "start_frame",
+              "end_frame"
+            ]
+          },
+          "idempotency": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "supported": {
+                "type": "boolean"
+              },
+              "header_name": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "retention_seconds": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lookup_by_client_key": {
+                "type": "boolean"
+              },
+              "same_intent_replay": {
+                "type": "boolean"
+              },
+              "immutable_fields": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "account",
+                    "endpoint",
+                    "json_body",
+                    "webhook",
+                    "expiry_header"
+                  ]
+                },
+                "minItems": 0,
+                "maxItems": 5
+              }
+            },
+            "required": [
+              "supported",
+              "header_name",
+              "retention_seconds",
+              "lookup_by_client_key",
+              "same_intent_replay",
+              "immutable_fields"
+            ]
+          },
+          "status": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "origin": {
+                "type": "string",
+                "pattern": "^https://[^/]+$"
+              },
+              "success_values": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "minItems": 1,
+                "maxItems": 10
+              },
+              "failure_values": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "minItems": 1,
+                "maxItems": 20
+              },
+              "cancel_supported": {
+                "type": "boolean"
+              },
+              "webhook_signature_algorithm": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "url_source": {
+                "const": "provider_response"
+              },
+              "allowed_path_pattern": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "request_id_binding": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            },
+            "required": [
+              "origin",
+              "success_values",
+              "failure_values",
+              "cancel_supported",
+              "webhook_signature_algorithm",
+              "url_source",
+              "allowed_path_pattern",
+              "request_id_binding"
+            ]
+          },
+          "pricing": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "currency": {
+                "const": "USD"
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "image",
+                  "video_second",
+                  "request"
+                ]
+              },
+              "unit_cost_micros": {
+                "$ref": "common.schema.json#/$defs/money_micros"
+              },
+              "maximum_request_cost_micros": {
+                "$ref": "common.schema.json#/$defs/money_micros"
+              },
+              "source_url": {
+                "$ref": "common.schema.json#/$defs/uri"
+              },
+              "observed_at": {
+                "$ref": "common.schema.json#/$defs/timestamp"
+              },
+              "expires_at": {
+                "$ref": "common.schema.json#/$defs/timestamp"
+              }
+            },
+            "required": [
+              "currency",
+              "unit",
+              "unit_cost_micros",
+              "maximum_request_cost_micros",
+              "source_url",
+              "observed_at",
+              "expires_at"
+            ]
+          },
+          "credential_modes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "workspace",
+                "platform"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 2
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "model_id",
+          "adapter_version",
+          "operation",
+          "endpoint_key",
+          "enabled",
+          "verified_at",
+          "valid_until",
+          "documentation_url",
+          "submit",
+          "request_schema",
+          "request_schema_sha256",
+          "reference_roles",
+          "outputs",
+          "controls",
+          "idempotency",
+          "status",
+          "pricing",
+          "credential_modes"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 200
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "entries"
+  ]
+}

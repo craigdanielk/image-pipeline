@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/export-v1.schema.json",
+  "title": "Immutable export and provenance manifest v1",
+  "$comment": "A success manifest exists only after final bytes and thumbnail (if present) are in private owned storage, MIME/dimensions/duration extracted, hashes stored and rendering constraints satisfied. Assets remain immutable even when approvals change. This manifest does not approve publication. Unknown generation cost may be retained; it must never be rewritten to zero.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-export-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "status": {
+      "const": "complete"
+    },
+    "format": {
+      "$ref": "common.schema.json#/$defs/format"
+    },
+    "file": {
+      "$ref": "common.schema.json#/$defs/asset_record"
+    },
+    "thumbnail": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/asset_ref"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "request": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "treatment": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "recipe": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "composition": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "brand_package": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "plan": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "compile_hash": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "catalogue": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "generated_sources": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/source_output"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "other_assets": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/asset_ref"
+          },
+          "minItems": 0,
+          "maxItems": 200
+        },
+        "render_engine_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "font_asset_sha256s": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          },
+          "minItems": 0,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "request",
+        "treatment",
+        "recipe",
+        "composition",
+        "brand_package",
+        "plan",
+        "compile_hash",
+        "catalogue",
+        "generated_sources",
+        "other_assets",
+        "render_engine_version",
+        "font_asset_sha256s"
+      ]
+    },
+    "exact_copy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "copy_id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 7000
+          },
+          "text_sha256": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          },
+          "source_copy": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "copy_id",
+          "text",
+          "text_sha256",
+          "source_copy"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 50
+    },
+    "cost": {
+      "$ref": "common.schema.json#/$defs/cost"
+    },
+    "rights_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "permitted",
+            "restricted"
+          ]
+        },
+        "receipt_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "minItems": 1,
+          "maxItems": 300
+        },
+        "restrictions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "attribution_text": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "receipt_ids",
+        "restrictions",
+        "attribution_text"
+      ]
+    },
+    "requires_downstream_review": {
+      "const": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "status",
+    "format",
+    "file",
+    "thumbnail",
+    "lineage",
+    "exact_copy",
+    "cost",
+    "rights_summary",
+    "requires_downstream_review"
+  ]
+}

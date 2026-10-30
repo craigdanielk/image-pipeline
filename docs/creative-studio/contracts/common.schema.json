@@ -1,0 +1,1153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/common.schema.json",
+  "title": "Creative Studio shared types v1",
+  "$comment": "Architectural contract; not a deployed URL. Semantic invariants in contract.md are mandatory in addition to schema. Public IDs lowercase UUIDs; money integer USD microdollars; timestamps UTC. The sha256 field of a rights or approval receipt is excluded when hashing that receipt.",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "uri": {
+      "type": "string",
+      "format": "uri",
+      "maxLength": 4096
+    },
+    "money_micros": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "authority": {
+      "type": "string",
+      "enum": [
+        "creative-studio",
+        "brand-ci-studio",
+        "marketing-os"
+      ]
+    },
+    "version_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "$ref": "common.schema.json#/$defs/authority"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "version_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      },
+      "required": [
+        "authority",
+        "workspace_id",
+        "kind",
+        "id",
+        "version_id",
+        "revision",
+        "sha256"
+      ]
+    },
+    "asset_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authority": {
+          "$ref": "common.schema.json#/$defs/authority"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "asset_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "asset_version_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "mime_type": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "authority",
+        "workspace_id",
+        "asset_id",
+        "asset_version_id",
+        "revision",
+        "sha256",
+        "mime_type"
+      ]
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receipt_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "permitted",
+            "restricted",
+            "denied"
+          ]
+        },
+        "holder": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "owned",
+            "licence",
+            "permission",
+            "public_domain",
+            "provider_terms",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "minItems": 0,
+          "maxItems": 20
+        },
+        "allowed_uses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "reference",
+              "generate",
+              "edit",
+              "embed",
+              "redistribute"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 5
+        },
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "minItems": 0,
+          "maxItems": 40
+        },
+        "territories": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "valid_from": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "expires_at": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attribution": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "restrictions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 40
+        },
+        "recorded_by": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        }
+      },
+      "required": [
+        "receipt_id",
+        "revision",
+        "sha256",
+        "status",
+        "holder",
+        "basis",
+        "evidence",
+        "allowed_uses",
+        "channels",
+        "territories",
+        "valid_from",
+        "expires_at",
+        "attribution",
+        "restrictions",
+        "recorded_by"
+      ]
+    },
+    "asset_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ref": {
+          "$ref": "common.schema.json#/$defs/asset_ref"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "width_px": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "height_px": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rights": {
+          "$ref": "common.schema.json#/$defs/rights"
+        },
+        "origin": {
+          "type": "string",
+          "enum": [
+            "capture",
+            "upload",
+            "provider",
+            "derived",
+            "legacy_import"
+          ]
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/uri"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "captured_at": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_assets": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/asset_ref"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "ref",
+        "name",
+        "size_bytes",
+        "width_px",
+        "height_px",
+        "duration_ms",
+        "rights",
+        "origin",
+        "source_url",
+        "captured_at",
+        "parent_assets"
+      ]
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "receipt_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "authority": {
+          "$ref": "common.schema.json#/$defs/authority"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "subject": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "decision": {
+          "const": "approved"
+        },
+        "actor_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "actor_role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "approved_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "policy_revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      },
+      "required": [
+        "receipt_id",
+        "authority",
+        "workspace_id",
+        "subject",
+        "decision",
+        "actor_id",
+        "actor_role",
+        "approved_at",
+        "policy_revision",
+        "sha256"
+      ]
+    },
+    "reference_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "subject",
+            "identity",
+            "product",
+            "style",
+            "composition",
+            "pose",
+            "mask",
+            "start_frame",
+            "end_frame",
+            "audio",
+            "source_clip"
+          ]
+        },
+        "asset": {
+          "$ref": "common.schema.json#/$defs/asset_ref"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "strength": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "role",
+        "asset",
+        "required",
+        "strength"
+      ]
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "const": "USD"
+        },
+        "max_cost_micros": {
+          "$ref": "common.schema.json#/$defs/money_micros"
+        },
+        "funding_source": {
+          "type": "string",
+          "enum": [
+            "workspace",
+            "platform"
+          ]
+        },
+        "credential_binding_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "policy": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "expires_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        }
+      },
+      "required": [
+        "currency",
+        "max_cost_micros",
+        "funding_source",
+        "credential_binding_id",
+        "policy",
+        "expires_at"
+      ]
+    },
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video"
+          ]
+        },
+        "preset": {
+          "type": "string",
+          "enum": [
+            "square_1080",
+            "portrait_1080x1350",
+            "story_1080x1920",
+            "video_story_1080x1920_30fps"
+          ]
+        },
+        "width_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1920
+        },
+        "height_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1920
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "video/mp4"
+          ]
+        },
+        "duration_frames": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 900
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_rate": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "num": {
+                  "const": 30
+                },
+                "den": {
+                  "const": 1
+                }
+              },
+              "required": [
+                "num",
+                "den"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "preset",
+        "width_px",
+        "height_px",
+        "mime_type",
+        "duration_frames",
+        "frame_rate",
+        "count",
+        "channel"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "square_1080"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1080
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "portrait_1080x1350"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1350
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "story_1080x1920"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1920
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "video_story_1080x1920_30fps"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1920
+              },
+              "kind": {
+                "const": "video"
+              },
+              "duration_frames": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 900
+              },
+              "frame_rate": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "num": {
+                    "const": 30
+                  },
+                  "den": {
+                    "const": 1
+                  }
+                },
+                "required": [
+                  "num",
+                  "den"
+                ]
+              },
+              "mime_type": {
+                "const": "video/mp4"
+              },
+              "count": {
+                "const": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "provider_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "selected"
+          ]
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "type": "string",
+          "enum": [
+            "standard",
+            "high"
+          ]
+        },
+        "max_unit_cost_micros": {
+          "$ref": "common.schema.json#/$defs/money_micros"
+        }
+      },
+      "required": [
+        "mode",
+        "provider",
+        "model_id",
+        "quality",
+        "max_unit_cost_micros"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "selected"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "provider": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "model_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "auto"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "provider": {
+                "type": "null"
+              },
+              "model_id": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "crop": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "width": {
+          "type": "number",
+          "minimum": 1e-06,
+          "maximum": 1
+        },
+        "height": {
+          "type": "number",
+          "minimum": 1e-06,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ]
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "retryable": {
+          "type": "boolean"
+        },
+        "field_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "related_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "minItems": 0,
+          "maxItems": 30
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable",
+        "field_paths",
+        "related_ids"
+      ]
+    },
+    "download_ticket": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "$ref": "common.schema.json#/$defs/asset_ref"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "maxLength": 8192
+        },
+        "expires_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "content_disposition": {
+          "type": "string",
+          "enum": [
+            "inline",
+            "attachment"
+          ]
+        }
+      },
+      "required": [
+        "asset",
+        "url",
+        "expires_at",
+        "content_disposition"
+      ]
+    },
+    "source_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "run_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "plan_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "compile_hash": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "node_id": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "attempt_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "output_port": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "asset": {
+          "$ref": "common.schema.json#/$defs/asset_ref"
+        }
+      },
+      "required": [
+        "run_id",
+        "plan_id",
+        "compile_hash",
+        "node_id",
+        "attempt_id",
+        "output_port",
+        "asset"
+      ]
+    },
+    "cost": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "const": "USD"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "reserved",
+            "settled",
+            "unknown"
+          ]
+        },
+        "estimated_micros": {
+          "$ref": "common.schema.json#/$defs/money_micros"
+        },
+        "reserved_micros": {
+          "$ref": "common.schema.json#/$defs/money_micros"
+        },
+        "settled_micros": {
+          "$ref": "common.schema.json#/$defs/money_micros"
+        },
+        "unresolved_micros": {
+          "$ref": "common.schema.json#/$defs/money_micros"
+        },
+        "receipt_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "minItems": 0,
+          "maxItems": 1000
+        }
+      },
+      "required": [
+        "currency",
+        "state",
+        "estimated_micros",
+        "reserved_micros",
+        "settled_micros",
+        "unresolved_micros",
+        "receipt_ids"
+      ]
+    },
+    "eligibility_receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "authority": {
+          "$ref": "common.schema.json#/$defs/authority"
+        },
+        "workspace_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "generate",
+            "export",
+            "handoff",
+            "publish"
+          ]
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "allowed",
+            "refused"
+          ]
+        },
+        "actor_id": {
+          "$ref": "common.schema.json#/$defs/uuid"
+        },
+        "source_versions": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "minItems": 1,
+          "maxItems": 100
+        },
+        "policy": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "approval_receipt_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/uuid"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "checked_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "valid_until": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "minItems": 0,
+          "maxItems": 30
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        }
+      },
+      "required": [
+        "id",
+        "authority",
+        "workspace_id",
+        "action",
+        "decision",
+        "actor_id",
+        "source_versions",
+        "policy",
+        "approval_receipt_ids",
+        "checked_at",
+        "valid_until",
+        "reason_codes",
+        "sha256"
+      ]
+    }
+  }
+}

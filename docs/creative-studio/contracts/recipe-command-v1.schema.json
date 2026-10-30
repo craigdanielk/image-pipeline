@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/recipe-command-v1.schema.json",
+  "title": "Atomic recipe revision commands v1",
+  "$comment": "One atomic reducer for guided/canvas. Client submits If-Match and Idempotency-Key. Apply command array in order, then structural/scope/graph validation; if any fails, save nothing. Removing a referenced node must be accompanied by edge/output changes in this same transaction. Acceptance of a treatment is a separate action; set_treatment cannot approve it.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-recipe-command-v1"
+    },
+    "base_recipe": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_request"
+              },
+              "request": {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              }
+            },
+            "required": [
+              "op",
+              "request"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_treatment"
+              },
+              "treatment": {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              }
+            },
+            "required": [
+              "op",
+              "treatment"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_template"
+              },
+              "template": {
+                "anyOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/version_ref"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "template"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "upsert_node"
+              },
+              "node": {
+                "$ref": "recipe-v1.schema.json#/properties/nodes/items"
+              }
+            },
+            "required": [
+              "op",
+              "node"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "remove_node"
+              },
+              "node_id": {
+                "$ref": "common.schema.json#/$defs/slug"
+              }
+            },
+            "required": [
+              "op",
+              "node_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_outputs"
+              },
+              "outputs": {
+                "$ref": "recipe-v1.schema.json#/properties/outputs"
+              }
+            },
+            "required": [
+              "op",
+              "outputs"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_composition"
+              },
+              "composition": {
+                "anyOf": [
+                  {
+                    "$ref": "common.schema.json#/$defs/version_ref"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "op",
+              "composition"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_authoring_view"
+              },
+              "authoring_view": {
+                "$ref": "recipe-v1.schema.json#/properties/authoring_view"
+              }
+            },
+            "required": [
+              "op",
+              "authoring_view"
+            ]
+          }
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 100
+    }
+  },
+  "required": [
+    "schema_version",
+    "base_recipe",
+    "commands"
+  ]
+}
