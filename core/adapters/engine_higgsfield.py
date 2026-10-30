@@ -32,6 +32,19 @@ _OUTPUT_PARAM = {
 }
 
 
+def _image_ref_args(imgs):
+    """Current CLI (0.2.3+) takes --image-references <path|uuid>, not --input_images JSON."""
+    args = []
+    for it in imgs:
+        if isinstance(it, str):
+            args += ["--image-references", it]
+        elif isinstance(it, dict):
+            rid = it.get("id") or it.get("image")
+            if rid:
+                args += ["--image-references", str(rid)]
+    return args
+
+
 def _param_args(output, engine):
     args = []
     for out_key, cli_key in _OUTPUT_PARAM.items():
@@ -46,14 +59,29 @@ def _param_args(output, engine):
     colors = output.get("colors")
     if colors:
         args += ["--colors", json.dumps(colors)]
-    for k, v in (engine.get("params") or {}).items():
+    params = dict(engine.get("params") or {})
+    imgs = params.pop("input_images", None) or params.pop("image_references", None)
+    for k, v in params.items():
+        if k.startswith("_") or k in _OUTPUT_PARAM:
+            continue
         args += [f"--{k}", v if isinstance(v, str) else json.dumps(v)]
+    if isinstance(imgs, list):
+        args += _image_ref_args(imgs)
     return args
 
 
 def _run(args):
+    shown = []
+    i = 0
+    while i < len(args):
+        if args[i] == "--prompt" and i + 1 < len(args):
+            shown += ["--prompt", "<%d chars>" % len(args[i + 1])]
+            i += 2
+            continue
+        shown.append(args[i])
+        i += 1
     cmd = ["higgsfield"] + args
-    print("  $ " + " ".join(cmd))
+    print("  $ higgsfield " + " ".join(shown))
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
         raise RuntimeError(f"higgsfield failed ({r.returncode}):\n{r.stderr or r.stdout}")
@@ -61,7 +89,10 @@ def _run(args):
         try:
             return json.loads(r.stdout)
         except json.JSONDecodeError:
-            return {"_raw": r.stdout}
+            raise RuntimeError(
+                "higgsfield returned non-JSON (exit 0):\n"
+                + (r.stderr or r.stdout or "")[:800]
+            )
     return r.stdout
 
 
@@ -76,14 +107,13 @@ def _upload(path):
 
 
 def _resolve_params(engine, job_dir, upload=True):
-    """Return a params copy with multi-ref `input_images` normalized.
+    """Return a params copy with multi-ref `input_images` as local paths.
 
-    Each entry may be a LOCAL PATH (uploaded here -> media object), an http(s)
-    URL (wrapped as an image object), or an already-formed object (passthrough).
-    The higgsfield API wants an array of media OBJECTS, not path strings — so the
-    JobSpec can keep clean local paths and this seam does the upload. Paths
-    resolve relative to the job dir. Set upload=False for dry-run (cost is
-    upload-independent) — input_images is dropped so no credits/network are used."""
+    Higgsfield CLI 0.2.3+ auto-uploads --image-references paths. We resolve
+    relative paths against job_dir and leave them as strings. HTTP URLs are
+    downloaded to a temp file first. Set upload=False for dry-run (cost is
+    upload-independent) — input_images is dropped so no credits/network are used.
+    """
     params = dict(engine.get("params") or {})
     imgs = params.get("input_images")
     if not isinstance(imgs, list):
@@ -94,21 +124,21 @@ def _resolve_params(engine, job_dir, upload=True):
     resolved = []
     for it in imgs:
         if isinstance(it, str) and it.startswith(("http://", "https://")):
-            # API no longer accepts {"type":"image","url":...}; must upload first.
             path_part = it.split("?", 1)[0].split("#", 1)[0]
             suffix = os.path.splitext(path_part)[1] or ".jpg"
             fd, tmp = tempfile.mkstemp(suffix=suffix, prefix="ip-input-")
             os.close(fd)
             urllib.request.urlretrieve(it, tmp)
-            resolved.append(_upload(tmp))
-            os.unlink(tmp)
+            resolved.append(tmp)
         elif isinstance(it, str):
             path = it if os.path.isabs(it) else os.path.join(job_dir, it)
             if not os.path.exists(path):
                 raise FileNotFoundError(f"input_images path not found: {path}")
-            resolved.append(_upload(path))
+            resolved.append(os.path.abspath(path))
+        elif isinstance(it, dict) and (it.get("id") or it.get("image")):
+            resolved.append(it.get("id") or it.get("image"))
         else:
-            resolved.append(it)  # already a media object
+            resolved.append(it)
     params["input_images"] = resolved
     return params
 
