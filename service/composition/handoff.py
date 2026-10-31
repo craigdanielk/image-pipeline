@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from .canonical import artifact_sha256
 from .contracts import require_valid
 from .errors import CompositionError
-from .export import version_ref
+from .export import READABLE_EXPORT_SCHEMA_VERSIONS, version_ref
 
 _STATE_RANK = {"settled": 0, "reserved": 1, "unknown": 2}
 
@@ -56,7 +56,11 @@ def build_handoff(exports: list[dict], *, target: dict, creative_request: dict, 
     workspace_id = exports[0]["workspace_id"]
     package = exports[0]["lineage"]["brand_package"]
     for i, e in enumerate(exports):
-        require_valid(e, "cs-export-v1")
+        version = e.get("schema_version") if isinstance(e, dict) else None
+        if version not in READABLE_EXPORT_SCHEMA_VERSIONS:
+            raise CompositionError("unsupported_schema_version", f"export schema_version {version!r} is not one of "
+                                   f"{', '.join(READABLE_EXPORT_SCHEMA_VERSIONS)}", [f"/exports/{i}/schema_version"])
+        require_valid(e, version)
         if e["sha256"] != artifact_sha256(e):
             raise CompositionError("artifact_hash_mismatch", "export manifest hash does not match its content",
                                    [f"/exports/{i}"], [e["version_id"]])

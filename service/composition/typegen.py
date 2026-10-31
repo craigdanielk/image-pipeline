@@ -22,7 +22,8 @@ OUT = Path(__file__).resolve().parents[2] / "ui" / "app" / "src" / "studio" / "c
 ROOTS = {
     "common.schema.json": None,
     "composition-v1.schema.json": "Composition",
-    "export-v1.schema.json": "ExportManifest",
+    "export-v1.schema.json": "ExportManifestV1",
+    "export-v2.schema.json": "ExportManifest",
     "mos-handoff-v1.schema.json": "MosHandoff",
     "mos-ingestion-receipt-v1.schema.json": "MosIngestionReceipt",
     "recipe-v1.schema.json": "Recipe",

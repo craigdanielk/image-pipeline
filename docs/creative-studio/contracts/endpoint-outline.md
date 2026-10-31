@@ -101,7 +101,7 @@ Rendering preview uses the same versioned layout engine and assets as final expo
 | `POST W/runs/{run_id}/cancel` | `{reason:string,expected_event_sequence:int}` | 202 cancel request; does not promise refund or abort of already accepted provider work |
 | `POST W/runs/{run_id}/reconcile` | `{attempt_id:uuid,expected_event_sequence:int}` | 202 status/billing reconciliation or allowed same-intent replay; never a new provider key/body |
 | `GET W/runs/{run_id}/receipts` | Cursor | Safe immutable provider/cost receipts |
-| `GET W/exports/{version_id}` | — | Complete `cs-export-v1`; in-progress export stays on run status |
+| `GET W/exports/{version_id}` | — | Complete `cs-export-v2` (manifests stored as `cs-export-v1` are returned as-is); in-progress export stays on run status |
 | `POST W/exports/{version_id}/download-ticket` | `{expected_sha256,disposition}` | Fresh ticket for the immutable final file |
 | `POST W/handoffs/marketing-os` | Editable handoff fields and exact export refs | 202 durable transfer; authenticates existing connection, then calls MOS adapter |
 | `GET W/handoffs/marketing-os/{id}` | — | `{handoff:VersionRef,state:queued|transferring|complete|blocked|failed,items:[{export,status,receipt_id|null,error|null}],receipt:IngestionReceipt|null}` |

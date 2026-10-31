@@ -113,6 +113,24 @@ class Format(TypedDict):
     channel: str
 
 
+class ExportFormatV2FrameRate0(TypedDict):
+    num: Literal[30]
+    den: Literal[1]
+
+
+class ExportFormatV2(TypedDict):
+    id: Slug
+    kind: Literal['image', 'video']
+    preset: Literal['square_1080', 'portrait_1080x1350', 'story_1080x1920', 'landscape_1920x1080', 'video_story_1080x1920_30fps']
+    width_px: int
+    height_px: int
+    mime_type: Literal['image/png', 'image/jpeg', 'image/webp', 'video/mp4']
+    duration_frames: Union[int, None]
+    frame_rate: Union[ExportFormatV2FrameRate0, None]
+    count: int
+    channel: str
+
+
 class ProviderSelection(TypedDict):
     mode: Literal['auto', 'selected']
     provider: Union[str, None]

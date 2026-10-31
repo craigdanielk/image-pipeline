@@ -1,4 +1,4 @@
-"""cs-export-v1 manifests (contract.md §11, export-v1.schema.json).
+"""cs-export-v2 manifests (contract.md §10/§11, export-v2.schema.json).
 
 A manifest is issued only after the rendered bytes are persisted through an
 ExportStore and read back: byte hash, MIME, dimensions re-derived from the
@@ -21,13 +21,16 @@ from .contracts import require_valid
 from .errors import CompositionError
 from .renderer import RenderResult
 
-# Contract presets (common.schema.json#/$defs/format, contract.md §10). The
-# renderer can lay out other artboard sizes (e.g. 1920x1080); export refuses
-# them until the contract adds a preset.
+# Contract image presets (common.schema.json#/$defs/export_format_v2, contract.md §10):
+# the operator-ratified E5 canvases 1:1 / 4:5 / 9:16 / 16:9. Any other artboard size
+# renders but is refused at export.
+EXPORT_SCHEMA_VERSION = "cs-export-v2"
+READABLE_EXPORT_SCHEMA_VERSIONS = ("cs-export-v1", "cs-export-v2")
 IMAGE_PRESETS = {
     "square_1080": (1080, 1080),
     "portrait_1080x1350": (1080, 1350),
     "story_1080x1920": (1080, 1920),
+    "landscape_1920x1080": (1920, 1080),
 }
 _DECODED_MIME = {"PNG": "image/png", "JPEG": "image/jpeg", "WEBP": "image/webp"}
 _EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp"}
@@ -88,7 +91,7 @@ def check_format(fmt: dict, render: RenderResult) -> None:
                                ["/format/preset"])
     if (render.width, render.height) not in IMAGE_PRESETS.values():
         raise CompositionError("unsupported_export_preset",
-                               f"artboard {render.width}x{render.height} has no export preset in contract v1 "
+                               f"artboard {render.width}x{render.height} has no export preset in {EXPORT_SCHEMA_VERSION} "
                                f"(supported: {', '.join(f'{w}x{h}' for w, h in IMAGE_PRESETS.values())})",
                                ["/format/preset"])
     if preset != (render.width, render.height) or (fmt["width_px"], fmt["height_px"]) != preset:
@@ -224,7 +227,7 @@ def build_export(render: RenderResult, *, composition: dict, brand_package: dict
                                    ["/file"], [record["ref"]["asset_version_id"]], retryable=True)
 
     doc = {
-        "schema_version": "cs-export-v1",
+        "schema_version": EXPORT_SCHEMA_VERSION,
         "id": export_id,
         "version_id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"cs-export-version:{export_id}:{render.sha256}")),
         "revision": 1,
@@ -257,5 +260,5 @@ def build_export(render: RenderResult, *, composition: dict, brand_package: dict
         "requires_downstream_review": True,
     }
     doc["sha256"] = artifact_sha256(doc)
-    require_valid(doc, "cs-export-v1")
+    require_valid(doc, EXPORT_SCHEMA_VERSION)
     return doc

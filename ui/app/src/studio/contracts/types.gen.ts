@@ -435,7 +435,7 @@ export type Composition = {
 };
 
 /** Immutable export and provenance manifest v1 (export-v1.schema.json) */
-export type ExportManifest = {
+export type ExportManifestV1 = {
   schema_version: "cs-export-v1";
   id: Uuid;
   version_id: Uuid;
@@ -446,6 +446,50 @@ export type ExportManifest = {
   sha256: Sha256;
   status: "complete";
   format: Format;
+  file: AssetRecord;
+  thumbnail: AssetRef | null;
+  lineage: {
+    request: VersionRef;
+    treatment: VersionRef;
+    recipe: VersionRef;
+    composition: VersionRef;
+    brand_package: VersionRef;
+    plan: VersionRef;
+    compile_hash: Sha256;
+    catalogue: VersionRef;
+    generated_sources: Array<SourceOutput>;
+    other_assets: Array<AssetRef>;
+    render_engine_version: string;
+    font_asset_sha256s: Array<Sha256>;
+  };
+  exact_copy: Array<{
+    copy_id: Slug;
+    text: string;
+    text_sha256: Sha256;
+    source_copy: VersionRef | null;
+  }>;
+  cost: Cost;
+  rights_summary: {
+    status: "permitted" | "restricted";
+    receipt_ids: Array<Uuid>;
+    restrictions: Array<string>;
+    attribution_text: string | null;
+  };
+  requires_downstream_review: true;
+};
+
+/** Immutable export and provenance manifest v2 (export-v2.schema.json) */
+export type ExportManifest = {
+  schema_version: "cs-export-v2";
+  id: Uuid;
+  version_id: Uuid;
+  revision: number;
+  workspace_id: Uuid;
+  created_at: Timestamp;
+  created_by: Uuid;
+  sha256: Sha256;
+  status: "complete";
+  format: ExportFormatV2;
   file: AssetRecord;
   thumbnail: AssetRef | null;
   lineage: {
@@ -1435,6 +1479,66 @@ export type Cost = {
   settled_micros: MoneyMicros;
   unresolved_micros: MoneyMicros;
   receipt_ids: Array<Uuid>;
+};
+
+export type ExportFormatV2 = {
+  id: Slug;
+  kind: "image";
+  preset: "square_1080";
+  width_px: 1080;
+  height_px: 1080;
+  mime_type: "image/png" | "image/jpeg" | "image/webp";
+  duration_frames: null;
+  frame_rate: null;
+  count: number;
+  channel: string;
+} | {
+  id: Slug;
+  kind: "image";
+  preset: "portrait_1080x1350";
+  width_px: 1080;
+  height_px: 1350;
+  mime_type: "image/png" | "image/jpeg" | "image/webp";
+  duration_frames: null;
+  frame_rate: null;
+  count: number;
+  channel: string;
+} | {
+  id: Slug;
+  kind: "image";
+  preset: "story_1080x1920";
+  width_px: 1080;
+  height_px: 1920;
+  mime_type: "image/png" | "image/jpeg" | "image/webp";
+  duration_frames: null;
+  frame_rate: null;
+  count: number;
+  channel: string;
+} | {
+  id: Slug;
+  kind: "image";
+  preset: "landscape_1920x1080";
+  width_px: 1920;
+  height_px: 1080;
+  mime_type: "image/png" | "image/jpeg" | "image/webp";
+  duration_frames: null;
+  frame_rate: null;
+  count: number;
+  channel: string;
+} | {
+  id: Slug;
+  kind: "video";
+  preset: "video_story_1080x1920_30fps";
+  width_px: 1080;
+  height_px: 1920;
+  mime_type: "video/mp4";
+  duration_frames: number;
+  frame_rate: {
+    num: 30;
+    den: 1;
+  };
+  count: 1;
+  channel: string;
 };
 
 export type ProviderSelection = {

@@ -20,7 +20,8 @@ BASE_URI = "https://schemas.creative-studio.invalid/v1/"
 
 SCHEMA_VERSIONS = {
     "cs-composition-v1": "composition-v1.schema.json",
-    "cs-export-v1": "export-v1.schema.json",
+    "cs-export-v1": "export-v1.schema.json",   # read-only: manifests issued before the v2 amendment
+    "cs-export-v2": "export-v2.schema.json",
     "cs-mos-handoff-v1": "mos-handoff-v1.schema.json",
     "cs-mos-ingestion-receipt-v1": "mos-ingestion-receipt-v1.schema.json",
     "brand-package-v1": "brand-package-v1.schema.json",

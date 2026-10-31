@@ -87,5 +87,43 @@ class PinnedRuntime(unittest.TestCase):
             self.assertTrue(fc.conforms(good, fmt), fmt)
 
 
+class CanonicalArchitecturePackage(unittest.TestCase):
+    """The accepted architecture document embeds every contract file; amendments keep it exact (F4)."""
+    DOC = ROOT / "docs/creative-studio/canonical-architecture.md"
+
+    def sections(self):
+        text = self.DOC.read_text(encoding="utf-8")
+        parts = re.split(r"^## Packaged file: (\S+)\n", text, flags=re.M)
+        return dict(zip(parts[1::2], parts[2::2])), text
+
+    def test_packaged_copies_equal_files(self):
+        sections, _ = self.sections()
+        on_disk = sorted(str(p.relative_to(ROOT / "docs/creative-studio"))
+                         for p in (ROOT / "docs/creative-studio/contracts").iterdir() if p.is_file())
+        self.assertEqual([n for n in on_disk if n not in sections], [], "every contract file is packaged")
+        for name, body in sections.items():
+            path = ROOT / "docs/creative-studio" / name
+            if not path.exists():
+                continue                      # package-only documents (README.md, ARCHITECTURE_EVIDENCE.md)
+            if name.endswith(".json"):
+                block = re.search(r"```json\n(.*?)\n```", body, re.S).group(1)
+                self.assertEqual(json.loads(block), json.loads(path.read_text()), name)
+            else:
+                self.assertEqual(body.strip("\n"), path.read_text(encoding="utf-8").strip("\n"), name)
+
+    def test_latest_manifest_hashes_match_files(self):
+        import hashlib
+        _, text = self.sections()
+        latest = {}
+        for block in re.findall(r"## Package (?:amendment )?manifest[^\n]*\n\n```json\n(.*?)\n```", text, re.S):
+            for f in json.loads(block)["files"]:
+                latest[f["path"]] = f["sha256"]                  # later manifests supersede earlier entries
+        self.assertIn("contracts/export-v2.schema.json", latest)
+        for rel, digest in latest.items():
+            path = ROOT / "docs/creative-studio" / rel
+            if path.exists():
+                self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), digest, rel)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

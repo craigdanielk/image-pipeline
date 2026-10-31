@@ -19,6 +19,7 @@ The generation compiler remains responsible for provider prompts and plans. Comp
 | Square | 1080 × 1080 | PNG |
 | Portrait feed | 1080 × 1350 | PNG |
 | Story / vertical | 1080 × 1920 | PNG |
+| Landscape (16:9; `cs-export-v2`, amendment 2026-10-31) | 1920 × 1080 | PNG |
 
 Custom dimensions are unavailable in the first release. The schema's broader structural bounds are not a promise that every width/height combination is supported. A named recipe output binds the selected format preset; server preflight enforces that preset. Input/generated source images may be larger within their separately declared ingestion/provider/worker bounds; output artboard limits do not truncate their stored originals. Variants can reuse one original image in different crops, but each artboard retains independent layout/copy bounds. “Apply to all sizes” is an explicit multi-artboard edit with a preview; resizing one artboard does not silently reflow the others.
 
@@ -130,7 +131,7 @@ When a replacement clip is shorter than its slot, offer **Trim the slot and move
 
 ## Export representation and preflight
 
-Each completed media file has a `cs-export-v1` with immutable file ID/version/hash, format/dimensions/duration, thumbnail, exact request/treatment/recipe/composition/brand/plan/catalogue lineage, original generated source attempts, font hashes, exact copy/text hashes, costs and rights summary. A pack is a named collection of those exports; an optional ZIP download includes the files and a readable/JSON manifest. It does not create a new approval or erase individual export identities.
+Each completed media file has a `cs-export-v2` (earlier manifests: `cs-export-v1`) with immutable file ID/version/hash, format/dimensions/duration, thumbnail, exact request/treatment/recipe/composition/brand/plan/catalogue lineage, original generated source attempts, font hashes, exact copy/text hashes, costs and rights summary. A pack is a named collection of those exports; an optional ZIP download includes the files and a readable/JSON manifest. It does not create a new approval or erase individual export identities.
 
 | Export | Settings / deliverable |
 |---|---|

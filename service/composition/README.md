@@ -6,7 +6,7 @@
 | `validate.py` | cs-composition-v1 schema + semantic checks (unique ids/sibling order, single-parent acyclic groups, crop bounds, workspace scope, artifact hash); semantic projection hash. |
 | `fontinfo.py` | Dependency-free sfnt reader: cmap coverage + OS/2 weight. |
 | `safe_zones.py` | Explicit per-canvas safe zone with a citation; `artboard_bounds()` is a recorded choice, never a default. |
-| `export.py` | cs-export-v1 manifest after persist + read-back (hash/MIME/dimensions), rights (embed on channel, validity), exact copy, lineage, unknown cost carried as-is. |
+| `export.py` | cs-export-v2 manifest (1:1, 4:5, 9:16, 16:9 image presets; handoff also reads earlier cs-export-v1) after persist + read-back (hash/MIME/dimensions), rights (embed on channel, validity), exact copy, lineage, unknown cost carried as-is. |
 | `handoff.py` | cs-mos-handoff-v1 (copy must be bound to MOS copy versions; cost counted once per plan) and ingestion-receipt verification. |
 | `routes.py` | HTTP routes (fenced block in `service/api.py`). |
 | `typegen.py` | Generates `ui/app/src/studio/contracts/types.gen.ts` from the contract schemas (`--check` for drift). |

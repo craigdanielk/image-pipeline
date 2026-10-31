@@ -10,7 +10,8 @@
 --     workspace, idempotent by (workspace, operation, key).
 --   * cs_publish_export (cs_worker, live publish_export lease): binds a stored
 --     asset version (hash/MIME/size/dimensions) and a saved composition to an
---     immutable cs-export-v1 manifest.
+--     immutable cs-export-v2 manifest (cs-export-v1 still accepted for manifests
+--     issued before the 16:9 amendment; CS-INT F4).
 --   * cs_enqueue_handoff (cs_api, producer): queues an immutable
 --     cs-mos-handoff-v1 for exact, existing exports; never writes MOS tables.
 -- JSON Schema + RFC 8785 hashing are verified by the service before the call
@@ -90,7 +91,7 @@ create table if not exists public.cs_exports (
   foreign key (workspace_id, asset_version_id) references public.cs_asset_versions(workspace_id, id),
   foreign key (workspace_id, run_id) references public.cs_runs(workspace_id, id),
   foreign key (workspace_id, work_item_id) references public.cs_work_items(workspace_id, id),
-  check (manifest ->> 'schema_version' = 'cs-export-v1'
+  check (manifest ->> 'schema_version' in ('cs-export-v1', 'cs-export-v2')
      and manifest ->> 'status' = 'complete'
      and manifest ->> 'requires_downstream_review' = 'true'
      and manifest ->> 'workspace_id' = workspace_id::text

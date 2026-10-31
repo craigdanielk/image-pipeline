@@ -8,12 +8,16 @@ import type {
   Composition,
   Error as ContractError,
   ExportManifest,
+  ExportManifestV1,
   MosHandoff,
   MosIngestionReceipt,
   Recipe,
   RecipeCommandBatch,
   VersionRef,
 } from "./contracts/types.gen";
+
+/** A stored export as served: current cs-export-v2, or a cs-export-v1 issued before the 16:9 amendment. */
+export type StoredExport = ExportManifest | ExportManifestV1;
 
 export class StudioApiError extends Error {
   constructor(
@@ -167,7 +171,7 @@ export const StudioApi = {
       (r) => r.data,
     ),
   getExport: (workspaceId: string, versionId: string, signal?: AbortSignal) =>
-    call<{ data: ExportManifest }>(`${ws(workspaceId)}/exports/${versionId}`, { signal }).then((r) => r.data),
+    call<{ data: StoredExport }>(`${ws(workspaceId)}/exports/${versionId}`, { signal }).then((r) => r.data),
   sendToMos: (
     workspaceId: string,
     body: { exports: VersionRef[]; target: MosHandoff["target"]; creative_request: VersionRef },
@@ -184,7 +188,7 @@ export const StudioApi = {
     ),
 };
 
-export function exportRef(manifest: ExportManifest): VersionRef {
+export function exportRef(manifest: StoredExport): VersionRef {
   return {
     authority: "creative-studio",
     workspace_id: manifest.workspace_id,

@@ -773,6 +773,304 @@
         }
       ]
     },
+    "export_format_v2": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "common.schema.json#/$defs/slug"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "image",
+            "video"
+          ]
+        },
+        "preset": {
+          "type": "string",
+          "enum": [
+            "square_1080",
+            "portrait_1080x1350",
+            "story_1080x1920",
+            "landscape_1920x1080",
+            "video_story_1080x1920_30fps"
+          ]
+        },
+        "width_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1920
+        },
+        "height_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1920
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "video/mp4"
+          ]
+        },
+        "duration_frames": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 900
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_rate": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "num": {
+                  "const": 30
+                },
+                "den": {
+                  "const": 1
+                }
+              },
+              "required": [
+                "num",
+                "den"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "preset",
+        "width_px",
+        "height_px",
+        "mime_type",
+        "duration_frames",
+        "frame_rate",
+        "count",
+        "channel"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "square_1080"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1080
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "portrait_1080x1350"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1350
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "story_1080x1920"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1920
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "landscape_1920x1080"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1920
+              },
+              "height_px": {
+                "const": 1080
+              },
+              "kind": {
+                "const": "image"
+              },
+              "duration_frames": {
+                "type": "null"
+              },
+              "frame_rate": {
+                "type": "null"
+              },
+              "mime_type": {
+                "type": "string",
+                "enum": [
+                  "image/png",
+                  "image/jpeg",
+                  "image/webp"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "preset": {
+                "const": "video_story_1080x1920_30fps"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "width_px": {
+                "const": 1080
+              },
+              "height_px": {
+                "const": 1920
+              },
+              "kind": {
+                "const": "video"
+              },
+              "duration_frames": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 900
+              },
+              "frame_rate": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "num": {
+                    "const": 30
+                  },
+                  "den": {
+                    "const": 1
+                  }
+                },
+                "required": [
+                  "num",
+                  "den"
+                ]
+              },
+              "mime_type": {
+                "const": "video/mp4"
+              },
+              "count": {
+                "const": 1
+              }
+            }
+          }
+        }
+      ],
+      "$comment": "Export rendition format, export-v2 onward. Identical to #/$defs/format plus the 16:9 image preset landscape_1920x1080 (operator-ratified E5 canvases 1:1/4:5/9:16/16:9, 2026-10-31). #/$defs/format is unchanged, so creative-request-v1 and execution-plan-v1 keep their meaning."
+    },
     "provider_selection": {
       "type": "object",
       "additionalProperties": false,

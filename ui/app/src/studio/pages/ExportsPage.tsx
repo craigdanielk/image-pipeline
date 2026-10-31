@@ -2,8 +2,8 @@
 // and "Send to MOS". Sending binds this exact export; it is not approval.
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import type { ExportManifest, MosHandoff, VersionRef } from "../contracts/types.gen";
-import { exportRef, newIdempotencyKey, StudioApi, StudioApiError } from "../StudioApi";
+import type { MosHandoff, VersionRef } from "../contracts/types.gen";
+import { exportRef, newIdempotencyKey, StudioApi, StudioApiError, type StoredExport } from "../StudioApi";
 import { ErrorNotice, formatMicros, StateNotice } from "../components/StateNotice";
 
 /** Provided by a MOS-origin request (router state); Studio never invents MOS targets. */
@@ -14,7 +14,7 @@ export default function ExportsPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const mos = (location.state as { mos?: MosHandoffContext } | null)?.mos ?? null;
-  const [manifest, setManifest] = useState<ExportManifest | null>(null);
+  const [manifest, setManifest] = useState<StoredExport | null>(null);
   const [error, setError] = useState<StudioApiError | null>(null);
   const [sending, setSending] = useState(false);
   const [sendKey] = useState(newIdempotencyKey); // one intent per page view; a retry reuses it

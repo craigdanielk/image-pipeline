@@ -379,7 +379,7 @@ class CsB4RealDatabase(unittest.TestCase):
         st, comp = self._create()
         comp = comp["data"]
         lease, manifest, _ = self._export_flow(comp)
-        self.assertEqual(schema_errors(manifest, "export-v1.schema.json"), [])
+        self.assertEqual(schema_errors(manifest, "export-v2.schema.json"), [])
         row = self._publish(lease, manifest)
         self.assertEqual((str(row["export_version_id"]), row["replayed"]), (manifest["version_id"], False))
         self.assertTrue(self._publish(lease, manifest)["replayed"])

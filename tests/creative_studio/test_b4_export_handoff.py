@@ -1,7 +1,10 @@
-"""CS-B4 export-v1 + mos-handoff-v1 (Accept: export -> mos-handoff payload validates against schema)."""
+"""CS-B4 export (cs-export-v2; v1 still readable) + mos-handoff-v1 (Accept: export -> mos-handoff payload validates).
+
+CS-INT F4: export-v2 adds the 16:9 preset landscape_1920x1080; the 16:9 export is golden-checked."""
 from __future__ import annotations
 
 import copy
+import dataclasses
 import json
 import subprocess
 import sys
@@ -14,7 +17,7 @@ from service.composition.errors import CompositionError
 from service.composition.export import MemoryExportStore, build_export
 from service.composition.handoff import build_handoff, export_ref, verify_ingestion_receipt
 from service.composition.renderer import render_artboard
-from tests.creative_studio.b4_support import FIXTURES, World
+from tests.creative_studio.b4_support import FIXTURES, GOLDENS, World
 
 FORMATS = {
     "square": {"id": "feed-square", "kind": "image", "preset": "square_1080", "width_px": 1080, "height_px": 1080,
@@ -26,6 +29,9 @@ FORMATS = {
     "story": {"id": "story", "kind": "image", "preset": "story_1080x1920", "width_px": 1080, "height_px": 1920,
               "mime_type": "image/png", "duration_frames": None, "frame_rate": None, "count": 1,
               "channel": "paid_social"},
+    "landscape": {"id": "landscape", "kind": "image", "preset": "landscape_1920x1080", "width_px": 1920,
+                  "height_px": 1080, "mime_type": "image/png", "duration_frames": None, "frame_rate": None,
+                  "count": 1, "channel": "paid_social"},
 }
 CREATED = "2026-10-31T10:00:00Z"
 
@@ -56,7 +62,8 @@ class ExportAndHandoff(unittest.TestCase):
     # -- export --
     def test_export_manifest_validates_and_binds_exact_versions(self):
         e = self.export()
-        self.assertEqual(schema_errors(e, "export-v1.schema.json"), [])
+        self.assertEqual(e["schema_version"], "cs-export-v2")
+        self.assertEqual(schema_errors(e, "export-v2.schema.json"), [])
         self.assertEqual(e["sha256"], artifact_sha256(e))
         self.assertEqual(e["file"]["ref"]["sha256"], self.renders["square"].sha256)
         self.assertEqual(self.store.read(e["file"]["ref"]), self.renders["square"].data)
@@ -81,10 +88,48 @@ class ExportAndHandoff(unittest.TestCase):
     def test_export_is_reproducible(self):
         self.assertEqual(self.export(), self.export())
 
-    def test_16x9_has_no_contract_export_preset(self):
-        e = self.refuse("unsupported_export_preset", lambda: self.export("landscape", fmt=dict(
-            FORMATS["square"], preset="square_1080")))
-        self.assertIn("1920x1080", e.message)
+    # -- 16:9 (CS-INT F4: export-v2 preset landscape_1920x1080) --
+    def test_16x9_export_matches_golden_and_validates(self):
+        golden = json.loads((GOLDENS / "goldens.json").read_text())["artboards"]["landscape"]
+        e = self.export("landscape")
+        self.assertEqual(schema_errors(e, "export-v2.schema.json"), [])
+        self.assertEqual(e["format"]["preset"], "landscape_1920x1080")
+        self.assertEqual((e["file"]["width_px"], e["file"]["height_px"]), (1920, 1080))
+        self.assertEqual(e["file"]["ref"]["sha256"], golden["sha256"])          # golden bytes, read back from store
+        self.assertEqual(self.store.read(e["file"]["ref"]), (GOLDENS / "landscape.png").read_bytes())
+        self.assertEqual(e, self.export("landscape"))                             # reproducible
+        h = self.handoff([self.export(b) for b in ("square", "portrait", "story", "landscape")])
+        self.assertEqual(schema_errors(h, "mos-handoff-v1.schema.json"), [])
+
+    def test_16x9_is_a_v2_only_preset(self):
+        """The bump is real: export-v1 cannot express 16:9, and v2 differs from v1 only in format."""
+        e = self.export("landscape")
+        self.assertNotEqual(schema_errors(dict(e, schema_version="cs-export-v1"), "export-v1.schema.json"), [])
+        v1_square = dict(self.export("square"), schema_version="cs-export-v1")
+        self.assertEqual(schema_errors(v1_square, "export-v1.schema.json"), [])
+        root = FIXTURES.parents[2] / "docs" / "creative-studio" / "contracts"
+        v1 = json.loads((root / "export-v1.schema.json").read_text())
+        v2 = json.loads((root / "export-v2.schema.json").read_text())
+        self.assertEqual({k for k in v1["properties"] if v1["properties"][k] != v2["properties"][k]},
+                         {"schema_version", "format"})
+        common = json.loads((root / "common.schema.json").read_text())["$defs"]
+        self.assertNotIn("landscape_1920x1080", common["format"]["properties"]["preset"]["enum"])   # request/plan v1
+
+    def test_export_refuses_sizes_without_a_preset(self):
+        odd = dataclasses.replace(self.renders["square"], width=1200, height=1200)
+        e = self.refuse("unsupported_export_preset", lambda: build_export(odd, **self._args("square")))
+        self.assertIn("1200x1200", e.message)
+        self.refuse("format_mismatch", lambda: self.export("landscape", fmt=FORMATS["square"]))
+        self.refuse("format_mismatch", lambda: self.export("square", fmt=FORMATS["landscape"]))
+        self.refuse("unsupported_export_preset", lambda: self.export("square", fmt=dict(FORMATS["square"],
+                                                                                        preset="landscape_1080")))
+
+    def _args(self, board):
+        return dict(composition=self.w.composition, brand_package=self.w.package, fmt=FORMATS[board],
+                    store=self.store, source_records=list(self.w.records.values()),
+                    generated_sources=self.w.lineage["generated_sources"], lineage=self.w.lineage,
+                    copy_sources=self.w.copy_sources, cost=self.w.lineage["cost"], created_by=self.w.ids["actor"],
+                    created_at=CREATED)
 
     def test_format_mismatch(self):
         self.refuse("format_mismatch", lambda: self.export("square", fmt=FORMATS["portrait"] | {
@@ -162,6 +207,18 @@ class ExportAndHandoff(unittest.TestCase):
         self.refuse("artifact_hash_mismatch", lambda: self.handoff([tampered]))
         self.refuse("invalid_mos_handoff", lambda: self.handoff([e, e]))
         self.refuse("invalid_mos_handoff", lambda: self.handoff([]))
+        future = dict(e, schema_version="cs-export-v9")
+        future["sha256"] = artifact_sha256(future)
+        self.refuse("unsupported_schema_version", lambda: self.handoff([future]))
+
+    def test_handoff_still_reads_v1_exports(self):
+        """Manifests issued as cs-export-v1 before the amendment are handed off unchanged, never rewritten."""
+        v1 = dict(self.export("square"), schema_version="cs-export-v1")
+        v1["sha256"] = artifact_sha256(v1)
+        self.assertEqual(schema_errors(v1, "export-v1.schema.json"), [])
+        h = self.handoff([v1, self.export("landscape")])
+        self.assertEqual(schema_errors(h, "mos-handoff-v1.schema.json"), [])
+        self.assertEqual(h["exports"][0]["sha256"], v1["sha256"])
 
     def receipt_for(self, h, exports, **over):
         mos_ws = self.w.target["workspace_id"]

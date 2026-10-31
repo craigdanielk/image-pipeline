@@ -42,7 +42,7 @@ The visible workflow is an authoring graph. Compiler internals can be expanded u
 | Mask and requested regional change | Versioned mask asset + EditSpec-compatible structured operation | **Region edit** attached to an exact source image | Consumes image/mask in one image coordinate system. Unsupported mask capability refuses preflight. Original file is retained. |
 | Crop/resize/layout placement/upscale | Transform node or composition revision | **Crop**, **Upscale** or **Image layout** | Deterministic local transforms are distinct from paid model upscale/edit actions; cost/rebuild preview distinguishes them. |
 | Shot order, trim, captions, audio, title/end cards | Video composition | **Video assembly** | Layout/trim changes rerender assembly; replacing one clip affects that clip and dependent assembly/exports only. |
-| Download / Send to MOS | `cs-export-v1` / `cs-mos-handoff-v1` | **Export** endpoint | Only complete owned artifacts, known source lineage and permitted rights. Handoff is version-bound and idempotent. |
+| Download / Send to MOS | `cs-export-v2` / `cs-mos-handoff-v1` | **Export** endpoint | Only complete owned artifacts, known source lineage and permitted rights. Handoff is version-bound and idempotent. |
 
 Existing `intake.load`, `jobspec.validate`, `prompt.build`, `reference.resolve`, `engine.generate`, `output.persist` and `artifacts.load` remain useful lowering stages. Board connections become real recipe connections; arbitrary user-authored labels cannot be silently filtered out of compile. An unsupported existing operation stays visible as a blocking migration issue or explicit non-executable annotation.
 
