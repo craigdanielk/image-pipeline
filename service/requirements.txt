@@ -1,0 +1,4 @@
+# Hosted Creative Studio API/worker runtime dependencies (CS-B1).
+# Wiring into the Vercel build is CS-B5; nothing here is installed by CS-B1.
+psycopg2-binary>=2.9,<3
+PyJWT[crypto]>=2.8,<3
