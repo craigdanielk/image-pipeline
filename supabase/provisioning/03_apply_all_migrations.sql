@@ -33,4 +33,7 @@
 \echo 'Applying CS-B4 composition & exports...'
 \i ../migrations/20261031140400_cs_b4_composition_exports.sql
 
+\echo 'Applying CS-12 use-time worker kick (settings, trigger, safety-net sweep; schedules nothing)...'
+\i ../migrations/20261031190100_cs_12_use_time_kick.sql
+
 \echo 'All Creative Studio migrations applied successfully.'
