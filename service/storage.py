@@ -53,3 +53,44 @@ class StorageSigner:
                 self.settings.storage_url).netloc:
             raise ServiceError(502, "storage_unavailable", "unexpected signed url origin")
         return url
+
+
+class StorageObjectStore:
+    """Production ObjectStore implementation for worker stages backed by Supabase Storage."""
+
+    def __init__(self, settings: Settings, token: str | None = None, opener=None):
+        self.settings = settings
+        self.token = token or settings.storage_worker_credential or ""
+        self._open = opener or urllib.request.urlopen
+
+    def put(self, storage_key: str, data: bytes, mime_type: str) -> None:
+        url = f"{self.settings.storage_url}/object/{BUCKET}/{quote(storage_key, safe='/')}"
+        req = urllib.request.Request(
+            url, method="POST", data=data,
+            headers={"Authorization": f"Bearer {self.token}", "apikey": self.settings.storage_anon_key,
+                     "Content-Type": mime_type})
+        try:
+            with self._open(req, timeout=30) as resp:
+                if resp.status not in (200, 201):
+                    raise ServiceError(502, "storage_put_failed", f"status {resp.status}")
+        except urllib.error.HTTPError as exc:
+            raise ServiceError(502, "storage_put_failed", f"status {exc.code}") from None
+        except urllib.error.URLError as exc:
+            raise ServiceError(502, "storage_unavailable", str(exc)) from None
+
+    def get(self, storage_key: str) -> bytes:
+        url = f"{self.settings.storage_url}/object/authenticated/{BUCKET}/{quote(storage_key, safe='/')}"
+        req = urllib.request.Request(
+            url, method="GET",
+            headers={"Authorization": f"Bearer {self.token}", "apikey": self.settings.storage_anon_key})
+        try:
+            with self._open(req, timeout=30) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as exc:
+            raise ServiceError(502, "storage_get_failed", f"status {exc.code}") from None
+        except urllib.error.URLError as exc:
+            raise ServiceError(502, "storage_unavailable", str(exc)) from None
+
+
+def make_storage_store(settings: Settings) -> StorageObjectStore:
+    return StorageObjectStore(settings)

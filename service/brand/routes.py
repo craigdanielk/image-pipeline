@@ -17,6 +17,11 @@ ACTIONS = ("author", "generate", "export", "handoff")
 def gateway_of(api):
     gw = getattr(api, "mos_gateway", None)
     if gw is None:
+        if getattr(api, "settings", None) and api.settings.mos_gateway_url:
+            from ..runtime.gateway import HttpMarketingOsGateway
+            gw = HttpMarketingOsGateway(api.settings.mos_gateway_url, api.settings.mos_service_token)
+            api.mos_gateway = gw
+            return gw
         raise ServiceError(503, "upstream_unavailable", "no Marketing OS gateway is configured")
     return gw
 

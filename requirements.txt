@@ -1,0 +1,2 @@
+# Hosted Creative Studio API/worker runtime dependencies (CS-B1..B4, pinned by CS-INT, assembled by CS-B5).
+-r service/requirements.txt

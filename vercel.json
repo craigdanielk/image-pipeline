@@ -1,0 +1,40 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm --prefix ui/app ci",
+  "buildCommand": "npm --prefix ui/app run build",
+  "outputDirectory": "ui/app/dist",
+  "regions": [
+    "arn1"
+  ],
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{services/**,jobs/**,out/**,compile/**,tests/**,ui/app/node_modules/**,ui/app/src/**,.env*,**/__pycache__/**,.venv/**}"
+    },
+    "api/worker.py": {
+      "maxDuration": 300,
+      "excludeFiles": "{services/**,jobs/**,out/**,compile/**,tests/**,ui/app/**,.env*,**/__pycache__/**,.venv/**}"
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/internal/worker",
+      "schedule": "* * * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/api/internal/worker",
+      "destination": "/api/worker.py"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

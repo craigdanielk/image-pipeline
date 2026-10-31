@@ -146,7 +146,7 @@ class CreativeStudioApi:
     # -- routes --------------------------------------------------------------
     @route("GET", r"/api/v1/health")
     def health(self, req):
-        # Readiness reflects an actual round trip as the restricted runtime role.
+        # Liveness reflects an actual round trip as the restricted runtime role.
         from .db import _connect
         conn = _connect(self.settings.api_database_url)
         try:
@@ -159,6 +159,46 @@ class CreativeStudioApi:
         if env_rows != 1:
             raise ServiceError(503, "environment_unavailable")
         return 200, {"status": "ready", "release_id": self.settings.release_id, "database_role": role}
+
+    @route("GET", r"/api/v1/readiness")
+    def readiness(self, req):
+        # 1. DB round trip as cs_api
+        from .db import _connect
+        try:
+            conn = _connect(self.settings.api_database_url)
+            try:
+                with conn, conn.cursor() as cur:
+                    cur.execute("select current_user, count(*) from cs_private.cs_runtime_limits where environment_id = %s",
+                                (self.settings.environment_id,))
+                    role, env_rows = cur.fetchone()
+            finally:
+                conn.close()
+            if env_rows != 1:
+                raise ServiceError(503, "environment_unavailable", "no runtime limits row for environment")
+        except ServiceError:
+            raise
+        except Exception as exc:
+            raise ServiceError(503, "database_unavailable", str(exc)) from None
+
+        # 2. Storage configuration & reachability
+        if not self.settings.storage_url or not self.settings.storage_anon_key:
+            raise ServiceError(503, "storage_unconfigured", "storage_url and storage_anon_key required")
+
+        # 3. Renderer stack version check (refuse ready on mismatch)
+        from .composition.renderer import renderer_version
+        current_version = renderer_version()
+        expected_prefix = "cs-image-compositor/1 pillow/12.2.0"
+        if not current_version.startswith(expected_prefix):
+            raise ServiceError(503, "renderer_version_mismatch",
+                               f"expected prefix {expected_prefix!r}, got {current_version!r}")
+
+        return 200, {
+            "status": "ready",
+            "release_id": self.settings.release_id,
+            "database_role": role,
+            "renderer_version": current_version,
+            "storage": "configured",
+        }
 
     @route("GET", r"/api/v1/me/workspaces")
     def my_workspaces(self, req):

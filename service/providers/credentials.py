@@ -51,7 +51,11 @@ class KeyRing:
     def from_env(cls, env=None) -> "KeyRing":
         raw = (env if env is not None else os.environ).get(KEYS_ENV, "").strip()
         if not raw:
-            raise CredentialError("credential_keys_unconfigured", f"set {KEYS_ENV}")
+            single = (env if env is not None else os.environ).get("CS_CREDENTIAL_ENCRYPTION_KEY_V1", "").strip()
+            if single:
+                raw = json.dumps({"1": single})
+            else:
+                raise CredentialError("credential_keys_unconfigured", f"set {KEYS_ENV} or CS_CREDENTIAL_ENCRYPTION_KEY_V1")
         try:
             parsed = json.loads(raw)
             return cls({str(k): base64.b64decode(v, validate=True) for k, v in parsed.items()})

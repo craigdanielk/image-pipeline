@@ -31,6 +31,10 @@ class Settings:
     download_grant_seconds: int
     worker_secret: str | None
     runtime_principal: str
+    storage_worker_credential: str | None = None
+    storage_worker_id: str | None = None
+    mos_gateway_url: str | None = None
+    mos_service_token: str | None = None
 
     @property
     def storage_origin(self) -> str:
@@ -82,4 +86,8 @@ def load(env=None) -> Settings:
                                             1, DOWNLOAD_GRANT_MAX_SECONDS),
         worker_secret=env.get("CS_WORKER_SECRET", "").strip() or None,
         runtime_principal=env.get("CS_RUNTIME_PRINCIPAL", "").strip() or f"cs-worker:{environment_id}",
+        storage_worker_credential=env.get("CS_STORAGE_WORKER_CREDENTIAL", "").strip() or None,
+        storage_worker_id=env.get("CS_STORAGE_WORKER_ID", "").strip() or None,
+        mos_gateway_url=env.get("CS_MOS_GATEWAY_URL", "").strip() or env.get("MOS_GATEWAY_URL", "").strip() or None,
+        mos_service_token=env.get("CS_MOS_SERVICE_TOKEN", "").strip() or env.get("MOS_SERVICE_TOKEN", "").strip() or None,
     )
