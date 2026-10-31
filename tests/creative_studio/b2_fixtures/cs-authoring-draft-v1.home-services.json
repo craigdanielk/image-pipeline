@@ -1,0 +1,80 @@
+{
+  "schema_version": "cs-authoring-draft-v1",
+  "id": "8e425e03-cd48-551c-8cbf-fffcdbe21cba",
+  "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1",
+  "revision": 1,
+  "sha256": "b654140c62c9989cf337e6c49312f23c99460318b66ef973d3b1d207127d2071",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "created_at": "2026-10-31T09:00:00.000Z",
+  "updated_at": "2026-10-31T09:00:00.000Z",
+  "name": "Annual maintenance plan 1:1",
+  "step": "direction",
+  "status": "editing",
+  "base_recipe": null,
+  "selections": {
+    "brand_package": {
+      "authority": "brand-ci-studio",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "brand-package",
+      "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+      "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+      "revision": 1,
+      "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819"
+    },
+    "offering": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "Offer",
+      "id": "3b574bf7-8226-5482-a60a-804d306b3524",
+      "version_id": "195a6340-abde-52c8-a414-a5b94c86514c",
+      "revision": 1,
+      "sha256": "d0239536dad6d1c7b4546767e70e6cc1e75734af4f5d7c73a6587844893266d7"
+    },
+    "audiences": [
+      {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "Avatar",
+        "id": "68907d39-e500-5f50-9a18-bbb1a0410c49",
+        "version_id": "88a3a0f4-1da1-5038-bfa3-73883e73c008",
+        "revision": 1,
+        "sha256": "bcbaa9b83325403bcb2a05f0b1d56fe67ab8bc94e71606ddb0e0d370465a1bb4"
+      }
+    ],
+    "concept": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "Concept",
+      "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+      "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+      "revision": 1,
+      "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72"
+    },
+    "request": {
+      "authority": "creative-studio",
+      "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1",
+      "kind": "creative-request",
+      "id": "eb86ee86-241b-5aa2-b839-4c21092fd00b",
+      "version_id": "3ef4753a-33fc-5b51-a95b-212700dcffd7",
+      "revision": 1,
+      "sha256": "7339672c7710044e49d505d5d450b2690a471cfcded476a6c7b46d27ff4a1750"
+    },
+    "treatment": {
+      "authority": "creative-studio",
+      "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1",
+      "kind": "treatment",
+      "id": "ac79dd53-4361-5c0a-b8e0-6bc9fd2d8e53",
+      "version_id": "f9e8fce6-bd86-5b47-9f61-b86d9820e10b",
+      "revision": 2,
+      "sha256": "ae139b29d195d75bb681c25e8498ba233797de6f24cc47d00ae7ef02f4e82219"
+    }
+  },
+  "pending_fields": {},
+  "working_nodes": [],
+  "authoring_view": {
+    "last_view": "guided",
+    "positions": [],
+    "collapsed_node_ids": []
+  },
+  "promoted_recipe": null
+}
