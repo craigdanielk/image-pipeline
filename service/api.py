@@ -330,3 +330,10 @@ _REASONS = {200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 
 
 def create_app(settings: Settings, **kwargs) -> CreativeStudioApi:
     return CreativeStudioApi(settings, **kwargs)
+
+
+# --- CS-B3 routes ---
+from .runtime.routes import register as _cs_b3_register  # noqa: E402
+
+_cs_b3_register(CreativeStudioApi, route)
+# --- end CS-B3 routes ---

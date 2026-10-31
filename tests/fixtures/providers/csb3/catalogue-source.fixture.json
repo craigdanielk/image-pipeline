@@ -1,0 +1,73 @@
+{
+  "schema_version": "cs-b3-catalogue-source-v1",
+  "provenance": {
+    "kind": "fixture",
+    "note": "Invented test values. The credit price, transport origins and model ids are NOT observed provider facts; production needs an operator snapshot (provenance.kind=operator_snapshot) with a real pricing citation.",
+    "observed_at": "2026-10-31T00:00:00Z"
+  },
+  "provider": "higgsfield",
+  "credit_price": {
+    "credit_price_micros": 50000,
+    "source_url": "https://pricing.provider.test/credits",
+    "observed_at": "2026-10-31T00:00:00Z",
+    "expires_at": "2099-01-01T00:00:00Z"
+  },
+  "valid_until": "2099-01-01T00:00:00Z",
+  "credential_modes": ["workspace", "platform"],
+  "probe_prompt": "Catalogue price probe for a generic square product image.",
+  "transport": {
+    "documentation_url": "https://docs.provider.test/generation",
+    "submit": { "method": "POST", "origin": "https://platform.provider.test", "path_template": "/v1/generations" },
+    "status": {
+      "origin": "https://platform.provider.test",
+      "success_values": ["completed"],
+      "failure_values": ["failed", "nsfw"],
+      "cancel_supported": false,
+      "webhook_signature_algorithm": null,
+      "url_source": "provider_response",
+      "allowed_path_pattern": "^/v1/requests/[A-Za-z0-9-]+$",
+      "request_id_binding": "provider_request_id"
+    },
+    "idempotency": {
+      "supported": false,
+      "header_name": null,
+      "retention_seconds": null,
+      "lookup_by_client_key": false,
+      "same_intent_replay": false,
+      "immutable_fields": []
+    },
+    "result_origins": ["https://cdn.provider.test"]
+  },
+  "marketing_studio": {
+    "catalogue": "tests/fixtures/higgsfield/catalogue.fixture.json",
+    "formats": ["0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11"],
+    "qualities": ["low", "high"],
+    "request_schema": { "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object" },
+    "reference_roles": [
+      { "role": "image", "field": "media", "mime_types": ["image/png", "image/jpeg", "image/webp"], "min_count": 0, "max_count": 14 }
+    ],
+    "outputs": {
+      "mime_types": ["image/png"], "aspect_ratios": ["1:1", "4:5", "9:16", "16:9"],
+      "max_width_px": 4096, "max_height_px": 4096, "min_duration_ms": null, "max_duration_ms": null
+    },
+    "controls": { "negative_prompt": false, "seed": false, "mask": false, "start_frame": false, "end_frame": false }
+  },
+  "models": [
+    {
+      "entry_id": "hf-example-image-draft",
+      "model_id": "example_image_model",
+      "tier": "draft",
+      "operation": "image_generate",
+      "max_units": 4,
+      "max_units_source": "fixture: invented batch limit for the example model",
+      "probe_parameters": { "aspect_ratio": "1:1" },
+      "request_schema": { "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object" },
+      "reference_roles": [],
+      "outputs": {
+        "mime_types": ["image/png"], "aspect_ratios": ["1:1"],
+        "max_width_px": 2048, "max_height_px": 2048, "min_duration_ms": null, "max_duration_ms": null
+      },
+      "controls": { "negative_prompt": false, "seed": false, "mask": false, "start_frame": false, "end_frame": false }
+    }
+  ]
+}
