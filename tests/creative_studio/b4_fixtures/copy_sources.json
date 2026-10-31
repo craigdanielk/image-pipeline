@@ -1,0 +1,20 @@
+{
+  "headline": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "copy",
+    "id": "f3eacd6e-d2dd-55b8-926c-0037e2554e4b",
+    "version_id": "a410ef8f-343a-50e9-8ba4-3cdd2a4862c6",
+    "revision": 1,
+    "sha256": "04e3f1ce196d7723498e753bc91edc0433b5bd79f7d7a2e3d8f2a97a8f114660"
+  },
+  "cta": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "copy",
+    "id": "2cc90e21-2a06-5742-b9b3-6ea784a3b32f",
+    "version_id": "dd269789-d1a7-5659-99d2-1f4df7063955",
+    "revision": 1,
+    "sha256": "211e6e1e6e8e074815896b1f987e72a7b193a2033ee5480814198defd8a5eb58"
+  }
+}

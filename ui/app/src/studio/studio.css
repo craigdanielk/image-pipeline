@@ -1,0 +1,36 @@
+/* Studio console primitives; neutral roles from design/tokens.css where present. */
+.cs-page { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+.cs-page-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px; }
+.cs-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.cs-primary { font-weight: 600; }
+.cs-muted { opacity: 0.7; font-size: 0.9em; }
+.cs-notice { border: 1px solid currentColor; border-radius: 6px; padding: 8px 12px; }
+.cs-notice-warning { color: #b45309; }
+.cs-notice-error { color: #b91c1c; }
+.cs-paths { display: block; font-size: 0.8em; }
+.cs-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.cs-tabs button[aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+.cs-editor { display: grid; grid-template-columns: 220px 1fr 280px; gap: 12px; align-items: start; }
+.cs-stage { background: #0002; padding: 8px; }
+.cs-scene { width: 100%; max-height: 72vh; display: block; }
+.cs-preview-text { width: 100%; height: 100%; display: flex; flex-direction: column; white-space: pre-wrap; overflow: visible; }
+.cs-layer-list { list-style: none; margin: 0; padding: 0; }
+.cs-layer { width: 100%; text-align: left; background: none; border: 0; padding: 4px 8px; cursor: pointer; }
+.cs-layer-selected { outline: 2px solid #3b82f6; }
+.cs-layer-type { font-size: 0.75em; text-transform: uppercase; opacity: 0.6; }
+.cs-inspector fieldset { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cs-field { display: flex; flex-direction: column; font-size: 0.85em; gap: 2px; }
+.cs-field-wide { grid-column: 1 / -1; }
+.cs-table { width: 100%; border-collapse: collapse; }
+.cs-table td, .cs-table th { padding: 6px; border-bottom: 1px solid #8884; text-align: left; }
+.cs-table tbody tr { cursor: pointer; }
+.cs-drawer { position: fixed; right: 0; top: 0; bottom: 0; width: min(420px, 100vw); overflow: auto; padding: 16px;
+  background: var(--surface, #fff); color: var(--text, #111); box-shadow: -4px 0 16px #0003; }
+.cs-drawer header { display: flex; justify-content: space-between; }
+.cs-facts { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; }
+.cs-list { margin: 0; padding-left: 18px; }
+.cs-library { list-style: none; padding: 0; columns: 2; }
+.cs-compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cs-compare-frame { overflow: hidden; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; background: #0002; }
+.cs-compare-frame img { max-width: 100%; transform-origin: center; }
+@media (max-width: 900px) { .cs-editor { grid-template-columns: 1fr; } }

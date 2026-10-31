@@ -1,0 +1,157 @@
+{
+  "logo": {
+    "ref": {
+      "authority": "creative-studio",
+      "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+      "asset_id": "f118824e-f049-552d-b098-c076dc7b541c",
+      "asset_version_id": "f118824e-f049-552d-b098-c076dc7b541c",
+      "revision": 1,
+      "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+      "mime_type": "image/png"
+    },
+    "name": "example-logo-primary.png",
+    "size_bytes": 1290,
+    "width_px": 480,
+    "height_px": 192,
+    "duration_ms": null,
+    "rights": {
+      "receipt_id": "86d2ce35-a795-5459-ac56-49c583d4682a",
+      "revision": 1,
+      "sha256": "4e7eab37b0bcdbacd415570b444aeb2251afe465282e98c5c22cffb3c7d6a769",
+      "status": "permitted",
+      "holder": "Example Home Services Co",
+      "basis": "owned",
+      "evidence": [],
+      "allowed_uses": [
+        "reference",
+        "embed",
+        "redistribute"
+      ],
+      "channels": [
+        "*"
+      ],
+      "territories": [
+        "*"
+      ],
+      "valid_from": "2026-01-01T00:00:00Z",
+      "expires_at": "2030-01-01T00:00:00Z",
+      "attribution": null,
+      "restrictions": [],
+      "recorded_by": "e0f38aea-37e2-56fa-b5b1-2f4bf8d75c7c"
+    },
+    "origin": "legacy_import",
+    "source_url": null,
+    "captured_at": null,
+    "parent_assets": [
+      {
+        "authority": "brand-ci-studio",
+        "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+        "asset_id": "56c0037b-98c6-55b1-a38e-7ce6ecd5de0f",
+        "asset_version_id": "56c0037b-98c6-55b1-a38e-7ce6ecd5de0f",
+        "revision": 1,
+        "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+        "mime_type": "image/png"
+      }
+    ]
+  },
+  "font": {
+    "ref": {
+      "authority": "creative-studio",
+      "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+      "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+      "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+      "revision": 1,
+      "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+      "mime_type": "font/ttf"
+    },
+    "name": "aileron-regular.ttf",
+    "size_bytes": 12676,
+    "width_px": null,
+    "height_px": null,
+    "duration_ms": null,
+    "rights": {
+      "receipt_id": "6c2a5070-c9e9-50d4-a750-b4dffdd03aa1",
+      "revision": 1,
+      "sha256": "afa3c551eaa36f5efdf25a5cc4ffddf95c8ff3fb300752009b94504763af2f74",
+      "status": "permitted",
+      "holder": "Aileron (dotcolon.net) CC0 1.0",
+      "basis": "licence",
+      "evidence": [],
+      "allowed_uses": [
+        "embed",
+        "redistribute"
+      ],
+      "channels": [
+        "*"
+      ],
+      "territories": [
+        "*"
+      ],
+      "valid_from": "2026-01-01T00:00:00Z",
+      "expires_at": "2030-01-01T00:00:00Z",
+      "attribution": null,
+      "restrictions": [],
+      "recorded_by": "e0f38aea-37e2-56fa-b5b1-2f4bf8d75c7c"
+    },
+    "origin": "legacy_import",
+    "source_url": null,
+    "captured_at": null,
+    "parent_assets": [
+      {
+        "authority": "brand-ci-studio",
+        "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+        "asset_id": "36a1bdd5-2be4-588e-8ce6-75f664e22ac7",
+        "asset_version_id": "36a1bdd5-2be4-588e-8ce6-75f664e22ac7",
+        "revision": 1,
+        "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+        "mime_type": "font/ttf"
+      }
+    ]
+  },
+  "scene": {
+    "ref": {
+      "authority": "creative-studio",
+      "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+      "asset_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+      "asset_version_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+      "revision": 1,
+      "sha256": "5e35c139339e8b12ce1cec23ade2e3bac8b9754fb7dedf421f63558ac0e0e53d",
+      "mime_type": "image/png"
+    },
+    "name": "example-generated-scene.png",
+    "size_bytes": 28991,
+    "width_px": 1600,
+    "height_px": 1200,
+    "duration_ms": null,
+    "rights": {
+      "receipt_id": "41911dd4-9e4b-5a40-93fc-4dcc83ea2bf4",
+      "revision": 1,
+      "sha256": "49bfed4d951e82158476ae45fdee190f87cbd62b95163a2a91244412d489173d",
+      "status": "permitted",
+      "holder": null,
+      "basis": "provider_terms",
+      "evidence": [],
+      "allowed_uses": [
+        "reference",
+        "edit",
+        "embed",
+        "redistribute"
+      ],
+      "channels": [
+        "*"
+      ],
+      "territories": [
+        "*"
+      ],
+      "valid_from": "2026-01-01T00:00:00Z",
+      "expires_at": "2030-01-01T00:00:00Z",
+      "attribution": null,
+      "restrictions": [],
+      "recorded_by": "e0f38aea-37e2-56fa-b5b1-2f4bf8d75c7c"
+    },
+    "origin": "provider",
+    "source_url": null,
+    "captured_at": null,
+    "parent_assets": []
+  }
+}

@@ -328,6 +328,13 @@ _REASONS = {200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 
             503: "Service Unavailable"}
 
 
+# --- CS-B4 routes ---
+from .composition.routes import register as _register_cs_b4  # noqa: E402
+_register_cs_b4(CreativeStudioApi, route)
+_REASONS.setdefault(202, "Accepted")
+_REASONS.setdefault(428, "Precondition Required")
+# --- end CS-B4 routes ---
+
 def create_app(settings: Settings, **kwargs) -> CreativeStudioApi:
     return CreativeStudioApi(settings, **kwargs)
 

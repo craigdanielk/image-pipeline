@@ -1,0 +1,69 @@
+{
+  "authority": "marketing-os",
+  "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+  "concept": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "concept",
+    "id": "f871e154-f167-5ec8-86c5-781074a688cf",
+    "version_id": "bb9f5455-fa8e-547e-b483-0632143f39fd",
+    "revision": 1,
+    "sha256": "f42ab44d6325ab97ab6907d58bb549ec80d664c5840a066e0dae6b1dc8eabddb"
+  },
+  "placement": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "placement",
+    "id": "3a1bd926-75c2-5437-a5d0-087a2833033f",
+    "version_id": "2d1d6565-4791-5c9f-bd70-018767b3138f",
+    "revision": 1,
+    "sha256": "98a02a7b6b81f057540dbe328b9c97edb882e4a1306cba7f24323d02219af352"
+  },
+  "copy_versions": [
+    {
+      "authority": "marketing-os",
+      "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+      "kind": "copy",
+      "id": "f3eacd6e-d2dd-55b8-926c-0037e2554e4b",
+      "version_id": "a410ef8f-343a-50e9-8ba4-3cdd2a4862c6",
+      "revision": 1,
+      "sha256": "04e3f1ce196d7723498e753bc91edc0433b5bd79f7d7a2e3d8f2a97a8f114660"
+    },
+    {
+      "authority": "marketing-os",
+      "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+      "kind": "copy",
+      "id": "2cc90e21-2a06-5742-b9b3-6ea784a3b32f",
+      "version_id": "dd269789-d1a7-5659-99d2-1f4df7063955",
+      "revision": 1,
+      "sha256": "211e6e1e6e8e074815896b1f987e72a7b193a2033ee5480814198defd8a5eb58"
+    }
+  ],
+  "destination": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "destination",
+    "id": "6441ead0-7808-5920-8041-311573c1e5af",
+    "version_id": "f11775cb-d59b-5c4f-99b0-bd66b8b05f06",
+    "revision": 1,
+    "sha256": "64a091877e59c6023cbc7bda77d9e0b652c8b7496283697938493de8bad77b23"
+  },
+  "claim_set": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "claim_set",
+    "id": "23cb8398-4d49-5000-b195-daeb5a70af3e",
+    "version_id": "ce9891c4-1bfa-5ba3-974e-6e5e1238794b",
+    "revision": 1,
+    "sha256": "8ec3a13dab43bcfc6f4468f43c627a97f2386f060abe90ed536f1e70c9b8e20a"
+  },
+  "policy": {
+    "authority": "marketing-os",
+    "workspace_id": "462eedfc-a251-53f7-856c-ec2608dc3b30",
+    "kind": "policy",
+    "id": "22f58079-5e98-5f40-9aff-4b35c61d3195",
+    "version_id": "a4965d71-ec09-5c51-8609-4301a66a3894",
+    "revision": 1,
+    "sha256": "b97a10dd5a495422758cd07d76a532d7443492cbe9f075cca90987b13026865d"
+  }
+}
