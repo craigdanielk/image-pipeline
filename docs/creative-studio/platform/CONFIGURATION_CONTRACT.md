@@ -25,7 +25,9 @@ In accordance with the operator architectural decision (DECISION record amendmen
 | `CS_STORAGE_URL` | Supabase Storage v1 endpoint (`https://<ref>.supabase.co/storage/v1`). | Supabase | Operator | API, Worker | No |
 | `CS_STORAGE_ANON_KEY` | Public Supabase anon key required by Storage alongside user bearer tokens. | Supabase | Operator | API, Worker | No |
 | `CS_STORAGE_WORKER_ID` | UUID of the dedicated Auth principal representing the storage worker. | Supabase Auth | Operator | Worker | No |
-| `CS_STORAGE_WORKER_CREDENTIAL` | Storage authentication token for the worker principal (scoped to `creative-studio` bucket). | Supabase Auth | Operator | Worker | **Yes** |
+| `CS_STORAGE_WORKER_EMAIL` | Email of the dedicated worker Auth user (password grant; see `supabase/provisioning/05_worker_identity.md`). Required when hosted. | Supabase Auth | Operator | Worker, readiness | No |
+| `CS_STORAGE_WORKER_PASSWORD` | Password of the worker Auth user. The access token is cached in-process until `exp − 120 s`, refreshed on expiry or a 401. No static JWT env exists. | Supabase Auth | Operator | Worker, readiness | **Yes** |
+| `CS_AUTH_URL` | Auth base URL (`https://<ref>.supabase.co/auth/v1`); defaults to `CS_JWT_ISSUER`. | Supabase | Operator | Worker, readiness | No |
 | `CS_WORKER_SECRET` | Shared bearer secret required by `/api/internal/worker` endpoint. Scheduled cron passes this in `Authorization: Bearer <token>`. | Vercel Env / Supabase Vault | Operator | Worker, Scheduler | **Yes** |
 | `CS_CREDENTIAL_ENCRYPTION_KEY_V1` | 32-byte Base64-encoded AES-256-GCM key used to seal and unseal provider credentials in `cs_private.cs_credentials`. | Vault / Vercel Env | Operator | Worker | **Yes** |
 | `CS_CREDENTIAL_KEYS` | JSON map of `{version: base64_key}` for key rotation (optional alternative to `CS_CREDENTIAL_ENCRYPTION_KEY_V1`). | Vault / Vercel Env | Operator | Worker | **Yes** |

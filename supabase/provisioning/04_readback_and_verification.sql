@@ -17,7 +17,8 @@ from pg_roles
 where rolname in ('cs_api', 'cs_worker')
 order by rolname;
 
--- 2. Prove zero direct table privileges for cs_api and cs_worker on all cs_* tables
+-- 2. List direct table privileges on cs_* tables. Expected under forced RLS: only SELECT/INSERT, and only where a
+--    policy admits the row; no UPDATE/DELETE/TRUNCATE for anon, authenticated, cs_api or cs_worker.
 select
   table_schema,
   table_name,
@@ -28,15 +29,16 @@ where grantee in ('cs_api', 'cs_worker', 'anon', 'authenticated')
   and table_name like 'cs_%'
 order by table_schema, table_name, grantee;
 
--- 3. Prove RLS is enabled and forced on all public cs_* tables
+-- 3. Prove RLS is enabled and forced on all cs_* tables (public and cs_private)
 select
-  schemaname,
-  tablename,
-  rowsecurity as rls_enabled,
-  forcerowsecurity as rls_forced
-from pg_tables
-where schemaname = 'public' and tablename like 'cs_%'
-order by tablename;
+  n.nspname as schema_name,
+  c.relname as table_name,
+  c.relrowsecurity as rls_enabled,
+  c.relforcerowsecurity as rls_forced
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname in ('public', 'cs_private') and c.relkind in ('r', 'p') and c.relname like 'cs_%'
+order by n.nspname, c.relname;
 
 -- 4. Prove security definer search_path isolation on procedures
 select

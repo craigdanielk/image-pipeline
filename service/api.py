@@ -183,6 +183,13 @@ class CreativeStudioApi:
         # 2. Storage configuration & reachability
         if not self.settings.storage_url or not self.settings.storage_anon_key:
             raise ServiceError(503, "storage_unconfigured", "storage_url and storage_anon_key required")
+        # The worker credential is proven, not assumed: real (cached) sign-in + authorised storage probe.
+        from .config import ConfigError
+        from .storage import make_storage_store
+        try:
+            make_storage_store(self.settings).probe()
+        except ConfigError:
+            raise ServiceError(503, "worker_identity_unconfigured") from None
 
         # 3. Renderer stack version check (refuse ready on mismatch)
         from .composition.renderer import renderer_version

@@ -100,6 +100,15 @@ class FakeStorage:
                     token = jwt.encode({"url": f"{bucket}/{name}", "exp": int(time.time()) + expires_in},
                                        _SIGN_SECRET, algorithm="HS256")
                     return self._send(200, {"signedURL": f"/object/sign/{bucket}/{name}?token={token}"})
+                if parsed.path.startswith("/storage/v1/object/list/"):
+                    claims = self._user()
+                    if claims is None:
+                        return
+                    bucket = unquote(parsed.path[len("/storage/v1/object/list/"):])
+                    prefix = json.loads(body or b"{}").get("prefix", "")
+                    rows = storage._as_user(claims, "select name from storage.objects where bucket_id = %s "
+                                                    "and name like %s limit 1", (bucket, prefix + "%"))
+                    return self._send(200, [{"name": r[0]} for r in rows])
                 if parsed.path.startswith("/storage/v1/object/"):
                     claims = self._user()
                     if claims is None:

@@ -31,6 +31,7 @@ from service.db import worker_transaction
 from service.runtime.entry import make_runtime_wsgi
 from service.storage import StorageObjectStore, make_storage_store
 from tests.creative_studio.b4_support import FILES, World, asset_bytes
+from tests.creative_studio.fake_auth import FakeAuth
 from tests.creative_studio.fake_storage import FakeStorage
 from tests.creative_studio.pg_harness import MIGRATIONS_DIR, REPO_ROOT, ThrowawayCluster
 from tests.creative_studio.test_cs_b1_real_db import ISSUER, JWT_SECRET, call, http, token
@@ -61,6 +62,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
         cls.encryption_key = base64.b64encode(b"0" * 32).decode()
         os.environ["CS_CREDENTIAL_ENCRYPTION_KEY_V1"] = cls.encryption_key
         cls.storage = FakeStorage(cls.pg.dsn(), JWT_SECRET, ISSUER).start()
+        cls.auth = FakeAuth(JWT_SECRET, ISSUER).start()
 
         cls.settings = config.Settings(
             api_database_url=cls.pg.dsn(user="cs_api"),
@@ -77,7 +79,9 @@ class CsB5AssembleAndHost(unittest.TestCase):
             download_grant_seconds=60,
             worker_secret="test-worker-secret-42",
             runtime_principal="cs-worker:test",
-            storage_worker_credential="worker-token-test",
+            storage_worker_email="machine@example.test",
+            storage_worker_password="machine-pw-test",
+            auth_url=cls.auth.base_url,
             mos_gateway_url="http://127.0.0.1:9999",
             mos_service_token="mos-service-token-test",
         )
@@ -92,6 +96,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
             cur.execute("insert into cs_private.cs_runtime_principals (user_id, environment_id) values (%s, 'test')",
                         (cls.users["machine"],))
 
+        cls.auth.users["machine@example.test"] = ("machine-pw-test", cls.users["machine"])
         cls.tok = {k: token(v) for k, v in cls.users.items()}
         cls.app = create_app(cls.settings)
 
@@ -111,6 +116,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
     def tearDownClass(cls):
         os.environ.pop("CS_CREDENTIAL_ENCRYPTION_KEY_V1", None)
         cls.storage.stop()
+        cls.auth.stop()
         cls.pg.stop()
 
     @staticmethod
@@ -406,8 +412,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
         self.assertIn("api/worker.py", v_data["functions"])
         self.assertEqual(v_data["functions"]["api/index.py"]["maxDuration"], 60)
         self.assertEqual(v_data["functions"]["api/worker.py"]["maxDuration"], 300)
-        self.assertIn("crons", v_data)
-        self.assertEqual(v_data["crons"][0]["path"], "/api/internal/worker")
+        self.assertNotIn("crons", v_data)   # Hobby plan: worker is kicked by Postgres cron/pg_net (ENG-12)
 
         # Pinned requirements
         req_root = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
