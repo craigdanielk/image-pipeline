@@ -26,7 +26,8 @@ def make_runtime_wsgi(settings_loader, store_factory=None, fetcher=None, keyring
         status, payload = 500, {"error": "internal_error"}
         try:
             settings = settings_loader()
-            if environ.get("REQUEST_METHOD") != "POST":
+            # POST = db kick / manual; GET = the single daily Vercel Hobby safety-net cron (same bearer)
+            if environ.get("REQUEST_METHOD") not in ("POST", "GET"):
                 raise ServiceError(405, "method_not_allowed")
             supplied = (environ.get("HTTP_AUTHORIZATION") or "")[len("Bearer "):]
             if not settings.worker_secret:

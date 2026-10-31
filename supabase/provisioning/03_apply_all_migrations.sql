@@ -36,4 +36,10 @@
 \echo 'Applying CS-12 use-time worker kick (settings, trigger, safety-net sweep; schedules nothing)...'
 \i ../migrations/20261031190100_cs_12_use_time_kick.sql
 
+\echo 'Applying CS-INT2 runtime principal registration...'
+\i ../migrations/20261031190200_cs_int2_register_runtime_principal.sql
+
+\echo 'Applying CS-INT2 paid-provider gate (paid_provider_enabled is the single spend switch)...'
+\i ../migrations/20261031190300_cs_int2_paid_provider_gate.sql
+
 \echo 'All Creative Studio migrations applied successfully.'

@@ -70,7 +70,7 @@ class CsB3RealDatabase(unittest.TestCase):
         cls.users = {}
         with cls.pg.connect() as conn:
             cur = conn.cursor()
-            cur.execute("update cs_private.cs_runtime_limits set admission_enabled = true, active_run_limit = 6 "
+            cur.execute("update cs_private.cs_runtime_limits set admission_enabled = true, paid_provider_enabled = true, active_run_limit = 6 "
                         "where environment_id = 'test'")
             for name in ("owner_a", "producer_a", "producer2_a", "reviewer_a", "viewer_a", "owner_b", "outsider"):
                 uid = str(uuid.uuid4())
@@ -425,6 +425,88 @@ class CsB3RealDatabase(unittest.TestCase):
             "compile_hash": att["compile_hash"], "node_id": att["node_id"], "inputs": inputs,
             "provider_call": att["provider_call"]}))
         self.__class__.draft_run = run["run_id"]
+
+    # -- 03b CS-INT2: the kick can never start paid provider work on its own ---------------------------
+    def test_03b_kick_runs_free_work_but_paid_stage_needs_admission_and_the_spend_switch(self):
+        from tests.creative_studio.test_cs12_real_db import CRON_STUB, NET_STUB, VAULT_STUB
+        self.q(NET_STUB + VAULT_STUB + CRON_STUB)
+        self.q("insert into vault.decrypted_secrets values ('cs_worker_cron_secret', 'unit-test-cron-secret') "
+               "on conflict (name) do nothing")
+        for k, v in (("worker_kick_enabled", "true"), ("worker_base_url", "https://cs.example.test"),
+                     ("worker_kick_window_seconds", "0")):
+            self.q("insert into cs_private.cs_platform_settings (key, value) values (%s, %s) "
+                   "on conflict (key) do update set value = excluded.value", (k, v))
+        self.q("update cs_private.cs_runtime_limits set dispatch_enabled = true, paid_provider_enabled = false "
+               "where environment_id = 'test'")
+        self.q("truncate net._http_request_queue")
+        try:
+            # --- explicit admission (the Produce click) with the spend switch OFF (the production value)
+            node = provider_node("n1", self.low, prompt="Generic square promo, warm light")
+            st, run, _ = self.admit("producer_a", self.ws_a, [node])
+            self.assertEqual(st, 202, run)
+            rid = run["run_id"]
+            self.assertGreaterEqual(self.q("select count(*) as n from net._http_request_queue")[0]["n"], 1,
+                                    "enqueue must fire the kick")
+            # --- a free stage in the same environment: the kicked worker runs it
+            free = self.q("""with r as (insert into public.cs_runs (workspace_id, environment_id, release_id)
+                                        values (%s, 'test', 'r') returning id),
+                                  n as (insert into public.cs_run_nodes (workspace_id, run_id, node_id, state)
+                                        select %s, id, 'n1', 'queued' from r returning run_id)
+                             insert into public.cs_work_items (workspace_id, environment_id, run_id, node_id, stage,
+                                                              dedupe_key, due_at)
+                             select %s, 'test', run_id, 'n1', 'render_thumbnail', 'free-' || gen_random_uuid(), now()
+                               from n returning id::text as id, run_id::text as run_id""",
+                          (self.ws_a, self.ws_a, self.ws_a))[0]
+            all_stages = ("{compile,prepare_reference,provider_submit,provider_reconcile_submission,provider_poll,"
+                          "ingest_original,compose_image,render_thumbnail,author_treatment}")
+            conn, cur = self._sql_as("cs_worker")
+            try:
+                cur.execute("select stage::text, work_item_id::text from public.cs_claim_work('test', 'cs-worker:test', "
+                            "%s::public.cs_work_stage[], 1)", (all_stages,))
+                claimed = cur.fetchall()
+                conn.commit()
+            finally:
+                conn.close()
+            self.assertEqual([c[0] for c in claimed], ["render_thumbnail"])          # free ran; paid not leased
+            self.q("update public.cs_work_items set state='cancelled', lease_token=null, lease_until=null, "
+                   "lease_owner=null where id = %s", (free["id"],))
+            # --- the real worker finds the paid stage and refuses to start it
+            creates = self.fake.creates()
+            steps = self.drain()
+            self.assertEqual([s["claimed"] for s in steps], [0])
+            self.assertEqual(self.fake.creates(), creates)                           # provider never called
+            item = self.q("select state::text, attempt_count from public.cs_work_items "
+                          "where run_id = %s and stage = 'provider_submit'", (rid,))[0]
+            self.assertEqual((item["state"], item["attempt_count"]), ("queued", 0))
+            self.assertEqual(self.q("select count(*) as n from public.cs_attempts where run_id = %s", (rid,))[0]["n"], 0)
+            self.assertEqual(self.reservation(rid)["state"], "reserved")
+            # --- defence in depth: even an already-leased item cannot prepare an attempt or dispatch
+            self.q("update cs_private.cs_runtime_limits set paid_provider_enabled = true where environment_id='test'")
+            conn, cur = self._sql_as("cs_worker")
+            try:
+                cur.execute("select work_item_id, lease_token, fencing_token from public.cs_claim_work("
+                            "'test', 'cs-worker:test', '{provider_submit}'::public.cs_work_stage[], 1)")
+                wid, lease, fence = cur.fetchone()
+                conn.commit()
+                self.q("update cs_private.cs_runtime_limits set paid_provider_enabled = false where environment_id='test'")
+                with self.assertRaises(psycopg2.Error) as ctx:
+                    cur.execute("select * from public.cs_prepare_attempt(%s, %s, %s, 'adapter-test')", (wid, lease, fence))
+                conn.rollback()
+                self.assertEqual(ctx.exception.pgcode, "CS503")
+                self.assertIn("paid_provider_disabled", ctx.exception.pgerror)
+            finally:
+                conn.close()
+            self.assertEqual(self.q("select count(*) as n from public.cs_attempts where run_id = %s", (rid,))[0]["n"], 0)
+            # --- operator flips the single spend switch: the SAME admitted run now proceeds and settles
+            self.q("update cs_private.cs_runtime_limits set paid_provider_enabled = true where environment_id='test'")
+            self.q("update public.cs_work_items set state='queued', lease_token=null, lease_until=null, "
+                   "lease_owner=null, attempt_count=0 where id = %s", (wid,))
+            self.drain()
+            self.assertEqual(self.fake.creates(), creates + 1)
+            self.assertEqual(self.run_state(rid), {"state": "completed", "cost_state": "settled"})
+        finally:
+            self.q("update cs_private.cs_runtime_limits set paid_provider_enabled = true where environment_id='test'")
+            self.q("update cs_private.cs_platform_settings set value='false' where key='worker_kick_enabled'")
 
     # -- 04 duplicate dispatch idempotent --------------------------------------------------------------
     def test_04_duplicate_dispatch_is_idempotent(self):

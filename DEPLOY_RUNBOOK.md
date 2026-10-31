@@ -129,10 +129,12 @@ vercel env add CS_AUTH_URL "https://wwimngjmnuuitowujnif.supabase.co/auth/v1" pr
 vercel env add CS_STORAGE_WORKER_EMAIL "$CS_STORAGE_WORKER_EMAIL" production
 vercel env add CS_STORAGE_WORKER_PASSWORD "$CS_STORAGE_WORKER_PASSWORD" production
 
-# Worker Secret: bearer for POST /api/internal/worker. vercel.json has NO crons (Hobby plan);
-# the worker is kicked by the Postgres cron/pg_net job (ENG-12) sending this bearer.
+# Worker Secret: bearer for /api/internal/worker. vercel.json has exactly ONE daily cron (Hobby plan: safety net,
+# GET with Authorization: Bearer $CRON_SECRET); real-time starts come from the Postgres kick/pg_net job (ENG-12).
+# Set CRON_SECRET to the SAME value as CS_WORKER_SECRET so the daily cron authenticates.
 CS_WORKER_SECRET=$(openssl rand -hex 32)
 vercel env add CS_WORKER_SECRET "$CS_WORKER_SECRET" production
+vercel env add CRON_SECRET "$CS_WORKER_SECRET" production
 
 # Credential Encryption Key (AES-256-GCM 32-byte Base64)
 CS_ENCRYPTION_KEY=$(openssl rand -base64 32)
@@ -203,6 +205,20 @@ Known limits: a retry scheduled for the future (`retry_wait` with a later `due_a
 (pg_net has no delay) — the 2-minute safety net starts it. A burst is coalesced to one kick per workspace per window; the
 remaining items are chained (each finished item kicks the next) or picked up by the safety net.
 
-**Follow-up (Vercel Hobby):** once the kick path is live, the `crons` block in `vercel.json` (`* * * * *` on
-`/api/internal/worker`) is no longer needed and Hobby's once-per-day cron limit becomes irrelevant. Remove the block in a
-separate change after step 5 has run clean for a few days; CS-12 deliberately left `vercel.json` untouched.
+**Vercel cron (Hobby):** `vercel.json` keeps ONE daily safety-net cron (`17 3 * * *` on `/api/internal/worker`; the
+endpoint accepts the cron's bearer GET). There is no every-minute cron. The pg_cron `cs-worker-drain` cadence is a config
+value, `cs_platform_settings.worker_safety_net_seconds` (default 120 = 2 minutes); change it and re-run the script.
+
+**Spend switch (CS-INT2):** Creative Studio is on-demand. Preparation is free; provider spend needs an explicit
+admission (the user's Produce click) AND `cs_private.cs_runtime_limits.paid_provider_enabled = true`.
+`02_storage_bucket.sql` seeds `admission_enabled = true, dispatch_enabled = true, paid_provider_enabled = false`;
+`paid_provider_enabled` stays false until the operator's first Produce, then:
+`update cs_private.cs_runtime_limits set paid_provider_enabled = true where environment_id = 'production';`
+While false, the kick may run free stages but `cs_claim_work` never leases `provider_submit`, and a DB trigger refuses
+attempt creation/dispatch with `paid_provider_disabled`. Admitted runs wait (queued, funds reserved) and proceed when
+the switch is turned on. Apply migrations only in chain order (a standalone B2 re-run restores B2's `cs_claim_work`; re-apply
+`20261031190300` after it).
+
+**Worker identity registration:** `05_worker_identity.py` registers the principal through
+`cs_private.cs_register_runtime_principal(uuid, text)` (migration `20261031190200`, SECURITY DEFINER, owner/admin DSN
+only; refused for anon, authenticated, cs_api, cs_worker and service_role).

@@ -806,8 +806,11 @@ class CsB2RealDatabase(unittest.TestCase):
             before = cur.fetchone()
             for _ in range(2):
                 cur.execute(B2_MIGRATION.read_text(encoding="utf-8"))
+            # CS-INT2: the paid-provider gate redefines cs_claim_work after B2; re-running B2 alone restores
+            # B2's body, so a standalone B2 replay is always followed by the later files (chain order).
+            cur.execute((MIGRATIONS_DIR / "20261031190300_cs_int2_paid_provider_gate.sql").read_text(encoding="utf-8"))
             cur.execute(snapshot)
-            self.assertEqual(cur.fetchone(), before, "B2 alone twice")
+            self.assertEqual(cur.fetchone(), before, "B2 alone twice, then the later gate file")
             for path in sorted(MIGRATIONS_DIR.glob("*.sql")):
                 cur.execute(path.read_text(encoding="utf-8"))
             cur.execute(snapshot)

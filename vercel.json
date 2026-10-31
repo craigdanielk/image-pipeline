@@ -17,6 +17,12 @@
       "excludeFiles": "{services/**,jobs/**,out/**,compile/**,tests/**,ui/app/**,.env*,**/__pycache__/**,.venv/**}"
     }
   },
+  "crons": [
+    {
+      "path": "/api/internal/worker",
+      "schedule": "17 3 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/v1/:path*",

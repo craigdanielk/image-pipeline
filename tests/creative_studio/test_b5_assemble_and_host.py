@@ -56,7 +56,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
             cur = conn.cursor()
             for prov_script in sorted(prov_dir.glob("0[12]_*.sql")):
                 cur.execute(prov_script.read_text(encoding="utf-8"))
-            cur.execute("update cs_private.cs_runtime_limits set admission_enabled = true, dispatch_enabled = true "
+            cur.execute("update cs_private.cs_runtime_limits set admission_enabled = true, dispatch_enabled = true, paid_provider_enabled = true "
                         "where environment_id = 'test'")
 
         cls.encryption_key = base64.b64encode(b"0" * 32).decode()
@@ -148,7 +148,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_01_all_cs_migrations_and_provisioning_applied(self):
         """All 4 CS migrations applied, roles exist with least privilege, RLS is forced."""
-        self.assertEqual(len(self.applied), 7)  # 2 legacy + 4 CS migrations + CS-12
+        self.assertEqual(len(self.applied), 9)  # 2 legacy + 4 CS migrations + CS-12 + 2 CS-INT2
         with self.pg.connect() as conn:
             cur = conn.cursor()
             # Prove roles exist without superuser or bypassrls
@@ -217,9 +217,13 @@ class CsB5AssembleAndHost(unittest.TestCase):
         self.assertEqual(st, 401)
         self.assertEqual(res["error"], "authentication_required")
 
-        # Wrong method -> 405
-        st, res = call(worker_wsgi, "GET", "/api/internal/worker", tok=self.settings.worker_secret)
+        # Wrong method -> 405 (GET is the daily Vercel cron and is allowed, bearer-authenticated)
+        st, res = call(worker_wsgi, "PUT", "/api/internal/worker", tok=self.settings.worker_secret)
         self.assertEqual(st, 405)
+        st, res = call(worker_wsgi, "GET", "/api/internal/worker")
+        self.assertEqual(st, 401)
+        st, res = call(worker_wsgi, "GET", "/api/internal/worker", tok=self.settings.worker_secret)
+        self.assertEqual(st, 200)
 
         # Valid token -> 200 (idle, no work items currently leased)
         st, res = call(worker_wsgi, "POST", "/api/internal/worker", tok=self.settings.worker_secret)
@@ -412,7 +416,10 @@ class CsB5AssembleAndHost(unittest.TestCase):
         self.assertIn("api/worker.py", v_data["functions"])
         self.assertEqual(v_data["functions"]["api/index.py"]["maxDuration"], 60)
         self.assertEqual(v_data["functions"]["api/worker.py"]["maxDuration"], 300)
-        self.assertNotIn("crons", v_data)   # Hobby plan: worker is kicked by Postgres cron/pg_net (ENG-12)
+        # Hobby plan: exactly ONE daily safety-net cron; real-time starts come from the DB kick (ENG-12)
+        self.assertEqual(len(v_data["crons"]), 1)
+        self.assertEqual(v_data["crons"][0]["path"], "/api/internal/worker")
+        self.assertRegex(v_data["crons"][0]["schedule"], r"^\d{1,2} \d{1,2} \* \* \*$")
 
         # Pinned requirements
         req_root = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")

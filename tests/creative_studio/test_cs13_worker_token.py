@@ -46,7 +46,7 @@ class CS13(unittest.TestCase):
             cur = conn.cursor()
             for f in sorted((REPO_ROOT / "supabase" / "provisioning").glob("0[12]_*.sql")):
                 cur.execute(f.read_text(encoding="utf-8"))
-            cur.execute("update cs_private.cs_runtime_limits set admission_enabled = true, dispatch_enabled = true "
+            cur.execute("update cs_private.cs_runtime_limits set admission_enabled = true, dispatch_enabled = true, paid_provider_enabled = true "
                         "where environment_id = 'test'")
             cls.worker_uid = str(uuid.uuid4())
             cur.execute("insert into auth.users (id, email) values (%s, %s)", (cls.worker_uid, EMAIL))
@@ -284,7 +284,8 @@ class CS13(unittest.TestCase):
 
     def test_deploy_files(self):
         vercel = json.loads((REPO_ROOT / "vercel.json").read_text())
-        self.assertNotIn("crons", vercel)
+        self.assertEqual([c["path"] for c in vercel["crons"]], ["/api/internal/worker"])   # one daily cron
+        self.assertNotIn("* *", vercel["crons"][0]["schedule"].replace(" * * *", ""))     # never every-minute
         sql = (REPO_ROOT / "supabase/provisioning/04_readback_and_verification.sql").read_text()
         self.assertIn("relforcerowsecurity", sql)
         self.assertNotIn("forcerowsecurity as", sql.replace("relforcerowsecurity", ""))

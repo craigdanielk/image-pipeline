@@ -583,6 +583,9 @@ class CsB1RealDatabase(unittest.TestCase):
                 "update public.cs_run_events set kind = 'x' where run_id = %s", (seed["run_id"],)))
         # an interrupted paid dispatch is never blindly re-claimed
         paid = self._seed_run(self.ws_a, "paid", stage="provider_submit")
+        with self.pg.connect() as su:      # CS-INT2: paid stages are leased only while the spend switch is on
+            su.cursor().execute("update cs_private.cs_runtime_limits set paid_provider_enabled = true "
+                                "where environment_id='test'")
         conn, cur = self.sql_as("cs_worker")
         try:
             cur.execute("select count(*) from public.cs_claim_work('test','w1',"

@@ -155,7 +155,8 @@ def post_worker(app, token=SECRET):
 # ----------------------------------------------------------------------------------------------
 def test_01_migrations_applied_in_order_and_rerun_is_non_destructive(pg):
     names = [p.name for p in sorted(MIGRATIONS_DIR.glob("*.sql"))]
-    assert names[-1] == MIGRATION.name
+    assert names.index(MIGRATION.name) == names.index("20261031190100_cs_12_use_time_kick.sql")
+    assert names[names.index(MIGRATION.name):][0] == MIGRATION.name
     set_setting(pg, "worker_kick_window_seconds", "7")
     pg.apply_file(MIGRATION)
     assert sql(pg, "select value from cs_private.cs_platform_settings where key='worker_kick_window_seconds'") == [("7",)]

@@ -3,7 +3,7 @@
 
   (a) creates the worker auth user through the Auth admin API (service key from env, never printed),
       or, if it already exists, sets its password to the env value;
-  (b) registers it in cs_private.cs_runtime_principals for CS_ENVIRONMENT_ID (upsert, status 'active');
+  (b) registers it through cs_private.cs_register_runtime_principal() for CS_ENVIRONMENT_ID (upsert, 'active');
   (c) reads back that cs_storage_allowed() PERMITS the worker (select + insert under its environment
       prefix) and DENIES an unrelated authenticated user, and denies the worker outside its prefix.
 
@@ -71,11 +71,8 @@ def register_principal(cur, uid: str, environment_id: str) -> None:
     cur.execute("select 1 from cs_private.cs_runtime_limits where environment_id = %s", (environment_id,))
     if not cur.fetchone():
         raise ProvisionError(f"no cs_runtime_limits row for environment {environment_id!r} (run provisioning 02)")
-    # No SECURITY DEFINER registration function exists in migrations 2026103021..2026103114; the admin
-    # session (RLS-bypassing) is the only writer of this table. Idempotent upsert.
-    cur.execute("""insert into cs_private.cs_runtime_principals (user_id, environment_id, role, status)
-                   values (%s, %s, 'storage_worker', 'active')
-                   on conflict (user_id, environment_id) do update set status = 'active'""", (uid, environment_id))
+    # Sanctioned path (migration 20261031190200): SECURITY DEFINER, owner/service_role only, idempotent.
+    cur.execute("select cs_private.cs_register_runtime_principal(%s, %s)", (uid, environment_id))
 
 
 def _allowed(cur, uid: str, name: str, op: str) -> bool:

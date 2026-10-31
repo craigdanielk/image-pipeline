@@ -295,6 +295,19 @@
     "request_body": "opaque work-item hint/environment/release; no provider keys or payload",
     "http_response_not_completion": true
   },
+  "spend_switch": {
+    "column": "cs_private.cs_runtime_limits.paid_provider_enabled",
+    "role": "the single spend switch; off until the operator's first Produce",
+    "production_seed": {"admission_enabled": true, "dispatch_enabled": true, "paid_provider_enabled": false},
+    "on_demand": "preparation (import/compile/composition) is free and may be started by the DB kick; a provider-spending stage needs an explicit admission (Produce click) AND paid_provider_enabled = true",
+    "enforced_by": ["cs_claim_work never leases provider_submit/author_treatment while false", "cs_attempts trigger refuses attempt creation and dispatching with paid_provider_disabled (CS503)"],
+    "migration": "20261031190300_cs_int2_paid_provider_gate.sql"
+  },
+  "worker_start": {
+    "primary": "DB trigger on cs_work_items -> net.http_post (CS-12), off until worker_kick_enabled = true",
+    "safety_net_pg_cron": "cs-worker-drain; cadence = cs_platform_settings.worker_safety_net_seconds (default 120 = every 2 minutes, rounded up to whole minutes)",
+    "safety_net_vercel": "exactly one daily cron in vercel.json (Hobby); no every-minute cron"
+  },
   "paid_provider": {
     "initial_budget_micros": 0,
     "budget_authorization_required": true,
