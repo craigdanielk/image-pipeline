@@ -36,7 +36,7 @@ from service.api import create_app
 from service.config import Settings
 from service.providers import catalogue as cat_mod
 from service.providers.contracts import validate
-from service.providers.credentials import KeyRing
+from service.providers.credentials import CredentialError, KeyRing, SealedCredential
 from service.runtime.worker import ProviderRuntime
 from tests.creative_studio.b3_support import (CREDENTIAL_PLAINTEXT, HEADLINE, ROOT, TEST_KEYS, DirStore, FakeFetcher,
                                               FakeHiggsfield, asset_input, load_source, make_plan,
@@ -399,9 +399,20 @@ class CsB3RealDatabase(unittest.TestCase):
                      "cost.reconciled", "asset.persisted", "run.state_changed"):
             self.assertIn(kind, events)
         self.assertLess(events.index("attempt.dispatched"), events.index("attempt.provider_bound"))
-        payload = self.q("select envelope from cs_private.cs_attempt_payloads p join public.cs_attempts a "
-                         "on a.id = p.attempt_id where a.run_id = %s", (run["run_id"],))[0]["envelope"]
+        # CS-INT F5: the frozen transport payload is encrypted at rest and bound to its attempt
+        row = self.q("select p.* from cs_private.cs_attempt_payloads p join public.cs_attempts a "
+                     "on a.id = p.attempt_id where a.run_id = %s", (run["run_id"],))[0]
+        self.assertNotIn("envelope", row)
+        self.assertNotIn(b"Generic square promo", bytes(row["ciphertext"]))
+        sealed = SealedCredential(bytes(row["ciphertext"]), bytes(row["nonce"]), row["encryption_key_version"])
+        payload = KEYRING.open_envelope(sealed, workspace_id=str(row["workspace_id"]),
+                                        attempt_id=str(row["attempt_id"]), envelope_sha256=row["envelope_sha256"])
         validate("dispatch-envelope-v1.schema.json", payload)
+        self.assertEqual((payload["sha256"], payload["dispatch_sha256"]), (row["envelope_sha256"], row["dispatch_sha256"]))
+        self.assertIn("Generic square promo", json.dumps(payload))
+        with self.assertRaises(CredentialError):                    # cannot be moved to another attempt
+            KEYRING.open_envelope(sealed, workspace_id=str(row["workspace_id"]), attempt_id=str(uuid.uuid4()),
+                                  envelope_sha256=row["envelope_sha256"])
         self.__class__.draft_run = run["run_id"]
 
     # -- 04 duplicate dispatch idempotent --------------------------------------------------------------

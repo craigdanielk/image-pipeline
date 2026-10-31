@@ -68,6 +68,30 @@ class KeyRing:
         ct = AESGCM(self._keys[version]).encrypt(nonce, plaintext, self._aad(provider, fingerprint))
         return SealedCredential(ct, nonce, version)
 
+    # -- frozen dispatch envelopes (encrypted at rest; DATABASE_CONTRACT.md, CS-INT F5) ----------
+    @staticmethod
+    def _envelope_aad(workspace_id: str, attempt_id: str, envelope_sha256: str) -> bytes:
+        return f"cs-dispatch-envelope-v1:{workspace_id}:{attempt_id}:{envelope_sha256}".encode()
+
+    def seal_envelope(self, envelope: dict) -> SealedCredential:
+        version = sorted(self._keys)[-1]
+        nonce = os.urandom(12)
+        plaintext = json.dumps(envelope, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+        aad = self._envelope_aad(envelope["workspace_id"], envelope["attempt_id"], envelope["sha256"])
+        return SealedCredential(AESGCM(self._keys[version]).encrypt(nonce, plaintext, aad), nonce, version)
+
+    def open_envelope(self, sealed: SealedCredential, *, workspace_id: str, attempt_id: str,
+                      envelope_sha256: str) -> dict:
+        key = self._keys.get(sealed.key_version)
+        if key is None:
+            raise CredentialError("credential_key_unavailable", f"key version {sealed.key_version}")
+        try:
+            raw = AESGCM(key).decrypt(bytes(sealed.nonce), bytes(sealed.ciphertext),
+                                      self._envelope_aad(workspace_id, attempt_id, envelope_sha256))
+        except Exception:
+            raise CredentialError("envelope_unreadable", "ciphertext does not open for this attempt") from None
+        return json.loads(raw)
+
     def open(self, sealed: SealedCredential, *, provider: str, fingerprint: str) -> bytes:
         key = self._keys.get(sealed.key_version)
         if key is None:

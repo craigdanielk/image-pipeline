@@ -294,10 +294,17 @@ create table if not exists public.cs_attempt_events (
   foreign key (workspace_id, attempt_id) references public.cs_attempts(workspace_id, id)
 );
 
+-- The frozen transport payload is encrypted at rest (DATABASE_CONTRACT.md: "freeze webhook and
+-- input URLs in the transport payload, encrypt it at rest"; CS-INT F5). The worker seals the whole
+-- cs-dispatch-envelope-v1 with AES-256-GCM (CS_CREDENTIAL_KEYS key ring); associated data binds
+-- workspace, attempt and envelope hash, so a ciphertext cannot be moved to another attempt.
 create table if not exists cs_private.cs_attempt_payloads (
   workspace_id    uuid not null,
   attempt_id      uuid not null,
-  envelope        jsonb not null check (envelope ->> 'schema_version' = 'cs-dispatch-envelope-v1'),
+  schema_version  text not null check (schema_version = 'cs-dispatch-envelope-v1'),
+  ciphertext      bytea not null,
+  nonce           bytea not null check (octet_length(nonce) = 12),
+  encryption_key_version text not null check (encryption_key_version ~ '^[A-Za-z0-9_.-]{1,40}$'),
   envelope_sha256 text not null check (envelope_sha256 ~ '^[0-9a-f]{64}$'),
   dispatch_sha256 text not null check (dispatch_sha256 ~ '^[0-9a-f]{64}$'),
   created_at      timestamptz not null default clock_timestamp(),
@@ -1325,6 +1332,7 @@ end $$;
 
 create or replace function public.cs_mark_dispatching(
   p_work_item_id uuid, p_lease_token uuid, p_fencing_token bigint, p_attempt_id uuid, p_envelope jsonb,
+  p_ciphertext bytea, p_nonce bytea, p_key_version text,
   p_envelope_sha256 text, p_dispatch_sha256 text, p_request_sha256 text)
 returns timestamptz language plpgsql security definer set search_path = public, pg_temp as $$
 declare
@@ -1357,13 +1365,18 @@ begin
   if not exists (select 1 from public.cs_budget_reservations r where r.id = a.budget_reservation_id and r.state = 'reserved') then
     perform cs_private.cs_b3_refuse('reservation_unavailable', null, 'CS409');
   end if;
-  if (p_envelope ->> 'attempt_id') is distinct from a.id::text
+  -- p_envelope is the clear binding header only (schema_version, workspace_id, attempt_id,
+  -- idempotency_key); the envelope itself arrives sealed in p_ciphertext.
+  if (p_envelope ->> 'schema_version') is distinct from 'cs-dispatch-envelope-v1'
+     or (p_envelope ->> 'attempt_id') is distinct from a.id::text
      or (p_envelope ->> 'idempotency_key') is distinct from a.provider_idempotency_key::text
      or (p_envelope ->> 'workspace_id') is distinct from a.workspace_id::text then
     perform cs_private.cs_b3_refuse('dispatch_envelope_conflict', 'envelope does not bind this attempt', 'CS409');
   end if;
-  insert into cs_private.cs_attempt_payloads (workspace_id, attempt_id, envelope, envelope_sha256, dispatch_sha256)
-  values (a.workspace_id, a.id, p_envelope, p_envelope_sha256, p_dispatch_sha256);
+  insert into cs_private.cs_attempt_payloads (workspace_id, attempt_id, schema_version, ciphertext, nonce,
+                                             encryption_key_version, envelope_sha256, dispatch_sha256)
+  values (a.workspace_id, a.id, p_envelope ->> 'schema_version', p_ciphertext, p_nonce, p_key_version,
+          p_envelope_sha256, p_dispatch_sha256);
   update public.cs_attempts set state = 'dispatching', request_sha256 = p_request_sha256,
          dispatch_envelope_sha256 = p_dispatch_sha256, dispatched_at = v_now where id = a.id;
   perform cs_private.cs_attempt_transition(a.workspace_id, a.id, 'dispatching', 'dispatch_marker_written');
@@ -1895,7 +1908,7 @@ grant execute on function
   to cs_api;
 grant execute on function
   public.cs_prepare_attempt(uuid, uuid, bigint, text),
-  public.cs_mark_dispatching(uuid, uuid, bigint, uuid, jsonb, text, text, text),
+  public.cs_mark_dispatching(uuid, uuid, bigint, uuid, jsonb, bytea, bytea, text, text, text, text),
   public.cs_abandon_attempt(uuid, uuid, bigint, uuid, text, jsonb, text),
   public.cs_close_duplicate_submit(uuid, uuid, bigint, text),
   public.cs_record_provider_outcome(uuid, uuid, bigint, uuid, text, jsonb, jsonb, jsonb, text),

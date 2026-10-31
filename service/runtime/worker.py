@@ -195,10 +195,13 @@ class ProviderRuntime:
                 return self._abandon(item, att["attempt_id"], "refused", higgsfield.error_doc(
                     "provider_credentials_missing", "the admitted credential is no longer active"))
             envelope = self._envelope(item, att, refs)
+            sealed_envelope = self.keyring.seal_envelope(envelope)          # encrypted at rest
+            header = {k: envelope[k] for k in ("schema_version", "workspace_id", "attempt_id", "idempotency_key")}
             try:
                 with self._tx() as cur:
-                    cur.execute("select public.cs_mark_dispatching(%s, %s, %s, %s, %s::jsonb, %s, %s, %s)",
-                                (*lease, att["attempt_id"], json.dumps(envelope), envelope["sha256"],
+                    cur.execute("select public.cs_mark_dispatching(%s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)",
+                                (*lease, att["attempt_id"], json.dumps(header), sealed_envelope.ciphertext,
+                                 sealed_envelope.nonce, sealed_envelope.key_version, envelope["sha256"],
                                  envelope["dispatch_sha256"], digest(envelope["body"])))
             except ServiceError as err:
                 if err.code == "run_cancel_requested":
