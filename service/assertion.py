@@ -66,6 +66,9 @@ POLICY: dict[str, Policy] = {
     "cs_b4_create_handoff": Policy("handoff.create", required=False),
     "cs_b4_get_handoff": Policy("handoff.read", required=False),
     "cs_b4_get_export": Policy("export.read", required=False),
+    # CS-17b: MOS pulls the exported file / reports its ingestion receipt
+    "cs17b_export_download_ticket": Policy("export.download", required=False),
+    "cs17b_record_handoff_receipt": Policy("handoff.receipt"),
 }
 
 

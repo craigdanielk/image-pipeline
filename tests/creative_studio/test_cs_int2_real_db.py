@@ -92,7 +92,8 @@ def test_06_gate_migrations_idempotent_and_policy_count_unchanged(pg):
     pol = run(pg, "select count(*) from pg_policies where schemaname in ('public','cs_private')")
     trg = run(pg, "select count(*) from pg_trigger where tgname = 'cs_attempts_paid_gate'")
     cluster_files = [p for p in sorted(MIGRATIONS_DIR.glob("*.sql")) if p.name >= "20261030210000"]
-    assert [p.name for p in cluster_files][-4:-2] == [REGISTER.name, GATE.name]
+    names = [p.name for p in cluster_files]
+    assert names[names.index(REGISTER.name):][:2] == [REGISTER.name, GATE.name]      # adjacent, in order
     pg.reapply_cs_b1()
     assert run(pg, "select count(*) from pg_policies where schemaname in ('public','cs_private')") == pol
     assert run(pg, "select count(*) from pg_trigger where tgname = 'cs_attempts_paid_gate'") == trg == [(1,)]

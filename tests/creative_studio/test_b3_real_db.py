@@ -462,7 +462,7 @@ class CsB3RealDatabase(unittest.TestCase):
                                from n returning id::text as id, run_id::text as run_id""",
                           (self.ws_a, self.ws_a, self.ws_a))[0]
             all_stages = ("{compile,prepare_reference,provider_submit,provider_reconcile_submission,provider_poll,"
-                          "ingest_original,compose_image,render_thumbnail,author_treatment}")
+                          "ingest_original,render_thumbnail,author_treatment}")      # compose_image: CS-17b post-run chain
             conn, cur = self._sql_as("cs_worker")
             try:
                 cur.execute("select stage::text, work_item_id::text from public.cs_claim_work('test', 'cs-worker:test', "
@@ -643,7 +643,8 @@ class CsB3RealDatabase(unittest.TestCase):
         self.assertEqual(self.fake.creates(), creates + 1)
         self.assertEqual(self.run_state(run["run_id"])["state"], "cancelled")
         nodes = {r["node_id"]: r["state"] for r in self.q("select node_id, state::text from public.cs_run_nodes "
-                                                          "where run_id = %s", (run["run_id"],))}
+                                                          "where run_id = %s and node_id not like 'post.%%'",
+                                                          (run["run_id"],))}      # provider DAG (CS-17b adds post.* nodes)
         self.assertEqual(nodes, {"n1": "succeeded", "n2": "cancelled"})          # paid output kept
         self.assertEqual(self.reservation(run["run_id"], "n2")["state"], "released")
         self.assertEqual(self.reservation(run["run_id"], "n1")["state"], "settled")

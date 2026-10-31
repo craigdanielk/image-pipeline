@@ -21,6 +21,17 @@ from .worker import HttpOutputFetcher, ProviderRuntime
 log = logging.getLogger("creative_studio.runtime.entry")
 
 
+def _postrun(settings, store):
+    """CS-17b post-run stages; the MOS push is configured only when a gateway URL and the assertion key exist
+    (otherwise a handoff is queued/readable and run status says `handoff_offered`)."""
+    from ..postrun.runtime import PostRunRuntime
+    gateway = None
+    if settings.mos_gateway_url and settings.mos_assertion_key:
+        from .gateway import HttpMarketingOsGateway
+        gateway = HttpMarketingOsGateway(settings.mos_gateway_url, settings.mos_service_token)
+    return PostRunRuntime(settings, store, gateway=gateway)
+
+
 def make_runtime_wsgi(settings_loader, store_factory=None, fetcher=None, keyring_loader=KeyRing.from_env):
     def app(environ, start_response):
         status, payload = 500, {"error": "internal_error"}
@@ -36,8 +47,9 @@ def make_runtime_wsgi(settings_loader, store_factory=None, fetcher=None, keyring
                 raise ServiceError(401, "authentication_required")
             if store_factory is None:
                 raise ServiceError(503, "object_store_unconfigured")
-            runtime = ProviderRuntime(settings, store_factory(settings), fetcher or HttpOutputFetcher(),
-                                      keyring_loader())
+            store = store_factory(settings)
+            runtime = ProviderRuntime(settings, store, fetcher or HttpOutputFetcher(), keyring_loader(),
+                                      postrun=_postrun(settings, store))
             status, payload = 200, runtime.run_once()
         except ServiceError as err:
             status, payload = err.status, err.body()

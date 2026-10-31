@@ -43,6 +43,7 @@ from ..providers.credentials import CredentialError, KeyRing, SealedCredential, 
 log = logging.getLogger("creative_studio.runtime")
 
 STAGES = ("provider_submit", "ingest_original")
+POST_STAGES = ("compose_image", "publish_export", "deliver_handoff")      # CS-17b: free, after the provider returns
 MAX_OBJECT_BYTES = 45_000_000            # database-contract per-stage media bound (cs_asset_versions check)
 # Backoff (seconds) by retryable error class, indexed by the item's attempt_count.
 # Engineering timing, not money; attempts are bounded by cs_work_items.max_attempts (<=3).
@@ -51,6 +52,8 @@ BACKOFF_SECONDS = {
     "credential_unavailable": (60, 300, 900),
     "output_unavailable": (15, 60, 240),
     "store_unavailable": (15, 60, 240),
+    "upstream_unavailable": (15, 60, 240),           # CS-17b post-run stages (MOS gateway)
+    "export_readback_mismatch": (15, 60, 240),
 }
 
 
@@ -114,6 +117,7 @@ class ProviderRuntime:
     keyring: KeyRing
     recover_batch: int = 2
     last: dict = field(default_factory=dict)
+    postrun: object | None = None            # service.postrun.runtime.PostRunRuntime (CS-17b); None = stages not claimed
 
     # -- entry -------------------------------------------------------------------
     def run_once(self) -> dict:
@@ -122,7 +126,8 @@ class ProviderRuntime:
         recovered = self.recover()
         with self._tx() as cur:
             cur.execute("select * from public.cs_claim_work(%s, %s, %s::public.cs_work_stage[], 1)",
-                        (self.settings.environment_id, self.settings.runtime_principal, list(STAGES)))
+                        (self.settings.environment_id, self.settings.runtime_principal,
+                         list(STAGES) + (list(POST_STAGES) if self.postrun is not None else [])))
             item = cur.fetchone()
         if item is None:
             return {"claimed": 0, "status": "idle", "reason": "no_due_work", "recovered": recovered}
@@ -130,10 +135,13 @@ class ProviderRuntime:
         try:
             if item["stage"] == "provider_submit":
                 out = self.provider_submit(item)
+            elif item["stage"] in POST_STAGES:
+                out = self.postrun.handle(item)
             else:
                 out = self.ingest_original(item)
         except Retryable as err:
             out = self._reschedule(item, err)
+
         out.update(claimed=1, work_item_id=str(item["work_item_id"]), stage=item["stage"], recovered=recovered)
         self.last = out
         return out

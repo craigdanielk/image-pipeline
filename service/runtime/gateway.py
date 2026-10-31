@@ -6,12 +6,28 @@ hygiene invariants (zero network calls in brand domain code).
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import secrets
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
+from service import assertion as _assertion
 from service.brand.gateway import GatewayUnavailable
+
+ASSERTION_HEADER = "X-CS-Service-Assertion"
+MOS_AUDIENCE = "marketing-os"
+ASSERTION_TTL_SECONDS = 60
+
+
+class GatewayRefused(GatewayUnavailable):
+    """Marketing OS answered with a definite 4xx: not retryable, never delivery."""
+
+    def __init__(self, status: int, message: str):
+        super().__init__(message)
+        self.refused_status = status
 
 
 class HttpMarketingOsGateway:
@@ -87,12 +103,28 @@ class HttpMarketingOsGateway:
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise GatewayUnavailable(f"failed to check eligibility: {exc}") from None
 
-    def deliver_handoff(self, *, mos_workspace_id: str, handoff: dict) -> dict:
+    def deliver_handoff(self, *, mos_workspace_id: str, handoff: dict, user_id: str | None = None,
+                        assertion_key: str | None = None, clock=time.time) -> dict:
+        """POST the immutable handoff to MOS. With `assertion_key` + `user_id` the request carries the signed service
+        assertion (ENG-15 format, audience `marketing-os`, subject = the run's requester, action `handoff.deliver`,
+        binding = the MOS workspace, bsha = sha256(raw body), exp-iat <= 60 s, random nonce). MOS verifies it; CS never
+        treats a response as delivery unless it carries a verifiable ingestion receipt."""
         url = f"{self.base_url}/api/creative-studio?action=ingest&workspace_id={mos_workspace_id}"
-        body = json.dumps({"handoff": handoff}).encode()
-        req = urllib.request.Request(url, method="POST", data=body, headers=self._headers())
+        body = json.dumps({"handoff": handoff}, sort_keys=True, separators=(",", ":")).encode()
+        headers = self._headers()
+        if assertion_key and user_id:
+            now = int(clock())
+            headers[ASSERTION_HEADER] = _assertion.sign(assertion_key, {
+                "aud": MOS_AUDIENCE, "sub": user_id, "act": "handoff.deliver", "bnd": mos_workspace_id,
+                "bsha": hashlib.sha256(body).hexdigest(), "nonce": _assertion.b64e(secrets.token_bytes(24)),
+                "iat": now, "exp": now + ASSERTION_TTL_SECONDS})
+        req = urllib.request.Request(url, method="POST", data=body, headers=headers)
         try:
             with self._open(req, timeout=30) as resp:
                 return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as exc:
+            if 400 <= exc.code < 500 and exc.code not in (408, 429):
+                raise GatewayRefused(exc.code, f"Marketing OS refused the handoff ({exc.code})") from None
+            raise GatewayUnavailable(f"failed to deliver handoff: HTTP {exc.code}") from None
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise GatewayUnavailable(f"failed to deliver handoff: {exc}") from None

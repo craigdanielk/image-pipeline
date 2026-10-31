@@ -14,6 +14,7 @@ import logging
 import re
 import uuid
 from datetime import datetime
+from decimal import Decimal
 from urllib.parse import parse_qs
 
 from . import assertion as _assertion
@@ -323,6 +324,7 @@ class CreativeStudioApi:
                             where workspace_id = %s and run_id = %s and sequence > %s
                             order by sequence limit 500""", (workspace_id, run_id, after))
             events = cur.fetchall()
+            run.update(_run_outcome(cur, workspace_id, run_id, run))
         return 200, {"run": run, "nodes": nodes, "events": events}
 
     @route("GET", rf"/api/v1/workspaces/({_UUID})/assets")
@@ -375,6 +377,39 @@ class CreativeStudioApi:
                      "sha256": grant["sha256"], "mime_type": grant["mime_type"], "size_bytes": grant["size_bytes"]}
 
 
+def _run_outcome(cur, workspace_id: str, run_id: str, run: dict) -> dict:
+    """CS-17b: what happened after the provider returned, and the ACTUAL cost.
+
+    `post_run` = typed per-canvas states (compose_blocked / exported / handoff_offered / handoff_delivered / ...).
+    `handoff` = the exact MOS handoff reference once one exists (MOS pulls it by version_id).
+    `actual_cost` is the settled provider cost (micros, USD) only when every reservation is settled; otherwise
+    certainty is `unknown` and micros is null: an estimate or reservation is never reported as actual."""
+    cur.execute("select public.cs_get_post_run_status(%s, %s) as v", (workspace_id, run_id))
+    post = cur.fetchone()["v"]
+    cur.execute("select public.cs_get_run_cost(%s, %s) as c", (workspace_id, run_id))
+    cost = cur.fetchone()["c"]
+    settled = cost["state"] == "settled" and run["state"] == "completed"
+    out = {"post_run": post,
+           "handoff": next((p["handoff"] for p in post if p.get("handoff")), None),
+           "actual_cost": {"currency": cost["currency"], "micros": cost["settled_micros"] if settled else None,
+                           "certainty": "settled" if settled else "unknown",
+                           "unresolved_micros": cost["unresolved_micros"], "receipt_ids": cost["receipt_ids"]},
+           "actual_usd": format(Decimal(cost["settled_micros"]) / Decimal(1_000_000), "f") if settled else None,
+           "charge": None}
+    if settled:
+        cur.execute("select charge_certainty, provider_units from public.cs_list_run_receipts(%s, %s) "
+                    "where kind in ('billing', 'reconciliation') and charge_certainty in "
+                    "('provider_reported', 'balance_delta', 'estimated', 'unknown')", (workspace_id, run_id))
+        rows = cur.fetchall()
+        if rows:
+            rank = ["unknown", "estimated", "balance_delta", "provider_reported"]
+            weakest = min((r["charge_certainty"] for r in rows), key=lambda c: rank.index(c) if c in rank else 0)
+            units = [r["provider_units"] for r in rows if r["provider_units"] is not None]
+            out["charge"] = {"certainty": weakest, "credits": format(sum(units), "f") if units else None,
+                             "scope": "call", "source": "creative_studio_provider_receipts"}
+    return out
+
+
 def _limit(req: Request) -> int:
     raw = req.query.get("limit", "50")
     if not raw.isdigit() or not 1 <= int(raw) <= 200:
@@ -407,10 +442,11 @@ from .brand import routes as _cs_b2_brand_routes  # noqa: E402
 from .composition import routes as _cs_b4_composition_routes  # noqa: E402
 from .requests import routes as _cs_b2_request_routes  # noqa: E402
 from .plans import routes as _cs16_plan_routes  # noqa: E402
+from .postrun import routes as _cs17b_postrun_routes  # noqa: E402
 from .runtime import routes as _cs_b3_runtime_routes  # noqa: E402
 
 DOMAIN_ROUTE_MODULES = (_cs_b2_brand_routes, _cs_b2_request_routes, _cs_b3_runtime_routes,
-                        _cs_b4_composition_routes, _cs16_plan_routes)
+                        _cs_b4_composition_routes, _cs16_plan_routes, _cs17b_postrun_routes)
 
 
 def _register_domain_routes() -> None:
