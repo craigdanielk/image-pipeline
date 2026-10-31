@@ -427,7 +427,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
 
         # Pinned requirements
         req_root = (REPO_ROOT / "requirements.txt").read_text(encoding="utf-8")
-        self.assertIn("service/requirements.txt", req_root)
+        self.assertNotIn("-r service/requirements.txt", req_root)  # CS-17a: self-contained
 
         # Runbook and Configuration Contract
         self.assertTrue((REPO_ROOT / "DEPLOY_RUNBOOK.md").exists())

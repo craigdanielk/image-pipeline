@@ -1,2 +1,27 @@
-# Hosted Creative Studio API/worker runtime dependencies (CS-B1..B4, pinned by CS-INT, assembled by CS-B5).
--r service/requirements.txt
+# Hosted Creative Studio runtime deps for the Vercel Python build. SELF-CONTAINED: no '-r' include
+# (Vercel's parser rejects it). Must equal service/requirements.txt (test_cs17a_requirements.py).
+# Hosted Creative Studio API/worker runtime dependencies (CS-B1..B4, pinned by CS-INT).
+# Wiring into the Vercel build is CS-B5.
+
+# --- database + auth --------------------------------------------------------
+psycopg2-binary>=2.9,<3
+PyJWT[crypto]>=2.8,<3
+# CS-B3 credential sealing (AES-GCM); also pulled by PyJWT[crypto], pinned explicitly.
+cryptography>=42,<47
+
+# --- contracts (Draft 2020-12 + referencing registry, CS-B2/B3/B4) -----------
+# format-nongpl makes FormatChecker enforce the contracts' date-time / uri / uuid
+# formats everywhere; without it jsonschema silently skips them.
+jsonschema[format-nongpl]>=4.18,<5
+referencing>=0.28,<1
+
+# --- render stack (CS-B4 exact compositor) — EXACT, never ranged -------------
+# Goldens (tests/creative_studio/b4_goldens) were produced by this wheel. Pillow's
+# binary wheel bundles the native libs, so this one pin fixes the whole stack:
+#   pillow 12.2.0 · freetype 2.14.3 · zlib-ng 1.3.1 · libjpeg-turbo 3.1.4.1 · webp 1.6.0
+# = renderer_version "cs-image-compositor/1 pillow/12.2.0 freetype/2.14.3
+#   zlib/1.3.1.zlib-ng jpeg/3.1.4.1 webp/1.6.0 layout/basic".
+# Never build Pillow from source: an sdist links whatever system freetype exists.
+# Changing this pin = regenerate goldens deliberately and review the diff.
+--only-binary Pillow
+Pillow==12.2.0

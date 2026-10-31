@@ -3,7 +3,7 @@
   "framework": "vite",
   "installCommand": "npm --prefix ui/app ci",
   "buildCommand": "npm --prefix ui/app run build",
-  "outputDirectory": "ui/app/dist",
+  "outputDirectory": "ui/static",
   "regions": [
     "arn1"
   ],
