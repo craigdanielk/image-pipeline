@@ -1,0 +1,6 @@
+# Test environment = hosted runtime (requirements.txt) + test tooling + the legacy local
+# server's deps (tests/test_server_*.py import ui/server.py). Paths are relative to this file.
+-r requirements.txt
+-r ../ui/requirements.txt
+pytest>=8,<10
+httpx>=0.27,<1

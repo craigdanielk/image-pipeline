@@ -16,4 +16,11 @@ Schema: `supabase/migrations/20261030210000_cs_b1_platform_foundation.sql`.
 
 Out of scope for B1 (not faked): plans/recipes (B2), admission, stage handlers, providers and dispatcher cron (B3), compositions/exports (B4), deployment and runtime login credentials (B5).
 
-Tests: `python3 -m pytest tests/creative_studio -v`. This needs PostgreSQL 17 binaries; the suite builds a private throwaway cluster.
+Dependencies: `service/requirements.txt` is the hosted runtime. The render stack is pinned exactly (`Pillow==…`, binary wheel only), because CS-B4 goldens are byte-exact; changing the pin means regenerating goldens deliberately. `service/requirements-test.txt` adds test tooling and the legacy local server's deps.
+
+Tests (clean venv):
+```
+python3 -m venv .venv && .venv/bin/pip install -r service/requirements-test.txt
+.venv/bin/python -m pytest tests            # Creative Studio + legacy compiler suite
+```
+The Creative Studio real-database tests need PostgreSQL 17 binaries (`PG_BIN`, or Homebrew `postgresql@17`); the suite builds a private throwaway cluster and applies every migration in filename order. The CS-B4 UI tests need `npm ci` in `ui/app`.
