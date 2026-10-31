@@ -412,6 +412,17 @@ class CsB4RealDatabase(unittest.TestCase):
         self.assertEqual((st, out["error"]), (403, "scope_mismatch"))
         st, out = call(self.app, "POST", path, tok=self.tok["owner_b"], body=body, idem=key)
         self.assertEqual(st, 404, out)
+        # CS-INT F5: the MOS target must be the workspace's active Marketing OS connection (CS-B2 binding)
+        st, out = call(self.app, "POST", path, tok=self.tok["producer_a"], body=body, idem=str(uuid.uuid4()))
+        self.assertEqual((st, out["error"]), (409, "mos_connection_required"))
+        with self.pg.connect() as conn:
+            conn.cursor().execute(
+                "insert into public.cs_external_bindings (workspace_id, authority, external_workspace_id, "
+                "verification, verification_sha256, created_by) values (%s, 'marketing-os', %s, '{}'::jsonb, %s, %s)",
+                (self.ws_a, self.w.target["workspace_id"], "a" * 64, self.users["owner_a"]))
+        elsewhere = dict(body, target=dict(self.w.target, workspace_id=str(uuid.uuid4())))
+        st, out = call(self.app, "POST", path, tok=self.tok["producer_a"], body=elsewhere, idem=str(uuid.uuid4()))
+        self.assertEqual((st, out["error"]), (403, "scope_mismatch"))
         st, out = call(self.app, "POST", path, tok=self.tok["producer_a"], body=body, idem=key)
         self.assertEqual(st, 202, out)
         handoff = out["data"]["handoff"]

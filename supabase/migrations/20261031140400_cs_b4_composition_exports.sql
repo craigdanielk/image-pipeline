@@ -382,6 +382,7 @@ declare
   r jsonb;
   i integer := 0;
   v_account uuid;
+  v_bound text;
 begin
   v_prior := cs_private.cs_idempotency_replay(p_workspace_id, 'handoff.marketing_os', p_idempotency_key,
                                               p_request_sha256);
@@ -397,6 +398,18 @@ begin
   if p_payload ->> 'created_by' is distinct from v_actor::text
      or p_payload ->> 'idempotency_key' is distinct from p_idempotency_key::text then
     raise exception 'invalid_mos_handoff' using errcode = 'CS422';
+  end if;
+  -- CS-INT F5: the MOS target must be this workspace's active, verified Marketing OS
+  -- connection (CS-B2 cs_external_bindings). A MOS workspace named only in the request
+  -- body is never sufficient (contract.md §2.2).
+  select lower(b.external_workspace_id) into v_bound
+    from public.cs_external_bindings b
+   where b.workspace_id = p_workspace_id and b.authority = 'marketing-os' and b.status = 'active';
+  if v_bound is null then
+    raise exception 'mos_connection_required' using errcode = 'CS409';
+  end if;
+  if v_bound is distinct from lower(p_payload -> 'target' ->> 'workspace_id') then
+    raise exception 'scope_mismatch' using errcode = 'CS403';
   end if;
   insert into public.cs_handoffs (id, workspace_id, version_id, destination_authority, external_workspace_id,
                                   idempotency_key, request_sha256, payload, sha256, created_by)
