@@ -1,0 +1,72 @@
+{
+  "schema_version": "cs-treatment-v1",
+  "id": "8299065c-00ac-52f7-9913-0ddd194ecf6a",
+  "version_id": "b42bfd70-ec90-5ae3-84c1-60d82d920b24",
+  "revision": 2,
+  "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31",
+  "created_at": "2026-10-31T09:05:00.000Z",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "status": "accepted",
+  "accepted_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "accepted_at": "2026-10-31T09:05:00.000Z",
+  "source_request": {
+    "authority": "creative-studio",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31",
+    "kind": "creative-request",
+    "id": "65e41b8a-af20-54b3-83a3-c84cc852f046",
+    "version_id": "d6c33060-6831-54d3-b4b6-f2e8308a0d9f",
+    "revision": 1,
+    "sha256": "e08f1a39e491001f505b2e2481f1d6d2f778e92d44548f05887ab69b7e75dfc8"
+  },
+  "authorship": {
+    "kind": "human",
+    "model_id": null,
+    "prompt_template": null,
+    "raw_response_sha256": null,
+    "operation_id": null,
+    "attempt_id": null
+  },
+  "direction": {
+    "summary": "A calm assessment in a bright treatment room",
+    "scene": "Physiotherapist guiding an adult patient through a gentle stretch",
+    "style": "Clean editorial healthcare photography",
+    "lighting": "Bright diffuse daylight",
+    "camera": "50mm, slightly above eye level",
+    "composition": "Centered pair, top band clear",
+    "negative": [
+      "medical claims on screen",
+      "x-ray imagery"
+    ]
+  },
+  "shots": [],
+  "sources": [
+    {
+      "authority": "marketing-os",
+      "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+      "kind": "Concept",
+      "id": "3a9abc08-bc50-52a2-bb1c-1e76e2d50e78",
+      "version_id": "09652f7f-06f7-5ec9-b86c-2e269de41b49",
+      "revision": 1,
+      "sha256": "b1a791977b793ddea5658d441ee6ea01cd97fd71094115fc877e80e648834753"
+    },
+    {
+      "authority": "marketing-os",
+      "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+      "kind": "ContentPack",
+      "id": "a0c44c9a-e87d-5e7b-bb83-a38f95755fb8",
+      "version_id": "886eae0f-1250-519a-9306-14dca220f8e3",
+      "revision": 1,
+      "sha256": "656e2d6a35f77356f9174d013e77ba22822b12403a334ba087843b5f6bbbd179"
+    },
+    {
+      "authority": "brand-ci-studio",
+      "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+      "kind": "brand-package",
+      "id": "d73114e3-24be-54a8-abc6-99c0643b4812",
+      "version_id": "371417ce-339d-538e-9ed1-41ec687ece44",
+      "revision": 1,
+      "sha256": "7488450e816f98057a617ba76d2b780dbb4b347de8e09bec775e119b18916274"
+    }
+  ],
+  "sha256": "04ef96febba24e5630fbabfd180a18b888e81954f3d8530d9ffa73b7e1180235"
+}

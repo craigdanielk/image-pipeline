@@ -1,0 +1,326 @@
+{
+  "schema_version": "brand-package-v1",
+  "id": "d73114e3-24be-54a8-abc6-99c0643b4812",
+  "version_id": "371417ce-339d-538e-9ed1-41ec687ece44",
+  "revision": 1,
+  "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+  "created_at": "2026-10-30T16:00:00.000Z",
+  "created_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+  "authority": "brand-ci-studio",
+  "brand_id": "3800bc9b-679d-506e-a686-a715981b32d2",
+  "brand_name": "Example Physio Clinic",
+  "source": {
+    "bci_version_id": "ffbcaf53-8499-5e5c-9cac-028642f07755",
+    "bci_revision": 2,
+    "document_digest": "f5d4d13f35d37b3320f2cfc92a72f9a66297f782cefdfa089963246ddd89c48b",
+    "document_digest_algorithm": "sha256-js-json-stringify-v1",
+    "document_jcs_sha256": "d0044f849f6f05a18ea41f0c586da162055b22892342e805e7946e7a688f8007",
+    "approval_receipt_id": "91fcac47-e2e6-5be6-ad6c-8d9ee2813154",
+    "guide_document": {
+      "authority": "marketing-os",
+      "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+      "kind": "brand-guide-revision",
+      "id": "ffbcaf53-8499-5e5c-9cac-028642f07755",
+      "version_id": "ffbcaf53-8499-5e5c-9cac-028642f07755",
+      "revision": 2,
+      "sha256": "d0044f849f6f05a18ea41f0c586da162055b22892342e805e7946e7a688f8007"
+    },
+    "approved_pdf": {
+      "authority": "marketing-os",
+      "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+      "asset_id": "e8aa03d3-01b2-597f-bd3c-31dfaad6fca1",
+      "asset_version_id": "e8aa03d3-01b2-597f-bd3c-31dfaad6fca1",
+      "revision": 1,
+      "sha256": "143080da4f2e58d3d1159c0cff45f04b26c2aa82606a7ecce49b30f261f8ee38",
+      "mime_type": "application/pdf"
+    },
+    "document_created_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+  },
+  "approval": {
+    "receipt_id": "91fcac47-e2e6-5be6-ad6c-8d9ee2813154",
+    "authority": "marketing-os",
+    "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+    "subject": {
+      "authority": "marketing-os",
+      "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+      "kind": "BrandKit",
+      "id": "85104db5-4bab-5366-a6e7-0c6eb3ba8ab6",
+      "version_id": "85104db5-4bab-5366-a6e7-0c6eb3ba8ab6",
+      "revision": 1,
+      "sha256": "e2eaabc433bd25b07aa99571aecc7bc5be63c75df47238f5df16cb24fb93f513"
+    },
+    "decision": "approved",
+    "actor_id": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+    "actor_role": "owner",
+    "approved_at": "2026-10-30T16:00:00.000Z",
+    "policy_revision": "mos-envelope-approval-v1",
+    "sha256": "3b8e26d2259bb8a5ddef2420821569107c00dcc6850f80318a1c5c01be4e275a"
+  },
+  "assets": [
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+        "asset_id": "18cc31a1-8a2e-5c96-85f3-6a9e08b0ae7a",
+        "asset_version_id": "18cc31a1-8a2e-5c96-85f3-6a9e08b0ae7a",
+        "revision": 1,
+        "sha256": "594d3d890bea02cd31082b3f2f7b7556c3a066bbc2ecb0c5af2e48edf104e7ca",
+        "mime_type": "image/png"
+      },
+      "name": "logo-primary.png",
+      "size_bytes": 160,
+      "width_px": 512,
+      "height_px": 512,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "6e123457-0205-57c7-ad47-5b03c1d3000f",
+        "revision": 1,
+        "sha256": "faf387c42d9e583f2f7095414cb0a4b3438b173260705d2659fa5c05ce7de9ba",
+        "status": "permitted",
+        "holder": "Brand owner",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": "https://example-physio-clinic.test/brand/logo-primary",
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+        "asset_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+        "asset_version_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+        "revision": 1,
+        "sha256": "5cda23404889aa372c40f9c7cd15ef97d3546ab4382e81125c8227a5ad51893b",
+        "mime_type": "font/ttf"
+      },
+      "name": "font-Example Humanist.ttf",
+      "size_bytes": 192,
+      "width_px": null,
+      "height_px": null,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "6b8527e5-420c-5bba-8d94-95ecde24378d",
+        "revision": 1,
+        "sha256": "1d9cc1f2437302d85ec056142d30074883af4fa850e6c12e32fb21deec542e3a",
+        "status": "permitted",
+        "holder": "Open font licence (OFL-1.1)",
+        "basis": "licence",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+        "asset_id": "e8aa03d3-01b2-597f-bd3c-31dfaad6fca1",
+        "asset_version_id": "e8aa03d3-01b2-597f-bd3c-31dfaad6fca1",
+        "revision": 1,
+        "sha256": "143080da4f2e58d3d1159c0cff45f04b26c2aa82606a7ecce49b30f261f8ee38",
+        "mime_type": "application/pdf"
+      },
+      "name": "guide-pdf.pdf",
+      "size_bytes": 149,
+      "width_px": null,
+      "height_px": null,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "1e1b7bb3-990b-54db-a1e3-49802c848e7e",
+        "revision": 1,
+        "sha256": "1dd6dfb05a8dc81426c71121c6be732debfd72d9888e4c1fb3334939449ce464",
+        "status": "permitted",
+        "holder": "Brand owner",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    }
+  ],
+  "logos": [
+    {
+      "id": "logo-primary",
+      "asset": {
+        "authority": "marketing-os",
+        "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+        "asset_id": "18cc31a1-8a2e-5c96-85f3-6a9e08b0ae7a",
+        "asset_version_id": "18cc31a1-8a2e-5c96-85f3-6a9e08b0ae7a",
+        "revision": 1,
+        "sha256": "594d3d890bea02cd31082b3f2f7b7556c3a066bbc2ecb0c5af2e48edf104e7ca",
+        "mime_type": "image/png"
+      },
+      "role": "primary",
+      "allowed_backgrounds": [
+        "light",
+        "brand-primary"
+      ],
+      "min_width_px": 96,
+      "clear_space_ratio": 0.5,
+      "allow_crop": false,
+      "allow_distort": false
+    }
+  ],
+  "palette": [
+    {
+      "token": "color-primary",
+      "hex": "#0E7C66",
+      "role": "primary"
+    },
+    {
+      "token": "color-background",
+      "hex": "#FFFFFF",
+      "role": "background"
+    }
+  ],
+  "typography": [
+    {
+      "id": "example-humanist-heading",
+      "family": "Example Humanist",
+      "role": "heading",
+      "font_assets": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+          "asset_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+          "asset_version_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+          "revision": 1,
+          "sha256": "5cda23404889aa372c40f9c7cd15ef97d3546ab4382e81125c8227a5ad51893b",
+          "mime_type": "font/ttf"
+        }
+      ],
+      "weights": [
+        400,
+        600
+      ],
+      "fallback_family": null
+    },
+    {
+      "id": "example-humanist-body",
+      "family": "Example Humanist",
+      "role": "body",
+      "font_assets": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82",
+          "asset_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+          "asset_version_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+          "revision": 1,
+          "sha256": "5cda23404889aa372c40f9c7cd15ef97d3546ab4382e81125c8227a5ad51893b",
+          "mime_type": "font/ttf"
+        }
+      ],
+      "weights": [
+        400,
+        600
+      ],
+      "fallback_family": null
+    }
+  ],
+  "imagery": {
+    "principles": [
+      "Real people in real settings, natural light"
+    ],
+    "reference_assets": [],
+    "prohibited": [
+      "stock-photo handshakes"
+    ]
+  },
+  "voice": {
+    "principles": [
+      "reassuring",
+      "clear"
+    ],
+    "preferred_terms": [
+      "plain words"
+    ],
+    "prohibited_terms": [
+      "cheapest",
+      "guaranteed"
+    ]
+  },
+  "usage_rules": [
+    {
+      "id": "health-results_vary",
+      "severity": "required",
+      "instruction": "Include this disclosure verbatim where it applies (all, GB): Individual results vary.",
+      "source_path": "/content/required_disclosures/value/0"
+    }
+  ],
+  "unresolved_decisions": [
+    {
+      "id": "unverified-tagline",
+      "description": "tagline was not owner-verified in the approved BrandKit and is excluded from provider payloads",
+      "blocks_compile": false,
+      "affected_asset_ids": []
+    },
+    {
+      "id": "unverified-brand_values",
+      "description": "brand_values was not owner-verified in the approved BrandKit and is excluded from provider payloads",
+      "blocks_compile": false,
+      "affected_asset_ids": []
+    }
+  ],
+  "sha256": "7488450e816f98057a617ba76d2b780dbb4b347de8e09bec775e119b18916274"
+}

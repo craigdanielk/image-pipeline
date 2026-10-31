@@ -330,3 +330,13 @@ _REASONS = {200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 
 
 def create_app(settings: Settings, **kwargs) -> CreativeStudioApi:
     return CreativeStudioApi(settings, **kwargs)
+
+
+# --- CS-B2 routes ---
+from .brand import routes as _cs_b2_brand_routes  # noqa: E402
+from .requests import routes as _cs_b2_request_routes  # noqa: E402
+
+_cs_b2_brand_routes.register(CreativeStudioApi, route)
+_cs_b2_request_routes.register(CreativeStudioApi, route)
+_REASONS.setdefault(202, "Accepted")
+# --- end CS-B2 routes ---

@@ -1,0 +1,412 @@
+{
+  "schema_version": "brand-package-v1",
+  "id": "0743c2d3-bf1e-5b02-bee3-330774d7b987",
+  "version_id": "61c876c1-c431-5252-88b5-11543b6475c1",
+  "revision": 1,
+  "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+  "created_at": "2026-10-30T16:00:00.000Z",
+  "created_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+  "authority": "brand-ci-studio",
+  "brand_id": "255a1cfb-b13d-5226-b4c7-293cfa00ccce",
+  "brand_name": "Example Home Services Co",
+  "source": {
+    "bci_version_id": "5e235227-e5d6-5869-b157-6a289a8b4329",
+    "bci_revision": 2,
+    "document_digest": "4e05bf37f7b9c0b07d8905baf7cba848e0018136ac782dcc71624b6ad5358472",
+    "document_digest_algorithm": "sha256-js-json-stringify-v1",
+    "document_jcs_sha256": "c5c7c54aa7f023e7e0c85bc11354692e726d347ca561bd983c26f783f430057b",
+    "approval_receipt_id": "09082a3e-6c29-593c-ab40-4ef160781239",
+    "guide_document": {
+      "authority": "marketing-os",
+      "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+      "kind": "brand-guide-revision",
+      "id": "5e235227-e5d6-5869-b157-6a289a8b4329",
+      "version_id": "5e235227-e5d6-5869-b157-6a289a8b4329",
+      "revision": 2,
+      "sha256": "c5c7c54aa7f023e7e0c85bc11354692e726d347ca561bd983c26f783f430057b"
+    },
+    "approved_pdf": {
+      "authority": "marketing-os",
+      "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+      "asset_id": "dee8abc4-b8ea-5dd8-8909-46c71d7b58de",
+      "asset_version_id": "dee8abc4-b8ea-5dd8-8909-46c71d7b58de",
+      "revision": 1,
+      "sha256": "86912e48a9db946a5d330aa513d23489258f57a74c91ea0d936c5165a907f092",
+      "mime_type": "application/pdf"
+    },
+    "document_created_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+  },
+  "approval": {
+    "receipt_id": "09082a3e-6c29-593c-ab40-4ef160781239",
+    "authority": "marketing-os",
+    "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+    "subject": {
+      "authority": "marketing-os",
+      "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+      "kind": "BrandKit",
+      "id": "171920a7-171e-5319-92a8-902bada927a5",
+      "version_id": "171920a7-171e-5319-92a8-902bada927a5",
+      "revision": 1,
+      "sha256": "b0e998ca2fb7cba135a3e9f0c651fab8c61df03e47d7970646c0217fa407a816"
+    },
+    "decision": "approved",
+    "actor_id": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+    "actor_role": "owner",
+    "approved_at": "2026-10-30T16:00:00.000Z",
+    "policy_revision": "mos-envelope-approval-v1",
+    "sha256": "8cf32e417edf66bcb6ef4acf363757cf94be8515073ec150627b306eed566dd6"
+  },
+  "assets": [
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+        "asset_id": "a8e8656a-cebd-5f46-8ed5-e99ad6a87159",
+        "asset_version_id": "a8e8656a-cebd-5f46-8ed5-e99ad6a87159",
+        "revision": 1,
+        "sha256": "9445e4569336a5570f309ce693dd1c601a194d5342fa945e8d3ae02f1058d783",
+        "mime_type": "image/png"
+      },
+      "name": "logo-primary.png",
+      "size_bytes": 172,
+      "width_px": 512,
+      "height_px": 512,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "446e67a2-ba0a-5c2c-bac6-776e715f7644",
+        "revision": 1,
+        "sha256": "59d43509061c8c2d8d236728279a96eff3a24be205f1b50a8ef0802ebd944bd0",
+        "status": "permitted",
+        "holder": "Brand owner",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": "https://example-home-services.test/brand/logo-primary",
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+        "asset_id": "77141cef-64d0-5a2d-bee2-e3d5a236d670",
+        "asset_version_id": "77141cef-64d0-5a2d-bee2-e3d5a236d670",
+        "revision": 1,
+        "sha256": "29dee747b2e2d7112ad2d62e38e1414e429b8864bf83d91d2533d8b29080d455",
+        "mime_type": "image/png"
+      },
+      "name": "logo-mono.png",
+      "size_bytes": 160,
+      "width_px": 512,
+      "height_px": 512,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "f2b153a8-a960-5c01-9fb0-e826e002a6ff",
+        "revision": 1,
+        "sha256": "5d3d04e5d2521fb546b1a0ec425f9d9424f6de5abb3175247fa50e7b6011a28f",
+        "status": "permitted",
+        "holder": "Brand owner",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": "https://example-home-services.test/brand/logo-mono",
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+        "asset_id": "d8301533-dd73-511f-ae92-edf0b247cb15",
+        "asset_version_id": "d8301533-dd73-511f-ae92-edf0b247cb15",
+        "revision": 1,
+        "sha256": "931ee7f389572e55ef07b402ead62ea42361f8ec3888af5450db4160c1a0e3be",
+        "mime_type": "font/ttf"
+      },
+      "name": "font-Example Sans.ttf",
+      "size_bytes": 188,
+      "width_px": null,
+      "height_px": null,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "adf79802-fa62-51d7-b078-c4799556436e",
+        "revision": 1,
+        "sha256": "104038b8955e839f816b4ddbfa21665976720df6a6c002250682dcd748627617",
+        "status": "permitted",
+        "holder": "Open font licence (OFL-1.1)",
+        "basis": "licence",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "marketing-os",
+        "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+        "asset_id": "dee8abc4-b8ea-5dd8-8909-46c71d7b58de",
+        "asset_version_id": "dee8abc4-b8ea-5dd8-8909-46c71d7b58de",
+        "revision": 1,
+        "sha256": "86912e48a9db946a5d330aa513d23489258f57a74c91ea0d936c5165a907f092",
+        "mime_type": "application/pdf"
+      },
+      "name": "guide-pdf.pdf",
+      "size_bytes": 161,
+      "width_px": null,
+      "height_px": null,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "4e0e5d0c-5d2e-5902-a658-db5eeb37b8f5",
+        "revision": 1,
+        "sha256": "e6cd5af67409223b745a2a870dbad115c3fdcbb123cd3cfbf1c6ad5a818fc5f1",
+        "status": "permitted",
+        "holder": "Brand owner",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "generate",
+          "edit",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-10-30T12:00:00.000Z",
+        "expires_at": null,
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": "2026-10-30T12:00:00.000Z",
+      "parent_assets": []
+    }
+  ],
+  "logos": [
+    {
+      "id": "logo-primary",
+      "asset": {
+        "authority": "marketing-os",
+        "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+        "asset_id": "a8e8656a-cebd-5f46-8ed5-e99ad6a87159",
+        "asset_version_id": "a8e8656a-cebd-5f46-8ed5-e99ad6a87159",
+        "revision": 1,
+        "sha256": "9445e4569336a5570f309ce693dd1c601a194d5342fa945e8d3ae02f1058d783",
+        "mime_type": "image/png"
+      },
+      "role": "primary",
+      "allowed_backgrounds": [
+        "light",
+        "brand-primary"
+      ],
+      "min_width_px": 96,
+      "clear_space_ratio": 0.5,
+      "allow_crop": false,
+      "allow_distort": false
+    },
+    {
+      "id": "logo-mono",
+      "asset": {
+        "authority": "marketing-os",
+        "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+        "asset_id": "77141cef-64d0-5a2d-bee2-e3d5a236d670",
+        "asset_version_id": "77141cef-64d0-5a2d-bee2-e3d5a236d670",
+        "revision": 1,
+        "sha256": "29dee747b2e2d7112ad2d62e38e1414e429b8864bf83d91d2533d8b29080d455",
+        "mime_type": "image/png"
+      },
+      "role": "monochrome",
+      "allowed_backgrounds": [
+        "light",
+        "brand-primary"
+      ],
+      "min_width_px": 96,
+      "clear_space_ratio": 0.5,
+      "allow_crop": false,
+      "allow_distort": false
+    }
+  ],
+  "palette": [
+    {
+      "token": "color-primary",
+      "hex": "#0B5FFF",
+      "role": "primary"
+    },
+    {
+      "token": "color-accent",
+      "hex": "#FFB000",
+      "role": "accent"
+    },
+    {
+      "token": "color-background",
+      "hex": "#F7F7F5",
+      "role": "background"
+    }
+  ],
+  "typography": [
+    {
+      "id": "example-sans-heading",
+      "family": "Example Sans",
+      "role": "heading",
+      "font_assets": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+          "asset_id": "d8301533-dd73-511f-ae92-edf0b247cb15",
+          "asset_version_id": "d8301533-dd73-511f-ae92-edf0b247cb15",
+          "revision": 1,
+          "sha256": "931ee7f389572e55ef07b402ead62ea42361f8ec3888af5450db4160c1a0e3be",
+          "mime_type": "font/ttf"
+        }
+      ],
+      "weights": [
+        400,
+        700
+      ],
+      "fallback_family": null
+    },
+    {
+      "id": "example-sans-body",
+      "family": "Example Sans",
+      "role": "body",
+      "font_assets": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "5c8066b9-a1e7-5986-8ac1-fdd760a01ddd",
+          "asset_id": "d8301533-dd73-511f-ae92-edf0b247cb15",
+          "asset_version_id": "d8301533-dd73-511f-ae92-edf0b247cb15",
+          "revision": 1,
+          "sha256": "931ee7f389572e55ef07b402ead62ea42361f8ec3888af5450db4160c1a0e3be",
+          "mime_type": "font/ttf"
+        }
+      ],
+      "weights": [
+        400,
+        700
+      ],
+      "fallback_family": null
+    }
+  ],
+  "imagery": {
+    "principles": [
+      "Real people in real settings, natural light"
+    ],
+    "reference_assets": [],
+    "prohibited": [
+      "stock-photo handshakes"
+    ]
+  },
+  "voice": {
+    "principles": [
+      "calm",
+      "direct",
+      "practical"
+    ],
+    "preferred_terms": [
+      "plain words"
+    ],
+    "prohibited_terms": [
+      "cheapest",
+      "guaranteed"
+    ]
+  },
+  "usage_rules": [
+    {
+      "id": "cl-guaranteed-cheapest",
+      "severity": "required",
+      "instruction": "Never claim: Owner-prohibited claim: cheapest in town",
+      "source_path": "/content/prohibited_claims/value/0"
+    }
+  ],
+  "unresolved_decisions": [
+    {
+      "id": "font-missing-example-display-display",
+      "description": "font_asset_missing: no usable Example Display file for role display; exact text in this role cannot be rendered",
+      "blocks_compile": false,
+      "affected_asset_ids": []
+    },
+    {
+      "id": "gap-1",
+      "description": "Lifestyle photography library not supplied yet.",
+      "blocks_compile": false,
+      "affected_asset_ids": []
+    },
+    {
+      "id": "unverified-tagline",
+      "description": "tagline was not owner-verified in the approved BrandKit and is excluded from provider payloads",
+      "blocks_compile": false,
+      "affected_asset_ids": []
+    },
+    {
+      "id": "unverified-brand_values",
+      "description": "brand_values was not owner-verified in the approved BrandKit and is excluded from provider payloads",
+      "blocks_compile": false,
+      "affected_asset_ids": []
+    }
+  ],
+  "sha256": "11f90783b9ddeb01eed03d55b15ccc04660c342f4fbc909a63a5729637aea044"
+}

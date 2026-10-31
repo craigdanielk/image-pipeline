@@ -1,0 +1,71 @@
+{
+  "schema_version": "cs-treatment-v1",
+  "id": "31aef2cf-7da6-575c-adcf-98b5224a19c2",
+  "version_id": "f5d20161-b432-56fb-a43b-374eb791020c",
+  "revision": 2,
+  "workspace_id": "8ea5b481-6396-56c6-82a1-46061c9fd8cb",
+  "created_at": "2026-10-31T09:05:00.000Z",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "status": "accepted",
+  "accepted_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "accepted_at": "2026-10-31T09:05:00.000Z",
+  "source_request": {
+    "authority": "creative-studio",
+    "workspace_id": "8ea5b481-6396-56c6-82a1-46061c9fd8cb",
+    "kind": "creative-request",
+    "id": "02e02bf1-321a-5294-b29b-34b25dfa92d8",
+    "version_id": "52738dbf-c4b3-537f-8d24-30e8fed2e3d8",
+    "revision": 1,
+    "sha256": "7f79c1e585e641c998bdebdea85e2b808539e9ecfdfb8a8c14de0d19fbba7ec4"
+  },
+  "authorship": {
+    "kind": "human",
+    "model_id": null,
+    "prompt_template": null,
+    "raw_response_sha256": null,
+    "operation_id": null,
+    "attempt_id": null
+  },
+  "direction": {
+    "summary": "The skillet searing vegetables on a home stove",
+    "scene": "Home kitchen counter, skillet on a gas hob with colourful vegetables",
+    "style": "Bright food photography",
+    "lighting": "Window light from the left",
+    "camera": "Top-down 45 degrees",
+    "composition": "Skillet centred, lower third clear",
+    "negative": [
+      "brand names on the pan"
+    ]
+  },
+  "shots": [],
+  "sources": [
+    {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "Concept",
+      "id": "3ec9fb9b-4dde-5576-919d-3002baae7dec",
+      "version_id": "6940b80b-cd4e-5ee4-8a52-796527847324",
+      "revision": 1,
+      "sha256": "a805a11af46219c43f4370e95e5290e65cba2ed1017f92fb2e1cb673633bf97b"
+    },
+    {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "ContentPack",
+      "id": "720bd231-e36b-5c9a-bc77-f8a38d47fb8a",
+      "version_id": "7cc7d5d1-15f6-504c-8248-8d2087922114",
+      "revision": 1,
+      "sha256": "5a891b8143af643a07b73a1862000a97f6e64711af4291c5940446251bead8ec"
+    },
+    {
+      "authority": "brand-ci-studio",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "brand-package",
+      "id": "cebec7a5-413e-5220-b2df-6d67e9202119",
+      "version_id": "2c853b16-84c8-5480-95e3-d0188a1e69a7",
+      "revision": 1,
+      "sha256": "a6f74b72e6e2f4a1766093b767855f5422ce6eb1483b9ff63acea450115d90d5"
+    }
+  ],
+  "sha256": "505c91607402e1bb2e14a3d6c2cd37f8705aceb0466f94edd16ee53d02aa8ab3"
+}

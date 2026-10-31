@@ -1,0 +1,435 @@
+{
+  "schema_version": "cs-creative-request-v1",
+  "id": "eb86ee86-241b-5aa2-b839-4c21092fd00b",
+  "version_id": "3ef4753a-33fc-5b51-a95b-212700dcffd7",
+  "revision": 1,
+  "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1",
+  "created_at": "2026-10-31T09:00:00.000Z",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "sha256": "7339672c7710044e49d505d5d450b2690a471cfcded476a6c7b46d27ff4a1750",
+  "origin": {
+    "kind": "marketing-os",
+    "mos_workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+    "campaign_brief": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "CampaignPlan",
+      "id": "dd2f30b9-7583-503f-9ab7-5fbdbb08ee3a",
+      "version_id": "3fc207ce-f439-517d-a9e1-89ccc9c93965",
+      "revision": 1,
+      "sha256": "6725c1441bab64a49194678bdcfaaa7a3c537163964a54a1e95e288f167b6f5e"
+    },
+    "concept": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "Concept",
+      "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+      "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+      "revision": 1,
+      "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72"
+    },
+    "concept_approval": {
+      "receipt_id": "2a7dbc23-11cc-5271-9e32-0e42d9f34ec7",
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "subject": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "Concept",
+        "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+        "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+        "revision": 1,
+        "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72"
+      },
+      "decision": "approved",
+      "actor_id": "1df9ce1f-c0b9-59ad-9064-7a743b134a01",
+      "actor_role": "reviewer",
+      "approved_at": "2026-10-30T16:00:00.000Z",
+      "policy_revision": "mos-concept-approval-v1",
+      "sha256": "58aa139f7cd2b69a63d24163ee2e8737ac6cec05ba9e67094e7fe4383159861b"
+    },
+    "placement": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "ContentPack",
+      "id": "6b7be4ee-6f36-59ae-9828-36af052c2c4d",
+      "version_id": "f41542d9-dcab-5b8a-8e31-eb09e41fbe67",
+      "revision": 1,
+      "sha256": "626b236bbcc522dad8f517120161e51cc3edffd68914448db27310e21ebfd217"
+    },
+    "copy_versions": [
+      {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "94969fa6-ddf3-5b11-ad6b-fa94be84ada6",
+        "version_id": "d901b3ea-2eaf-5fc3-8475-5cf54c437686",
+        "revision": 1,
+        "sha256": "b6fc9fe8f235a27c7e79306237849b606524cfd691ca0354408781c21a74c8a2"
+      },
+      {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+        "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+        "revision": 1,
+        "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+      }
+    ],
+    "destination": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "Destination",
+      "id": "386b25b0-0fd3-55e7-80fc-8610aaaa4ce6",
+      "version_id": "1b47fa7c-ca22-586d-968b-920c335e2993",
+      "revision": 1,
+      "sha256": "779b5bc09f11f72e184e060fee25f44df519122a6e356e75c47a24d1075f0d0b"
+    },
+    "claim_set": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "ClaimSet",
+      "id": "87f631e9-4e14-51d4-a6cc-188f797e6d0a",
+      "version_id": "a6d0ae4e-0ac7-52d3-ae6f-c3d086388154",
+      "revision": 1,
+      "sha256": "083b168773cd49acfd52a10ca53d6443f1aef517464026e1997fdb51528c1150"
+    },
+    "policy": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "GenerationPolicy",
+      "id": "12f8431a-b794-5ee4-84f3-8607d43aa603",
+      "version_id": "5887cd45-3215-515e-8d69-ada2c43718ce",
+      "revision": 1,
+      "sha256": "45ae3a9de84d9b55e3451187369001edd9a54da50bf8fe57788ff44ff40d7c1b"
+    },
+    "brand_rule_revision": null,
+    "brand_rule_approval": null,
+    "generation_eligibility": {
+      "id": "995a77d5-a0eb-508e-b773-098891f97034",
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "action": "generate",
+      "decision": "allowed",
+      "actor_id": "0b58228e-1746-5a33-ba75-8d285820170b",
+      "source_versions": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Concept",
+          "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+          "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+          "revision": 1,
+          "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72"
+        },
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "ContentPack",
+          "id": "6b7be4ee-6f36-59ae-9828-36af052c2c4d",
+          "version_id": "f41542d9-dcab-5b8a-8e31-eb09e41fbe67",
+          "revision": 1,
+          "sha256": "626b236bbcc522dad8f517120161e51cc3edffd68914448db27310e21ebfd217"
+        },
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "CopyVersion",
+          "id": "94969fa6-ddf3-5b11-ad6b-fa94be84ada6",
+          "version_id": "d901b3ea-2eaf-5fc3-8475-5cf54c437686",
+          "revision": 1,
+          "sha256": "b6fc9fe8f235a27c7e79306237849b606524cfd691ca0354408781c21a74c8a2"
+        },
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "CopyVersion",
+          "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+          "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+          "revision": 1,
+          "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+        }
+      ],
+      "policy": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "GenerationPolicy",
+        "id": "da27a623-578d-5aac-8df4-2356e7abacd6",
+        "version_id": "d1b65e5f-f04f-57da-bdb7-5f56d07a61c8",
+        "revision": 1,
+        "sha256": "c8d809a503122e65301f715a59e69952b64d17ccd6c657aaf64b295ec47408bb"
+      },
+      "approval_receipt_ids": [],
+      "checked_at": "2026-10-31T08:59:30Z",
+      "valid_until": "2026-10-31T09:00:30Z",
+      "reason_codes": [],
+      "sha256": "8466c021a6184a9994a9eca5d75f2f1cd43097c4cf5c83bab972570f92f508c5"
+    }
+  },
+  "brand_package": {
+    "authority": "brand-ci-studio",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+    "kind": "brand-package",
+    "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+    "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+    "revision": 1,
+    "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819"
+  },
+  "offering": {
+    "kind": "service",
+    "source": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "Offer",
+      "id": "3b574bf7-8226-5482-a60a-804d306b3524",
+      "version_id": "195a6340-abde-52c8-a414-a5b94c86514c",
+      "revision": 1,
+      "sha256": "d0239536dad6d1c7b4546767e70e6cc1e75734af4f5d7c73a6587844893266d7"
+    },
+    "name": "Annual maintenance plan",
+    "summary": "Two scheduled inspections a year with a fixed quote before any repair work starts.",
+    "value_propositions": [
+      "Fixed quote before work starts",
+      "Arrival windows you can plan around"
+    ],
+    "approved_claims": [
+      {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "Claim",
+        "id": "501bf236-3ab6-549d-9ebf-28d95b211479",
+        "version_id": "787b2373-49c4-51e0-85df-9e44b5130037",
+        "revision": 1,
+        "sha256": "f71bf2186f27effb0ed1d988bf9b73d3afbeea87591a2de122d9a7e380d065df"
+      }
+    ],
+    "physical_product_spec": null,
+    "service_facts": [
+      {
+        "id": "visits",
+        "label": "Visits",
+        "value": "Two inspections a year",
+        "source": {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Offer",
+          "id": "3b574bf7-8226-5482-a60a-804d306b3524",
+          "version_id": "195a6340-abde-52c8-a414-a5b94c86514c",
+          "revision": 1,
+          "sha256": "d0239536dad6d1c7b4546767e70e6cc1e75734af4f5d7c73a6587844893266d7"
+        }
+      },
+      {
+        "id": "callout",
+        "label": "Callout",
+        "value": "Same-day callout in the service area",
+        "source": {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Claim",
+          "id": "501bf236-3ab6-549d-9ebf-28d95b211479",
+          "version_id": "787b2373-49c4-51e0-85df-9e44b5130037",
+          "revision": 1,
+          "sha256": "f71bf2186f27effb0ed1d988bf9b73d3afbeea87591a2de122d9a7e380d065df"
+        }
+      }
+    ]
+  },
+  "audiences": [
+    {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "Avatar",
+      "id": "68907d39-e500-5f50-9a18-bbb1a0410c49",
+      "version_id": "88a3a0f4-1da1-5038-bfa3-73883e73c008",
+      "revision": 1,
+      "sha256": "bcbaa9b83325403bcb2a05f0b1d56fe67ab8bc94e71606ddb0e0d370465a1bb4"
+    }
+  ],
+  "objective": "Plan sign-ups in the service area",
+  "hook": "Never wait all day for a technician",
+  "locale": "en-GB",
+  "exact_copy": [
+    {
+      "id": "v1-headline",
+      "role": "headline",
+      "text": "Your arrival window, kept",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+        "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+        "revision": 1,
+        "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Claim",
+          "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+          "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+          "revision": 1,
+          "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476"
+        }
+      ]
+    },
+    {
+      "id": "v1-body-short",
+      "role": "body",
+      "text": "Two inspections a year, fixed quotes, no waiting around.",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+        "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+        "revision": 1,
+        "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Claim",
+          "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+          "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+          "revision": 1,
+          "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476"
+        }
+      ]
+    },
+    {
+      "id": "v1-body-medium",
+      "role": "body",
+      "text": "Two inspections a year and a fixed quote before any work starts.",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+        "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+        "revision": 1,
+        "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Claim",
+          "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+          "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+          "revision": 1,
+          "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476"
+        }
+      ]
+    },
+    {
+      "id": "v1-body-long",
+      "role": "body",
+      "text": "Two inspections a year, a fixed quote before any work starts, and arrival windows you can plan your day around.",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+        "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+        "revision": 1,
+        "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Claim",
+          "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+          "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+          "revision": 1,
+          "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476"
+        }
+      ]
+    },
+    {
+      "id": "v1-cta",
+      "role": "cta",
+      "text": "See the plan",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+        "kind": "CopyVersion",
+        "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+        "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+        "revision": 1,
+        "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+          "kind": "Claim",
+          "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+          "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+          "revision": 1,
+          "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476"
+        }
+      ]
+    }
+  ],
+  "formats": [
+    {
+      "id": "square_1080-slot-1",
+      "kind": "image",
+      "preset": "square_1080",
+      "width_px": 1080,
+      "height_px": 1080,
+      "mime_type": "image/png",
+      "duration_frames": null,
+      "frame_rate": null,
+      "count": 1,
+      "channel": "instagram,facebook"
+    }
+  ],
+  "references": [],
+  "provider_selection": {
+    "mode": "auto",
+    "provider": null,
+    "model_id": null,
+    "quality": "standard",
+    "max_unit_cost_micros": 62500
+  },
+  "budget": {
+    "currency": "USD",
+    "max_cost_micros": 62500,
+    "funding_source": "workspace",
+    "credential_binding_id": "5a7fd799-1397-5c2f-9fae-c0106b62a9a6",
+    "policy": {
+      "authority": "marketing-os",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+      "kind": "BudgetPolicy",
+      "id": "564e6527-55c0-572c-8d74-c2e2a28c6447",
+      "version_id": "b32fa115-844d-5169-b5c1-a36d44e9ae7f",
+      "revision": 1,
+      "sha256": "a7c3e843be3f044bf451abc76991b0e11a62a97c19f06d8a31014468560f84f8"
+    },
+    "expires_at": "2026-12-31T00:00:00.000Z"
+  },
+  "constraints": {
+    "forbidden": [
+      "stock-photo handshakes",
+      "cheapest",
+      "guaranteed"
+    ],
+    "required": [
+      "Never claim: Owner-prohibited claim: cheapest in town"
+    ],
+    "exact_logo_layers": true,
+    "exact_copy_layers": true
+  }
+}

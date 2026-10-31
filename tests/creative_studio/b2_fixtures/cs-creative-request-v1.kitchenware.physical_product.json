@@ -1,0 +1,331 @@
+{
+  "schema_version": "cs-creative-request-v1",
+  "id": "02e02bf1-321a-5294-b29b-34b25dfa92d8",
+  "version_id": "52738dbf-c4b3-537f-8d24-30e8fed2e3d8",
+  "revision": 1,
+  "workspace_id": "8ea5b481-6396-56c6-82a1-46061c9fd8cb",
+  "created_at": "2026-10-31T09:00:00.000Z",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "sha256": "7f79c1e585e641c998bdebdea85e2b808539e9ecfdfb8a8c14de0d19fbba7ec4",
+  "origin": {
+    "kind": "marketing-os",
+    "mos_workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+    "campaign_brief": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "CampaignPlan",
+      "id": "27f760b6-c178-5841-be2c-378a2dad9931",
+      "version_id": "4f808826-043c-5c02-baf8-6f6f1ceec6c2",
+      "revision": 1,
+      "sha256": "ce2d50ec31668d1ce11dd09da6d6d346eb6849af61a330bca7250f76c8ae1e8c"
+    },
+    "concept": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "Concept",
+      "id": "3ec9fb9b-4dde-5576-919d-3002baae7dec",
+      "version_id": "6940b80b-cd4e-5ee4-8a52-796527847324",
+      "revision": 1,
+      "sha256": "a805a11af46219c43f4370e95e5290e65cba2ed1017f92fb2e1cb673633bf97b"
+    },
+    "concept_approval": {
+      "receipt_id": "dd2f93a7-b875-573e-9564-302afcfd0f09",
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "subject": {
+        "authority": "marketing-os",
+        "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+        "kind": "Concept",
+        "id": "3ec9fb9b-4dde-5576-919d-3002baae7dec",
+        "version_id": "6940b80b-cd4e-5ee4-8a52-796527847324",
+        "revision": 1,
+        "sha256": "a805a11af46219c43f4370e95e5290e65cba2ed1017f92fb2e1cb673633bf97b"
+      },
+      "decision": "approved",
+      "actor_id": "1df9ce1f-c0b9-59ad-9064-7a743b134a01",
+      "actor_role": "reviewer",
+      "approved_at": "2026-10-30T16:00:00.000Z",
+      "policy_revision": "mos-concept-approval-v1",
+      "sha256": "500631ac0d9d767a90b7d31edf43250ff586a5d8c09f26a1ceb4d2b0f5611a6e"
+    },
+    "placement": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "ContentPack",
+      "id": "720bd231-e36b-5c9a-bc77-f8a38d47fb8a",
+      "version_id": "7cc7d5d1-15f6-504c-8248-8d2087922114",
+      "revision": 1,
+      "sha256": "5a891b8143af643a07b73a1862000a97f6e64711af4291c5940446251bead8ec"
+    },
+    "copy_versions": [
+      {
+        "authority": "marketing-os",
+        "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+        "kind": "CopyVersion",
+        "id": "3fbed4f2-46f5-5cb4-ba76-15ec3ca37371",
+        "version_id": "6dc8b49b-3879-5e60-a180-aec781d0294e",
+        "revision": 1,
+        "sha256": "7f0528de95c5ed22bd0cb674795bce23ce1aacf047d1b83b4796fae32c97fa46"
+      }
+    ],
+    "destination": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "Destination",
+      "id": "00b64668-269c-5d39-bda9-d318f4b91a3c",
+      "version_id": "b04ff966-5fc3-5ac5-8414-44dba3483d84",
+      "revision": 1,
+      "sha256": "54384a880df6fd9025b9e6e1fcf419272827f38e71289532fd6311d5b873937f"
+    },
+    "claim_set": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "ClaimSet",
+      "id": "c6cde024-a24a-5223-8f24-8da2ef9f4e30",
+      "version_id": "83245881-f2c2-597c-92f3-dbd290039ead",
+      "revision": 1,
+      "sha256": "a1701616fca977d8482bd0cf7d512c2432232c5a2c6760511dd19bef95e4a8be"
+    },
+    "policy": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "GenerationPolicy",
+      "id": "71b79a70-ea88-57af-90d0-c0f69610d57b",
+      "version_id": "71c5e116-65e7-55a5-b2a9-8eb07e1c6106",
+      "revision": 1,
+      "sha256": "e4063d6a0e48b300020f62209f1f37291cf0b04331b0024e76e2785e44fcb7e4"
+    },
+    "brand_rule_revision": null,
+    "brand_rule_approval": null,
+    "generation_eligibility": {
+      "id": "2596de6a-4cef-5bf6-829e-c5eeef9449cd",
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "action": "generate",
+      "decision": "allowed",
+      "actor_id": "0b58228e-1746-5a33-ba75-8d285820170b",
+      "source_versions": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+          "kind": "Concept",
+          "id": "3ec9fb9b-4dde-5576-919d-3002baae7dec",
+          "version_id": "6940b80b-cd4e-5ee4-8a52-796527847324",
+          "revision": 1,
+          "sha256": "a805a11af46219c43f4370e95e5290e65cba2ed1017f92fb2e1cb673633bf97b"
+        },
+        {
+          "authority": "marketing-os",
+          "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+          "kind": "ContentPack",
+          "id": "720bd231-e36b-5c9a-bc77-f8a38d47fb8a",
+          "version_id": "7cc7d5d1-15f6-504c-8248-8d2087922114",
+          "revision": 1,
+          "sha256": "5a891b8143af643a07b73a1862000a97f6e64711af4291c5940446251bead8ec"
+        },
+        {
+          "authority": "marketing-os",
+          "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+          "kind": "CopyVersion",
+          "id": "3fbed4f2-46f5-5cb4-ba76-15ec3ca37371",
+          "version_id": "6dc8b49b-3879-5e60-a180-aec781d0294e",
+          "revision": 1,
+          "sha256": "7f0528de95c5ed22bd0cb674795bce23ce1aacf047d1b83b4796fae32c97fa46"
+        }
+      ],
+      "policy": {
+        "authority": "marketing-os",
+        "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+        "kind": "GenerationPolicy",
+        "id": "da27a623-578d-5aac-8df4-2356e7abacd6",
+        "version_id": "d1b65e5f-f04f-57da-bdb7-5f56d07a61c8",
+        "revision": 1,
+        "sha256": "c8d809a503122e65301f715a59e69952b64d17ccd6c657aaf64b295ec47408bb"
+      },
+      "approval_receipt_ids": [],
+      "checked_at": "2026-10-31T08:59:30Z",
+      "valid_until": "2026-10-31T09:00:30Z",
+      "reason_codes": [],
+      "sha256": "0b7f0d5098fecfe49a457b2d46337728645fa8452bb092498c9080816346294e"
+    }
+  },
+  "brand_package": {
+    "authority": "brand-ci-studio",
+    "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+    "kind": "brand-package",
+    "id": "cebec7a5-413e-5220-b2df-6d67e9202119",
+    "version_id": "2c853b16-84c8-5480-95e3-d0188a1e69a7",
+    "revision": 1,
+    "sha256": "a6f74b72e6e2f4a1766093b767855f5422ce6eb1483b9ff63acea450115d90d5"
+  },
+  "offering": {
+    "kind": "physical_product",
+    "source": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "Offer",
+      "id": "1de99e4d-86e6-5cce-9b5a-7e0f6c4eef41",
+      "version_id": "26151867-9183-52dd-86b4-cb6474579892",
+      "revision": 1,
+      "sha256": "278b77a7306eb03fab81c6902bfaf36ec3d736f737738f2acb622e6ceef0f322"
+    },
+    "name": "Everyday Skillet",
+    "summary": "Pre-seasoned cast iron skillet for weeknight dinners.",
+    "value_propositions": [
+      "Pre-seasoned and ready to cook"
+    ],
+    "approved_claims": [],
+    "physical_product_spec": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "ProductSpec",
+      "id": "000fa9d3-bab0-502d-b931-89462c63a972",
+      "version_id": "13520b5e-d951-5719-8cbb-bf504fcbc069",
+      "revision": 1,
+      "sha256": "d28efc78a49c70343490c39bf79e73a95d9f4f07d64985530974de7a72bd4dd3"
+    },
+    "service_facts": []
+  },
+  "audiences": [
+    {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "Avatar",
+      "id": "166c05b6-bc1f-53f7-82e3-cc35642edccb",
+      "version_id": "d4ea16c4-aeeb-5084-8a8d-4ad6456643c0",
+      "revision": 1,
+      "sha256": "88a8246eec2d23660972e3db9320dc3768bc8f49f1669dcf03db8c3ad5cf2c54"
+    }
+  ],
+  "objective": "Product page visits",
+  "hook": "Your old pan won't make it",
+  "locale": "en-GB",
+  "exact_copy": [
+    {
+      "id": "v1-headline",
+      "role": "headline",
+      "text": "Cook more, scrub less",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+        "kind": "CopyVersion",
+        "id": "3fbed4f2-46f5-5cb4-ba76-15ec3ca37371",
+        "version_id": "6dc8b49b-3879-5e60-a180-aec781d0294e",
+        "revision": 1,
+        "sha256": "7f0528de95c5ed22bd0cb674795bce23ce1aacf047d1b83b4796fae32c97fa46"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+          "kind": "Claim",
+          "id": "08903443-5974-517e-9ad1-fc9d7b278664",
+          "version_id": "81dba929-507e-509d-adb5-0bac90cc1786",
+          "revision": 1,
+          "sha256": "6e7b68e3b5d5666998094001a4badfb7886d62aa88ae524222a8466f010a5f05"
+        }
+      ]
+    },
+    {
+      "id": "v1-body-short",
+      "role": "body",
+      "text": "The Everyday Skillet: pre-seasoned and ready for tonight.",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+        "kind": "CopyVersion",
+        "id": "3fbed4f2-46f5-5cb4-ba76-15ec3ca37371",
+        "version_id": "6dc8b49b-3879-5e60-a180-aec781d0294e",
+        "revision": 1,
+        "sha256": "7f0528de95c5ed22bd0cb674795bce23ce1aacf047d1b83b4796fae32c97fa46"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+          "kind": "Claim",
+          "id": "08903443-5974-517e-9ad1-fc9d7b278664",
+          "version_id": "81dba929-507e-509d-adb5-0bac90cc1786",
+          "revision": 1,
+          "sha256": "6e7b68e3b5d5666998094001a4badfb7886d62aa88ae524222a8466f010a5f05"
+        }
+      ]
+    },
+    {
+      "id": "v1-cta",
+      "role": "cta",
+      "text": "Shop the skillet",
+      "language": "en-GB",
+      "source_copy": {
+        "authority": "marketing-os",
+        "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+        "kind": "CopyVersion",
+        "id": "3fbed4f2-46f5-5cb4-ba76-15ec3ca37371",
+        "version_id": "6dc8b49b-3879-5e60-a180-aec781d0294e",
+        "revision": 1,
+        "sha256": "7f0528de95c5ed22bd0cb674795bce23ce1aacf047d1b83b4796fae32c97fa46"
+      },
+      "claim_refs": [
+        {
+          "authority": "marketing-os",
+          "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+          "kind": "Claim",
+          "id": "08903443-5974-517e-9ad1-fc9d7b278664",
+          "version_id": "81dba929-507e-509d-adb5-0bac90cc1786",
+          "revision": 1,
+          "sha256": "6e7b68e3b5d5666998094001a4badfb7886d62aa88ae524222a8466f010a5f05"
+        }
+      ]
+    }
+  ],
+  "formats": [
+    {
+      "id": "story_1080x1920-slot-1",
+      "kind": "image",
+      "preset": "story_1080x1920",
+      "width_px": 1080,
+      "height_px": 1920,
+      "mime_type": "image/png",
+      "duration_frames": null,
+      "frame_rate": null,
+      "count": 1,
+      "channel": "instagram"
+    }
+  ],
+  "references": [],
+  "provider_selection": {
+    "mode": "auto",
+    "provider": null,
+    "model_id": null,
+    "quality": "standard",
+    "max_unit_cost_micros": 62500
+  },
+  "budget": {
+    "currency": "USD",
+    "max_cost_micros": 62500,
+    "funding_source": "workspace",
+    "credential_binding_id": "03fb119f-eef4-5d89-a63b-6aadea034f27",
+    "policy": {
+      "authority": "marketing-os",
+      "workspace_id": "8cfb8832-bcd6-5b75-b71a-f94aefd6face",
+      "kind": "BudgetPolicy",
+      "id": "a3ad7494-6324-5732-af97-fde0c96ad777",
+      "version_id": "25d724a1-235e-5644-89ce-f6a8c2432602",
+      "revision": 1,
+      "sha256": "31cebfa4e3d8122b840997ca5634cbec1a8ec33c35d74813a323aa3ce5805a97"
+    },
+    "expires_at": "2026-12-31T00:00:00.000Z"
+  },
+  "constraints": {
+    "forbidden": [
+      "stock-photo handshakes",
+      "cheapest",
+      "guaranteed"
+    ],
+    "required": [],
+    "exact_logo_layers": true,
+    "exact_copy_layers": true
+  }
+}
