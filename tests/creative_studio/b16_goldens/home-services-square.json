@@ -1,0 +1,350 @@
+{
+ "content_key": "714775c2a2be0db86b5f517adf3a26c0bad5b5e51a8240b4e6ae8992a1ce16dd",
+ "media_pack": {
+  "brand_elements": {
+   "fonts": [
+    {
+     "family": "Example Sans",
+     "font_assets": [
+      {
+       "asset_version_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+       "sha256": "fcbea38312582a2e9d623936445070c4e9eb75b2f0af4cb8f96a510208df0354"
+      }
+     ],
+     "id": "example-sans-heading",
+     "role": "heading"
+    },
+    {
+     "family": "Example Sans",
+     "font_assets": [
+      {
+       "asset_version_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+       "sha256": "fcbea38312582a2e9d623936445070c4e9eb75b2f0af4cb8f96a510208df0354"
+      }
+     ],
+     "id": "example-sans-body",
+     "role": "body"
+    }
+   ],
+   "logos": [
+    {
+     "asset_version_id": "e00dd6ea-c7b7-5ddf-a030-53b6f18c265d",
+     "id": "logo-primary",
+     "role": "primary",
+     "sha256": "3f4723511cc33bca54fbabfe352fd0e644443ab5373e157444561fc84cec5df2"
+    },
+    {
+     "asset_version_id": "b73ec039-85fb-5070-94a5-116bd21bba8e",
+     "id": "logo-mono",
+     "role": "monochrome",
+     "sha256": "2a3062ca58adf26d8ba686d47c1fb2d310d41789430f04147bb60d84ad356ca3"
+    }
+   ],
+   "palette": [
+    {
+     "hex": "#0B5FFF",
+     "role": "primary",
+     "token": "color-primary"
+    },
+    {
+     "hex": "#FFB000",
+     "role": "accent",
+     "token": "color-accent"
+    },
+    {
+     "hex": "#F7F7F5",
+     "role": "background",
+     "token": "color-background"
+    }
+   ],
+   "voice": {
+    "preferred_terms": [
+     "plain words"
+    ],
+    "principles": [
+     "calm",
+     "direct",
+     "practical"
+    ],
+    "prohibited_terms": [
+     "cheapest",
+     "guaranteed"
+    ]
+   }
+  },
+  "canvases": [
+   {
+    "count": 1,
+    "format_id": "square_1080-slot-1",
+    "height_px": 1080,
+    "lane": "studio-offering",
+    "model": {
+     "catalogue_entry_id": "hf-ms-low",
+     "model_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+     "provider": "higgsfield"
+    },
+    "node_id": "render-square_1080-slot-1",
+    "preset": "square_1080",
+    "prompt": {
+     "negative": "No uniform logos. No readable text on clothing. No stock-photo handshakes. No cheapest. No guaranteed.",
+     "positive": "A technician arriving on time at a tidy family home. Front porch of a suburban home in the morning, technician with a tool bag greeting the homeowner at the door. Lighting: Soft morning daylight. Camera: 35mm, eye level, shallow depth of field. Composition: Subject on the left third, open sky on the right for overlays. Offering: Annual maintenance plan \u2014 Two scheduled inspections a year with a fixed quote before any repair work starts. Value: Fixed quote before work starts. Value: Arrival windows you can plan around. Callout: Same-day callout in the service area. Visits: Two inspections a year. Imagery: Real people in real settings, natural light. Brand palette: primary #0B5FFF, accent #FFB000, background #F7F7F5. Leave clean, uncluttered space for the brand logo and exact body, cta, headline overlays; do not render any text, letters or logos in the image."
+    },
+    "width_px": 1080
+   }
+  ],
+  "compile_hash": "96da2f00c6c9bf266b3d7002cf8131de9bdfa88fefb4225956483191e99b3880",
+  "estimated_credits": null,
+  "pinned": {
+   "brand_package": {
+    "authority": "brand-ci-studio",
+    "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+    "kind": "brand-package",
+    "revision": 1,
+    "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819",
+    "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "catalogue": {
+    "authority": "creative-studio",
+    "id": "1d3202f7-585e-5ef7-afb9-acb18bf86d19",
+    "kind": "provider_catalogue",
+    "revision": 1,
+    "sha256": "18ce01238761a67a95c6dae6d4406f83ba9d626a8fc52d3092b2229c091b9e2a",
+    "version_id": "f56503ee-3665-5dde-957a-cff80c216948",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   },
+   "request": {
+    "authority": "creative-studio",
+    "id": "eb86ee86-241b-5aa2-b839-4c21092fd00b",
+    "kind": "creative-request",
+    "revision": 1,
+    "sha256": "7339672c7710044e49d505d5d450b2690a471cfcded476a6c7b46d27ff4a1750",
+    "version_id": "3ef4753a-33fc-5b51-a95b-212700dcffd7",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   },
+   "treatment": {
+    "authority": "creative-studio",
+    "id": "ac79dd53-4361-5c0a-b8e0-6bc9fd2d8e53",
+    "kind": "treatment",
+    "revision": 2,
+    "sha256": "ae139b29d195d75bb681c25e8498ba233797de6f24cc47d00ae7ef02f4e82219",
+    "version_id": "f9e8fce6-bd86-5b47-9f61-b86d9820e10b",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   }
+  },
+  "plan_id": "41fc6585-58a3-53cd-8b46-1f18919f9ae9",
+  "plan_sha256": "08f3d28659c77a1ea160682e1153808b99997c1efa6c16a7296a44f133a6c504",
+  "plan_version_id": "a7dfdc44-1f8e-576e-8067-2140225a5a80",
+  "quote_status": "unquoted",
+  "references": {
+   "bound_to_provider_call": false,
+   "count": 0
+  },
+  "revision": 1,
+  "text_layers": [
+   {
+    "composed_by": "composition",
+    "id": "v1-headline",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "headline",
+    "text": "Your arrival window, kept"
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-body-short",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "body",
+    "text": "Two inspections a year, fixed quotes, no waiting around."
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-body-medium",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "body",
+    "text": "Two inspections a year and a fixed quote before any work starts."
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-body-long",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "body",
+    "text": "Two inspections a year, a fixed quote before any work starts, and arrival windows you can plan your day around."
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-cta",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "cta",
+    "text": "See the plan"
+   }
+  ],
+  "tier": "draft"
+ },
+ "plan": {
+  "admission": {
+   "budget": {
+    "credential_binding_id": "5a7fd799-1397-5c2f-9fae-c0106b62a9a6",
+    "currency": "USD",
+    "expires_at": "2026-12-31T00:00:00.000Z",
+    "funding_source": "workspace",
+    "max_cost_micros": 62500,
+    "policy": {
+     "authority": "marketing-os",
+     "id": "564e6527-55c0-572c-8d74-c2e2a28c6447",
+     "kind": "BudgetPolicy",
+     "revision": 1,
+     "sha256": "a7c3e843be3f044bf451abc76991b0e11a62a97c19f06d8a31014468560f84f8",
+     "version_id": "b32fa115-844d-5169-b5c1-a36d44e9ae7f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    }
+   },
+   "estimated_cost_micros": 50000,
+   "expires_at": "2026-12-31T00:00:00.000Z",
+   "maximum_cost_micros": 50000
+  },
+  "compile_hash": "96da2f00c6c9bf266b3d7002cf8131de9bdfa88fefb4225956483191e99b3880",
+  "compile_hash_algorithm": "sha256-rfc8785-cs-program-v1",
+  "created_at": "2026-10-31T09:00:00.000Z",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "id": "41fc6585-58a3-53cd-8b46-1f18919f9ae9",
+  "legacy_artifacts": [],
+  "program": {
+   "asset_inputs": [],
+   "budget_ceiling_micros": 50000,
+   "catalogue_sha256": "18ce01238761a67a95c6dae6d4406f83ba9d626a8fc52d3092b2229c091b9e2a",
+   "compiler_version": "cs-16-hosted-compile-v1",
+   "currency": "USD",
+   "lowering_version": "single-provider-render-per-canvas-v1",
+   "node_registry_sha256": "a516ce0061ea1e82ae3106416265fce2e6d51bf8a168624543dfe247ce876cab",
+   "nodes": [
+    {
+     "dependencies": [],
+     "estimated_cost_micros": 50000,
+     "id": "render-square_1080-slot-1",
+     "implementation_version": "cs-16-provider-generate-1",
+     "inputs": [],
+     "kind": "provider_generate",
+     "maximum_cost_micros": 50000,
+     "output_contract": [
+      {
+       "duration_frames": null,
+       "height_px": 1080,
+       "media_kind": "image",
+       "mime_type": "image/png",
+       "port": "image",
+       "width_px": 1080
+      }
+     ],
+     "provider_call": {
+      "adapter_version": "engine_higgsfield@fixture",
+      "catalogue_entry_id": "hf-ms-low",
+      "endpoint_key": "marketing-studio-dtc-ads",
+      "media_bindings": [],
+      "model_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+      "negative_prompt": "No uniform logos. No readable text on clothing. No stock-photo handshakes. No cheapest. No guaranteed.",
+      "parameters": {
+       "batch_size": 1,
+       "format_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+       "quality": "low"
+      },
+      "positive_prompt": "A technician arriving on time at a tidy family home. Front porch of a suburban home in the morning, technician with a tool bag greeting the homeowner at the door. Lighting: Soft morning daylight. Camera: 35mm, eye level, shallow depth of field. Composition: Subject on the left third, open sky on the right for overlays. Offering: Annual maintenance plan \u2014 Two scheduled inspections a year with a fixed quote before any repair work starts. Value: Fixed quote before work starts. Value: Arrival windows you can plan around. Callout: Same-day callout in the service area. Visits: Two inspections a year. Imagery: Real people in real settings, natural light. Brand palette: primary #0B5FFF, accent #FFB000, background #F7F7F5. Leave clean, uncluttered space for the brand logo and exact body, cta, headline overlays; do not render any text, letters or logos in the image.",
+      "provider": "higgsfield",
+      "request_schema_sha256": "14b6aa038f1572f1dbc9c0b8bdcd43b02c557f90a394ab5b23df76ffdd533ddb",
+      "retries": {
+       "automatic_resubmits": 0,
+       "same_intent_replay_max": 0,
+       "transport_before_dispatch_max": 2
+      },
+      "seed": null
+     },
+     "transform": null
+    }
+   ],
+   "outputs": [
+    {
+     "format": {
+      "channel": "instagram,facebook",
+      "count": 1,
+      "duration_frames": null,
+      "frame_rate": null,
+      "height_px": 1080,
+      "id": "square_1080-slot-1",
+      "kind": "image",
+      "mime_type": "image/png",
+      "preset": "square_1080",
+      "width_px": 1080
+     },
+     "id": "out-render-square_1080-slot-1",
+     "node_id": "render-square_1080-slot-1",
+     "port": "image"
+    }
+   ],
+   "schema_version": "cs-program-v1",
+   "source_semantics": {
+    "composition_sha256": null,
+    "recipe_graph_sha256": "55abd5018264134640becc769dc5ff11131d359bba785115ac6bcf9dcbb484d6",
+    "request_sha256": "7661c80df886622f004a372173fe574bd6702a9dec60528c0acdc176054a296b",
+    "treatment_sha256": "7cfaf7d7b809a3d9aa6d96fc22ee024254c96824ac580e8000bf764bd095d363"
+   },
+   "template_sha256": null
+  },
+  "revision": 1,
+  "schema_version": "cs-execution-plan-v1",
+  "sha256": "08f3d28659c77a1ea160682e1153808b99997c1efa6c16a7296a44f133a6c504",
+  "sources": {
+   "brand_package": {
+    "authority": "brand-ci-studio",
+    "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+    "kind": "brand-package",
+    "revision": 1,
+    "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819",
+    "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "catalogue": {
+    "authority": "creative-studio",
+    "id": "1d3202f7-585e-5ef7-afb9-acb18bf86d19",
+    "kind": "provider_catalogue",
+    "revision": 1,
+    "sha256": "18ce01238761a67a95c6dae6d4406f83ba9d626a8fc52d3092b2229c091b9e2a",
+    "version_id": "f56503ee-3665-5dde-957a-cff80c216948",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   },
+   "composition": null,
+   "recipe": {
+    "authority": "creative-studio",
+    "id": "d002ca92-77f2-56a7-b64c-4fd6a41c93c7",
+    "kind": "recipe",
+    "revision": 1,
+    "sha256": "55abd5018264134640becc769dc5ff11131d359bba785115ac6bcf9dcbb484d6",
+    "version_id": "e0e081ff-cd73-55fd-880f-680591b95f5f",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   },
+   "request": {
+    "authority": "creative-studio",
+    "id": "eb86ee86-241b-5aa2-b839-4c21092fd00b",
+    "kind": "creative-request",
+    "revision": 1,
+    "sha256": "7339672c7710044e49d505d5d450b2690a471cfcded476a6c7b46d27ff4a1750",
+    "version_id": "3ef4753a-33fc-5b51-a95b-212700dcffd7",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   },
+   "treatment": {
+    "authority": "creative-studio",
+    "id": "ac79dd53-4361-5c0a-b8e0-6bc9fd2d8e53",
+    "kind": "treatment",
+    "revision": 2,
+    "sha256": "ae139b29d195d75bb681c25e8498ba233797de6f24cc47d00ae7ef02f4e82219",
+    "version_id": "f9e8fce6-bd86-5b47-9f61-b86d9820e10b",
+    "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+   }
+  },
+  "version_id": "a7dfdc44-1f8e-576e-8067-2140225a5a80",
+  "workspace_id": "b556b144-d83d-5b75-86c8-5e6b79ad60f1"
+ }
+}

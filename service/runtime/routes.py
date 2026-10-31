@@ -1,7 +1,7 @@
 """CS-B3 HTTP routes, registered on the CS-B1 API through its single fenced block.
 
   POST /api/v1/accounts/{account}/budget-policies            account admin sets a ceiling (Idempotency-Key)
-  POST /api/v1/workspaces/{ws}/quotes                        quote a frozen plan (no reservation)
+  POST /api/v1/workspaces/{ws}/quotes                        quote a frozen plan or {plan_id} (no reservation)
   POST /api/v1/workspaces/{ws}/runs                          admit (Idempotency-Key) -> 202 + Location
   POST /api/v1/workspaces/{ws}/runs/{run}/cancel             request cancellation
   POST /api/v1/workspaces/{ws}/runs/{run}/nodes/{node}/draft-approvals   reviewer approves a draft output
@@ -12,6 +12,7 @@ from __future__ import annotations
 import uuid
 
 from ..errors import ServiceError
+from ..plans import quoting
 from . import admission, costs
 
 _UUID = r"[0-9a-fA-F-]{36}"
@@ -55,16 +56,22 @@ def register(api_cls, route) -> None:
     def cs_b3_quote(self, req, workspace_id):
         workspace_id = _uuid(workspace_id)
         _, tx = self._tx(req)
+        body = req.json()
         with tx as cur:
-            return 200, admission.quote(cur, workspace_id, req.json())
+            if "plan_id" in body:      # CS-16: quote a plan CS compiled (no caller-held plan)
+                return 200, quoting.quote_plan(cur, self.settings, workspace_id, body, admission.quote)
+            return 200, admission.quote(cur, workspace_id, body)
 
     @route("POST", rf"/api/v1/workspaces/({_UUID})/runs")
     def cs_b3_admit_run(self, req, workspace_id):
         workspace_id = _uuid(workspace_id)
         key, digest = req.require_idempotency()
         _, tx = self._tx(req)
+        body = req.json()
         with tx as cur:
-            row = admission.admit(cur, self.settings, workspace_id, req.json(), key, digest)
+            if "plan_id" in body:      # CS-16: admit only a quoted, current, CS-compiled plan
+                body = quoting.plan_for_admission(cur, self.settings, workspace_id, body)
+            row = admission.admit(cur, self.settings, workspace_id, body, key, digest)
         row["location"] = f"/api/v1/workspaces/{workspace_id}/runs/{row['run_id']}"
         return (200 if row["replayed"] else 202), row
 

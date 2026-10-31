@@ -406,10 +406,11 @@ def create_app(settings: Settings, **kwargs) -> CreativeStudioApi:
 from .brand import routes as _cs_b2_brand_routes  # noqa: E402
 from .composition import routes as _cs_b4_composition_routes  # noqa: E402
 from .requests import routes as _cs_b2_request_routes  # noqa: E402
+from .plans import routes as _cs16_plan_routes  # noqa: E402
 from .runtime import routes as _cs_b3_runtime_routes  # noqa: E402
 
 DOMAIN_ROUTE_MODULES = (_cs_b2_brand_routes, _cs_b2_request_routes, _cs_b3_runtime_routes,
-                        _cs_b4_composition_routes)
+                        _cs_b4_composition_routes, _cs16_plan_routes)
 
 
 def _register_domain_routes() -> None:

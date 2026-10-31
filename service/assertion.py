@@ -55,7 +55,9 @@ POLICY: dict[str, Policy] = {
     "b2_accept_treatment": Policy("treatment.accept"),
     "b2_get_treatment": Policy("treatment.read", required=False),
     "b2_compile_mapping": Policy("compile.map"),
-    "cs_b3_quote": Policy("compile.quote"),
+    "cs16_compile_plan": Policy("plan.compile", required=False),
+    "cs16_get_plan": Policy("plan.read", required=False),
+    "cs_b3_quote": Policy("quote.create"),
     # run admission
     "cs_b3_admit_run": Policy("run.admit"),
     "cs_b3_cancel_run": Policy("run.cancel"),

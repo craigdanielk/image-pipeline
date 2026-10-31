@@ -88,7 +88,7 @@ class Unit(unittest.TestCase):
 
     def test_policy_covers_every_gateway_family_and_no_static_key(self):
         acts = {p.action for p in assertion.POLICY.values() if p.required}
-        for need in ("connection.bind", "brand_package.import", "request.intake", "treatment.accept", "compile.quote",
+        for need in ("connection.bind", "brand_package.import", "request.intake", "treatment.accept", "quote.create",
                      "run.admit"):
             self.assertIn(need, acts)
         from pathlib import Path

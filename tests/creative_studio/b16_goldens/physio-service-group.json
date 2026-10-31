@@ -1,0 +1,330 @@
+{
+ "content_key": "0be0e11be8547d1b4e38dd2c57108b7d512583fef928a0c65e3710ba7a32db5c",
+ "media_pack": {
+  "brand_elements": {
+   "fonts": [
+    {
+     "family": "Example Humanist",
+     "font_assets": [
+      {
+       "asset_version_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+       "sha256": "5cda23404889aa372c40f9c7cd15ef97d3546ab4382e81125c8227a5ad51893b"
+      }
+     ],
+     "id": "example-humanist-heading",
+     "role": "heading"
+    },
+    {
+     "family": "Example Humanist",
+     "font_assets": [
+      {
+       "asset_version_id": "35eb9ad1-da63-5420-ac6c-e336d7a3662f",
+       "sha256": "5cda23404889aa372c40f9c7cd15ef97d3546ab4382e81125c8227a5ad51893b"
+      }
+     ],
+     "id": "example-humanist-body",
+     "role": "body"
+    }
+   ],
+   "logos": [
+    {
+     "asset_version_id": "18cc31a1-8a2e-5c96-85f3-6a9e08b0ae7a",
+     "id": "logo-primary",
+     "role": "primary",
+     "sha256": "594d3d890bea02cd31082b3f2f7b7556c3a066bbc2ecb0c5af2e48edf104e7ca"
+    }
+   ],
+   "palette": [
+    {
+     "hex": "#0E7C66",
+     "role": "primary",
+     "token": "color-primary"
+    },
+    {
+     "hex": "#FFFFFF",
+     "role": "background",
+     "token": "color-background"
+    }
+   ],
+   "voice": {
+    "preferred_terms": [
+     "plain words"
+    ],
+    "principles": [
+     "reassuring",
+     "clear"
+    ],
+    "prohibited_terms": [
+     "cheapest",
+     "guaranteed"
+    ]
+   }
+  },
+  "canvases": [
+   {
+    "count": 1,
+    "format_id": "portrait_1080x1350-slot-1",
+    "height_px": 1350,
+    "lane": "studio-offering",
+    "model": {
+     "catalogue_entry_id": "hf-ms-low",
+     "model_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+     "provider": "higgsfield"
+    },
+    "node_id": "render-portrait_1080x1350-slot-1",
+    "preset": "portrait_1080x1350",
+    "prompt": {
+     "negative": "No medical claims on screen. No x-ray imagery. No stock-photo handshakes. No cheapest. No guaranteed.",
+     "positive": "A calm assessment in a bright treatment room. Physiotherapist guiding an adult patient through a gentle stretch. Lighting: Bright diffuse daylight. Camera: 50mm, slightly above eye level. Composition: Centered pair, top band clear. Offering: Back pain rehab \u2014 Assessment with registered physiotherapists and a personalised exercise plan. Value: A plan, not a quick fix. Assessment: Registered physiotherapists assess how you sit, sleep and move. Imagery: Real people in real settings, natural light. Brand palette: primary #0E7C66, background #FFFFFF. Leave clean, uncluttered space for the brand logo and exact body, cta, headline, other overlays; do not render any text, letters or logos in the image."
+    },
+    "width_px": 1080
+   }
+  ],
+  "compile_hash": "9aa0b8b650fdb1908101109f72fb94b96ea72193391ece930cdf107f81b660f8",
+  "estimated_credits": null,
+  "pinned": {
+   "brand_package": {
+    "authority": "brand-ci-studio",
+    "id": "d73114e3-24be-54a8-abc6-99c0643b4812",
+    "kind": "brand-package",
+    "revision": 1,
+    "sha256": "7488450e816f98057a617ba76d2b780dbb4b347de8e09bec775e119b18916274",
+    "version_id": "371417ce-339d-538e-9ed1-41ec687ece44",
+    "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82"
+   },
+   "catalogue": {
+    "authority": "creative-studio",
+    "id": "1d3202f7-585e-5ef7-afb9-acb18bf86d19",
+    "kind": "provider_catalogue",
+    "revision": 1,
+    "sha256": "18ce01238761a67a95c6dae6d4406f83ba9d626a8fc52d3092b2229c091b9e2a",
+    "version_id": "f56503ee-3665-5dde-957a-cff80c216948",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   },
+   "request": {
+    "authority": "creative-studio",
+    "id": "65e41b8a-af20-54b3-83a3-c84cc852f046",
+    "kind": "creative-request",
+    "revision": 1,
+    "sha256": "e08f1a39e491001f505b2e2481f1d6d2f778e92d44548f05887ab69b7e75dfc8",
+    "version_id": "d6c33060-6831-54d3-b4b6-f2e8308a0d9f",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   },
+   "treatment": {
+    "authority": "creative-studio",
+    "id": "8299065c-00ac-52f7-9913-0ddd194ecf6a",
+    "kind": "treatment",
+    "revision": 2,
+    "sha256": "04ef96febba24e5630fbabfd180a18b888e81954f3d8530d9ffa73b7e1180235",
+    "version_id": "b42bfd70-ec90-5ae3-84c1-60d82d920b24",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   }
+  },
+  "plan_id": "51a764c6-418e-5510-8275-1c7f72de6d7f",
+  "plan_sha256": "e007687dec776f711ddba4589b8c1a30ec465394ac574c9e04bff7b0fbfeeb60",
+  "plan_version_id": "a9b0ac2a-4f6d-5691-89f2-77933fe17efd",
+  "quote_status": "unquoted",
+  "references": {
+   "bound_to_provider_call": false,
+   "count": 0
+  },
+  "revision": 1,
+  "text_layers": [
+   {
+    "composed_by": "composition",
+    "id": "v1-headline",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "headline",
+    "text": "A plan, not a quick fix"
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-body-short",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "body",
+    "text": "Stiff back every morning? Start with a plan. Individual results vary."
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-item-1",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "other",
+    "text": "Stiff back every morning? A quick fix rarely lasts. Individual results vary."
+   },
+   {
+    "composed_by": "composition",
+    "id": "v1-cta",
+    "language": "en-GB",
+    "model_drawn": false,
+    "role": "cta",
+    "text": "Book an assessment"
+   }
+  ],
+  "tier": "draft"
+ },
+ "plan": {
+  "admission": {
+   "budget": {
+    "credential_binding_id": "bc4eb40d-9575-5971-9e70-10df935fb579",
+    "currency": "USD",
+    "expires_at": "2026-12-31T00:00:00.000Z",
+    "funding_source": "workspace",
+    "max_cost_micros": 62500,
+    "policy": {
+     "authority": "marketing-os",
+     "id": "4f1a90f6-0932-5387-9d0e-e6aee0e3dc8d",
+     "kind": "BudgetPolicy",
+     "revision": 1,
+     "sha256": "d9c89bfbb991a73b0ba742e97875fe973ce856756ddc9546069af575ad1e4c58",
+     "version_id": "87367a5c-56f2-544f-bac2-057d0e65633a",
+     "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82"
+    }
+   },
+   "estimated_cost_micros": 50000,
+   "expires_at": "2026-12-31T00:00:00.000Z",
+   "maximum_cost_micros": 50000
+  },
+  "compile_hash": "9aa0b8b650fdb1908101109f72fb94b96ea72193391ece930cdf107f81b660f8",
+  "compile_hash_algorithm": "sha256-rfc8785-cs-program-v1",
+  "created_at": "2026-10-31T09:00:00.000Z",
+  "created_by": "0b58228e-1746-5a33-ba75-8d285820170b",
+  "id": "51a764c6-418e-5510-8275-1c7f72de6d7f",
+  "legacy_artifacts": [],
+  "program": {
+   "asset_inputs": [],
+   "budget_ceiling_micros": 50000,
+   "catalogue_sha256": "18ce01238761a67a95c6dae6d4406f83ba9d626a8fc52d3092b2229c091b9e2a",
+   "compiler_version": "cs-16-hosted-compile-v1",
+   "currency": "USD",
+   "lowering_version": "single-provider-render-per-canvas-v1",
+   "node_registry_sha256": "a516ce0061ea1e82ae3106416265fce2e6d51bf8a168624543dfe247ce876cab",
+   "nodes": [
+    {
+     "dependencies": [],
+     "estimated_cost_micros": 50000,
+     "id": "render-portrait_1080x1350-slot-1",
+     "implementation_version": "cs-16-provider-generate-1",
+     "inputs": [],
+     "kind": "provider_generate",
+     "maximum_cost_micros": 50000,
+     "output_contract": [
+      {
+       "duration_frames": null,
+       "height_px": 1350,
+       "media_kind": "image",
+       "mime_type": "image/png",
+       "port": "image",
+       "width_px": 1080
+      }
+     ],
+     "provider_call": {
+      "adapter_version": "engine_higgsfield@fixture",
+      "catalogue_entry_id": "hf-ms-low",
+      "endpoint_key": "marketing-studio-dtc-ads",
+      "media_bindings": [],
+      "model_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+      "negative_prompt": "No medical claims on screen. No x-ray imagery. No stock-photo handshakes. No cheapest. No guaranteed.",
+      "parameters": {
+       "batch_size": 1,
+       "format_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+       "quality": "low"
+      },
+      "positive_prompt": "A calm assessment in a bright treatment room. Physiotherapist guiding an adult patient through a gentle stretch. Lighting: Bright diffuse daylight. Camera: 50mm, slightly above eye level. Composition: Centered pair, top band clear. Offering: Back pain rehab \u2014 Assessment with registered physiotherapists and a personalised exercise plan. Value: A plan, not a quick fix. Assessment: Registered physiotherapists assess how you sit, sleep and move. Imagery: Real people in real settings, natural light. Brand palette: primary #0E7C66, background #FFFFFF. Leave clean, uncluttered space for the brand logo and exact body, cta, headline, other overlays; do not render any text, letters or logos in the image.",
+      "provider": "higgsfield",
+      "request_schema_sha256": "14b6aa038f1572f1dbc9c0b8bdcd43b02c557f90a394ab5b23df76ffdd533ddb",
+      "retries": {
+       "automatic_resubmits": 0,
+       "same_intent_replay_max": 0,
+       "transport_before_dispatch_max": 2
+      },
+      "seed": null
+     },
+     "transform": null
+    }
+   ],
+   "outputs": [
+    {
+     "format": {
+      "channel": "x,linkedin",
+      "count": 1,
+      "duration_frames": null,
+      "frame_rate": null,
+      "height_px": 1350,
+      "id": "portrait_1080x1350-slot-1",
+      "kind": "image",
+      "mime_type": "image/png",
+      "preset": "portrait_1080x1350",
+      "width_px": 1080
+     },
+     "id": "out-render-portrait_1080x1350-slot-1",
+     "node_id": "render-portrait_1080x1350-slot-1",
+     "port": "image"
+    }
+   ],
+   "schema_version": "cs-program-v1",
+   "source_semantics": {
+    "composition_sha256": null,
+    "recipe_graph_sha256": "8279950cdf50794a938ab3e43d10d1087e64ad5d8f45aa451d2b9c511e8af642",
+    "request_sha256": "8f14b6a568521b1fe96375b028ee5e92af92c475f84e6685e79f3a74dacef38e",
+    "treatment_sha256": "78de5743376bed16c280a7dd6f528aed9bc7ee0d08b3fa084ad2f6ba297ec0be"
+   },
+   "template_sha256": null
+  },
+  "revision": 1,
+  "schema_version": "cs-execution-plan-v1",
+  "sha256": "e007687dec776f711ddba4589b8c1a30ec465394ac574c9e04bff7b0fbfeeb60",
+  "sources": {
+   "brand_package": {
+    "authority": "brand-ci-studio",
+    "id": "d73114e3-24be-54a8-abc6-99c0643b4812",
+    "kind": "brand-package",
+    "revision": 1,
+    "sha256": "7488450e816f98057a617ba76d2b780dbb4b347de8e09bec775e119b18916274",
+    "version_id": "371417ce-339d-538e-9ed1-41ec687ece44",
+    "workspace_id": "682f86a5-1b8b-56f5-94aa-976ee000dc82"
+   },
+   "catalogue": {
+    "authority": "creative-studio",
+    "id": "1d3202f7-585e-5ef7-afb9-acb18bf86d19",
+    "kind": "provider_catalogue",
+    "revision": 1,
+    "sha256": "18ce01238761a67a95c6dae6d4406f83ba9d626a8fc52d3092b2229c091b9e2a",
+    "version_id": "f56503ee-3665-5dde-957a-cff80c216948",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   },
+   "composition": null,
+   "recipe": {
+    "authority": "creative-studio",
+    "id": "d002ca92-77f2-56a7-b64c-4fd6a41c93c7",
+    "kind": "recipe",
+    "revision": 1,
+    "sha256": "8279950cdf50794a938ab3e43d10d1087e64ad5d8f45aa451d2b9c511e8af642",
+    "version_id": "4b634c70-12f1-56b5-82b6-d5d3b465f55b",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   },
+   "request": {
+    "authority": "creative-studio",
+    "id": "65e41b8a-af20-54b3-83a3-c84cc852f046",
+    "kind": "creative-request",
+    "revision": 1,
+    "sha256": "e08f1a39e491001f505b2e2481f1d6d2f778e92d44548f05887ab69b7e75dfc8",
+    "version_id": "d6c33060-6831-54d3-b4b6-f2e8308a0d9f",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   },
+   "treatment": {
+    "authority": "creative-studio",
+    "id": "8299065c-00ac-52f7-9913-0ddd194ecf6a",
+    "kind": "treatment",
+    "revision": 2,
+    "sha256": "04ef96febba24e5630fbabfd180a18b888e81954f3d8530d9ffa73b7e1180235",
+    "version_id": "b42bfd70-ec90-5ae3-84c1-60d82d920b24",
+    "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+   }
+  },
+  "version_id": "a9b0ac2a-4f6d-5691-89f2-77933fe17efd",
+  "workspace_id": "e195dad8-5f22-5753-8e14-2ee65d287b31"
+ }
+}
