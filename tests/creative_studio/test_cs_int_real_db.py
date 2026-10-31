@@ -10,9 +10,14 @@ Proves, over ALL Creative Studio migrations in filename order:
 """
 from __future__ import annotations
 
+import json
 import unittest
 
+import psycopg2
+
+from service import jcs
 from tests.creative_studio.pg_harness import CS_B1_MIGRATION, ThrowawayCluster, cs_migrations
+from tests.creative_studio.test_cs_int_unit import jcs_corpus
 
 EXPECTED_CS_CHAIN = [
     "20261030210000_cs_b1_platform_foundation.sql",
@@ -120,6 +125,29 @@ class CsIntegratedSchema(unittest.TestCase):
         self.assertSnapshotEqual(before, after)
         self.assertIn("operation_id", self.q(claim_def)[0][0])
         self.assertEqual(self.q(mime_sql)[0][0], "svg")
+
+    def test_04_sql_canonical_json_equals_python(self):
+        """cs_private.cs_jcs (node_input_sha256 preimage) == service/jcs.py on the shared corpus."""
+        corpus = jcs_corpus()
+        with self.pg.connect() as conn:
+            cur = conn.cursor()
+            cur.execute("set extra_float_digits = 3")           # the function pins its own setting
+            cur.execute("select cs_private.cs_jcs(d) from jsonb_array_elements(%s::jsonb) with ordinality t(d, o) "
+                        "order by o", (json.dumps(corpus),))
+            got = [r[0] for r in cur.fetchall()]
+        self.assertEqual(len(got), len(corpus))
+        for doc, sql in zip(corpus, got):
+            self.assertEqual(sql, jcs.canonical_text(doc), doc)
+
+    def test_05_sql_canonical_json_refuses_outside_its_domain(self):
+        for bad in ("1e-5", "1000000000000000.5", "1.5e300", "9007199254740992", '{"\\ud83d\\ude00": 1}', '{"\\ue000": 1}'):
+            with self.pg.connect() as conn, self.subTest(bad=bad):
+                with self.assertRaises(psycopg2.Error) as ctx:
+                    conn.cursor().execute("select cs_private.cs_jcs(%s::jsonb)", (bad,))
+                self.assertEqual(ctx.exception.pgcode, "CS422")
+        for role in ("anon", "authenticated", "cs_api", "cs_worker"):
+            self.assertFalse(self.q("select has_function_privilege(%s, 'cs_private.cs_jcs(jsonb)', 'execute')",
+                                    (role,))[0][0], role)
 
 
 if __name__ == "__main__":

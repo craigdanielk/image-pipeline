@@ -9,62 +9,14 @@ never coerced.
 from __future__ import annotations
 
 import hashlib
-import json
-import math
 
-MAX_SAFE_INTEGER = 9007199254740991
+from .. import jcs as _jcs
 
-
-class CanonicalError(ValueError):
-    pass
-
-
-def _number(value) -> str:
-    if isinstance(value, bool):
-        raise CanonicalError("bool is not a number")
-    if isinstance(value, int):
-        if abs(value) > MAX_SAFE_INTEGER:
-            raise CanonicalError("integer outside the exact JavaScript range")
-        return str(value)
-    if not math.isfinite(value):
-        raise CanonicalError("non-finite number")
-    if value == 0:
-        return "0"
-    if value.is_integer() and abs(value) < 1e21:
-        return str(int(value))
-    text = repr(value)
-    if "e" in text:
-        mantissa, exponent = text.split("e")
-        exp = int(exponent)
-        text = f"{mantissa}e{'+' if exp > 0 else '-'}{abs(exp)}"
-    return text
-
-
-def _encode(value) -> str:
-    if value is None:
-        return "null"
-    if value is True:
-        return "true"
-    if value is False:
-        return "false"
-    if isinstance(value, (int, float)):
-        return _number(value)
-    if isinstance(value, str):
-        return json.dumps(value, ensure_ascii=False)
-    if isinstance(value, (list, tuple)):
-        return "[" + ",".join(_encode(v) for v in value) + "]"
-    if isinstance(value, dict):
-        for k in value:
-            if not isinstance(k, str):
-                raise CanonicalError("object keys must be strings")
-        # RFC 8785: sort by UTF-16 code units
-        keys = sorted(value, key=lambda k: k.encode("utf-16-be"))
-        return "{" + ",".join(json.dumps(k, ensure_ascii=False) + ":" + _encode(value[k]) for k in keys) + "}"
-    raise CanonicalError(f"unsupported type {type(value).__name__}")
-
-
-def canonical(value) -> bytes:
-    return _encode(value).encode("utf-8")
+MAX_SAFE_INTEGER = _jcs.MAX_SAFE_INTEGER
+# One RFC 8785 implementation for every module (service/jcs.py, CS-INT). CS-B3's own
+# number formatter wrote 1e-6 <= |x| < 1e-4 as exponents, which is not ECMAScript output.
+CanonicalError = _jcs.JcsError
+canonical = _jcs.canonical_bytes
 
 
 def sha256_hex(data: bytes) -> str:

@@ -125,5 +125,65 @@ class CanonicalArchitecturePackage(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), digest, rel)
 
 
+def jcs_corpus(seed: int = 8785, n: int = 400) -> list:
+    """Fixed edge cases + seeded random documents inside the SQL canonicaliser's domain."""
+    import random
+    rnd = random.Random(seed)
+    fixed = [0, 1, -1, 2.0, 0.5, -0.5, 1.5, 3.5, 0.1, 0.2, 0.30000000000000004, 0.0001, 0.00012, 0.001, 123.456,
+             333333333.3333333, 99999999999999.9, 123456789012345.6, 9007199254740991, -9007199254740991,
+             "", "plain", "quote\" back\\ slash/", "\b\f\n\r\t", "\u0001\u001f\u007f", "é 中 ü", "😀 astral",
+             "\u2028\u2029", True, False, None, [], {}, [1, [2, [3, {}]]],
+             {"b": 1, "a": 2, "A": 3, "é": 4, "中": 5, "aa": 6, "a_b": 7, "a-b": 8, "": 9},
+             {"compile_hash": "0" * 64, "node_id": "n1", "inputs": [{"port": "ref", "asset": {"sha256": "f" * 64,
+              "revision": 1}}], "provider_call": {"model": "m", "params": {"strength": 0.35, "seed": 42}}}]
+    def value(depth):
+        kind = rnd.choice(["int", "float", "str", "bool", "null", "arr", "obj"] if depth < 3 else
+                          ["int", "float", "str", "bool", "null"])
+        if kind == "int":
+            return rnd.randint(-9007199254740991, 9007199254740991) if rnd.random() < .2 else rnd.randint(-1000, 1000)
+        if kind == "float":
+            mag = 10 ** rnd.uniform(-4, 14.9)
+            return round(rnd.choice([-1, 1]) * mag, rnd.randint(0, 12)) or 0.5
+        if kind == "str":
+            return "".join(rnd.choice("aZ09 _-\"\\/\n\téüß中") for _ in range(rnd.randint(0, 8)))
+        if kind == "bool":
+            return rnd.random() < .5
+        if kind == "null":
+            return None
+        if kind == "arr":
+            return [value(depth + 1) for _ in range(rnd.randint(0, 4))]
+        return {"".join(rnd.choice("abcAB_é中") for _ in range(rnd.randint(1, 4))): value(depth + 1)
+                for _ in range(rnd.randint(0, 4))}
+    return fixed + [value(0) for _ in range(n)]
+
+
+class SingleCanonicalJson(unittest.TestCase):
+    """CS-INT: one RFC 8785 implementation, checked against ECMAScript itself."""
+
+    def test_modules_share_one_implementation(self):
+        from service import jcs
+        from service.composition import canonical as b4
+        from service.providers import canonical as b3
+        from service.requests import canonical as b2
+        self.assertIs(b2.canonical_bytes, jcs.canonical_bytes)
+        self.assertIs(b3.canonical, jcs.canonical_bytes)
+        self.assertIs(b4.canonical_bytes, jcs.canonical_bytes)
+        self.assertEqual(b3.canonical(1e-5), b"0.00001")      # CS-B3 used to emit 1e-5
+
+    def test_python_matches_ecmascript_reference(self):
+        import subprocess
+        from service import jcs
+        corpus = jcs_corpus()
+        ref = subprocess.run(["node", str(ROOT / "tests/creative_studio/cs_int/jcs_reference.mjs")],
+                             input=json.dumps(corpus), capture_output=True, text=True, check=True).stdout
+        expected = json.loads(ref)
+        for doc, want in zip(corpus, expected, strict=True):
+            self.assertEqual(jcs.canonical_text(doc), want, doc)
+        for extra in (1e-7, 1.5e-7, 1e-6, 1e-5, 1e21, 1.5e300, 5e-324, -0.0):     # outside the SQL domain
+            want = subprocess.run(["node", "-e", f"process.stdout.write(JSON.stringify({extra!r}))"],
+                                  capture_output=True, text=True, check=True).stdout
+            self.assertEqual(jcs.canonical_text(extra), want, extra)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

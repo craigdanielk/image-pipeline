@@ -36,6 +36,7 @@ from service.api import create_app
 from service.config import Settings
 from service.providers import catalogue as cat_mod
 from service.providers.contracts import validate
+from service import jcs
 from service.providers.credentials import CredentialError, KeyRing, SealedCredential
 from service.runtime.worker import ProviderRuntime
 from tests.creative_studio.b3_support import (CREDENTIAL_PLAINTEXT, HEADLINE, ROOT, TEST_KEYS, DirStore, FakeFetcher,
@@ -413,6 +414,16 @@ class CsB3RealDatabase(unittest.TestCase):
         with self.assertRaises(CredentialError):                    # cannot be moved to another attempt
             KEYRING.open_envelope(sealed, workspace_id=str(row["workspace_id"]), attempt_id=str(uuid.uuid4()),
                                   envelope_sha256=row["envelope_sha256"])
+        # CS-INT F5: node_input_sha256 is SHA-256 of the RFC 8785 preimage (contract.md §3), recomputed here
+        att = self.q("select a.workspace_id, a.node_id, a.node_input_sha256, adm.compile_hash, s.provider_call "
+                     "from public.cs_attempts a join public.cs_run_admissions adm on adm.run_id = a.run_id "
+                     "join public.cs_run_node_specs s on s.run_id = a.run_id and s.node_id = a.node_id "
+                     "where a.run_id = %s", (run["run_id"],))[0]
+        inputs = self.q("select cs_private.cs_resolve_inputs(%s, %s, %s) as i",
+                        (att["workspace_id"], run["run_id"], att["node_id"]))[0]["i"]
+        self.assertEqual(att["node_input_sha256"], jcs.jcs_sha256({
+            "compile_hash": att["compile_hash"], "node_id": att["node_id"], "inputs": inputs,
+            "provider_call": att["provider_call"]}))
         self.__class__.draft_run = run["run_id"]
 
     # -- 04 duplicate dispatch idempotent --------------------------------------------------------------

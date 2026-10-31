@@ -1241,6 +1241,50 @@ begin
    where id = p_item.id;
 end $$;
 
+-- RFC 8785 (JCS) canonical text of a jsonb value, for digests computed in SQL (contract.md §3;
+-- CS-INT F5). Output equals service/jcs.py byte for byte on its supported domain; outside it
+-- the value is refused, never approximated:
+--   * strings: jsonb's own escaping is exactly JCS (", \, \b \f \n \r \t, other C0 as \u00xx);
+--   * object keys: code-point order (= UTF-16 order) only for keys inside U+0001..U+D7FF;
+--   * numbers: integers within the JavaScript exact range; other numbers only where
+--     Postgres' shortest float8 output and ECMAScript both use plain notation (1e-4 <= |x| < 1e15).
+create or replace function cs_private.cs_jcs(p_value jsonb) returns text
+language plpgsql immutable strict
+set search_path = pg_catalog, pg_temp
+set extra_float_digits = 1 as $$
+declare
+  v_type text := jsonb_typeof(p_value);
+  v_num numeric;
+  v_out text;
+begin
+  if v_type = 'object' then
+    if exists (select 1 from jsonb_object_keys(p_value) k where k !~ '^[\u0001-\ud7ff]*$') then
+      raise exception 'canonicalization_unsupported_key' using errcode = 'CS422';
+    end if;
+    select '{' || coalesce(string_agg(to_jsonb(e.key)::text || ':' || cs_private.cs_jcs(e.value), ','
+                                       order by e.key collate "C"), '') || '}'
+      into v_out from jsonb_each(p_value) e;
+    return v_out;
+  elsif v_type = 'array' then
+    select '[' || coalesce(string_agg(cs_private.cs_jcs(e.value), ',' order by e.ordinality), '') || ']'
+      into v_out from jsonb_array_elements(p_value) with ordinality e;
+    return v_out;
+  elsif v_type = 'number' then
+    v_num := (p_value #>> '{}')::numeric;
+    if v_num = trunc(v_num) then
+      if abs(v_num) > 9007199254740991 then
+        raise exception 'canonicalization_unsupported_number' using errcode = 'CS422';
+      end if;
+      return trunc(v_num)::text;
+    end if;
+    if abs(v_num) < 0.0001 or abs(v_num) >= 1000000000000000 then
+      raise exception 'canonicalization_unsupported_number' using errcode = 'CS422';
+    end if;
+    return (v_num::float8)::text;
+  end if;
+  return p_value::text;     -- string, boolean, null
+end $$;
+
 -- Resolve the node's inputs to exact AssetRefs (dependency outputs by
 -- node/port/ordinal) and derive node_input_sha256 from compile hash, node id,
 -- resolved refs and the frozen provider call.
@@ -1303,8 +1347,9 @@ begin
    where x.workspace_id = v.workspace_id and x.run_id = v.run_id and x.node_id = v.node_id
    order by x.attempt_number desc limit 1 for update;
   v_inputs := cs_private.cs_resolve_inputs(v.workspace_id, v.run_id, v.node_id);
-  v_hash := encode(sha256(convert_to(jsonb_build_object('compile_hash', adm.compile_hash, 'node_id', v.node_id,
-              'inputs', v_inputs, 'provider_call', s.provider_call)::text, 'UTF8')), 'hex');
+  -- contract.md §3: node_input_sha256 = SHA-256 of the RFC 8785 canonical preimage (CS-INT F5)
+  v_hash := encode(sha256(convert_to(cs_private.cs_jcs(jsonb_build_object('compile_hash', adm.compile_hash,
+              'node_id', v.node_id, 'inputs', v_inputs, 'provider_call', s.provider_call)), 'UTF8')), 'hex');
   if a.id is null then
     select * into cred from cs_private.cs_credentials x where x.version_id = adm.credential_version_id;
     select * into r from public.cs_budget_reservations x
@@ -1890,7 +1935,7 @@ begin
                      'cs_attempt_transition', 'cs_release_unspent', 'cs_mark_unknown', 'cs_settle',
                      'cs_budget_consumed', 'cs_current_policy', 'cs_run_cost', 'cs_advance_run', 'cs_quote_nodes',
                      'cs_b3_lease', 'cs_finish_item', 'cs_resolve_inputs', 'cs_mark_attempt_uncertain', 'cs_attempt_guard',
-                     'cs_reservation_guard')) loop
+                     'cs_reservation_guard', 'cs_jcs')) loop
     execute format('revoke all on function %s from public, anon, authenticated, cs_api, cs_worker', r.sig);
   end loop;
 end $$;
