@@ -43,7 +43,7 @@ from tests.creative_studio.test_b2_real_db import call
 from tests.creative_studio.test_cs_b1_real_db import ISSUER, JWT_SECRET, token
 
 KEYRING = KeyRing({k: base64.b64decode(v) for k, v in TEST_KEYS.items()})
-MIGRATION = "20261031230100_cs_17b_post_run_pipeline.sql"
+MIGRATION = "20261031240100_cs_17b_post_run_pipeline.sql"
 EVIDENCE = Path(__file__).parent / "evidence" / "cs17b_post_run_handoff.json"
 
 
