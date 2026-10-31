@@ -24,6 +24,7 @@ EXPECTED_CS_CHAIN = [
     "20261031140100_cs_b2_brand_campaign_inputs.sql",
     "20261031140300_cs_b3_provider_execution.sql",
     "20261031140400_cs_b4_composition_exports.sql",
+    "20261031190100_cs_12_use_time_kick.sql",
 ]
 
 _CS_REL = "((n.nspname = 'public' and c.relname like 'cs\\_%%') or n.nspname = 'cs_private')"

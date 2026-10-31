@@ -184,3 +184,25 @@ If issues occur post-deployment:
    ```bash
    psql "$PGDATABASE_ADMIN_URL" -c "UPDATE cs_private.cs_runtime_limits SET dispatch_enabled = false, admission_enabled = false WHERE environment_id = 'production';"
    ```
+
+## 5. Use-time kick (CS-12) — operator steps, in this order, AFTER the first manual end-to-end run works
+
+Work now starts when it is enqueued: a trigger on `cs_work_items` fires one async `net.http_post` to
+`<worker_base_url>/api/internal/worker`. The scheduler is only a safety net. Nothing below was applied by CS-12.
+
+1. Apply `supabase/migrations/20261031190100_cs_12_use_time_kick.sql` (also listed in `03_apply_all_migrations.sql`). Kicking stays OFF by default.
+2. Vault secret (same value as the Vercel `CS_WORKER_SECRET`): `select vault.create_secret('<CS_WORKER_SECRET>', 'cs_worker_cron_secret');`
+3. Settings: `insert into cs_private.cs_platform_settings(key,value) values ('worker_base_url','https://<deployment host>') on conflict (key) do update set value=excluded.value;`
+   Tunables (all in the same table): `worker_kick_window_seconds` (2), `worker_safety_net_seconds` (120), `worker_sweep_grace_seconds` (20).
+4. Turn on: `update cs_private.cs_platform_settings set value='true' where key='worker_kick_enabled';`
+   Turn off (kill switch, instant): same with `'false'`.
+5. Run `scripts/ops/sql/cs_worker_dispatch.sql` to (re)schedule `cs-worker-drain` as a 2-minute safety net (pause: `select cron.unschedule('cs-worker-drain');`).
+6. Watch: `select * from cs_private.cs_kick_failures order by id desc limit 20;` (pg_net non-2xx answers are recorded by the sweep).
+
+Known limits: a retry scheduled for the future (`retry_wait` with a later `due_at`) cannot be kicked at its due time
+(pg_net has no delay) — the 2-minute safety net starts it. A burst is coalesced to one kick per workspace per window; the
+remaining items are chained (each finished item kicks the next) or picked up by the safety net.
+
+**Follow-up (Vercel Hobby):** once the kick path is live, the `crons` block in `vercel.json` (`* * * * *` on
+`/api/internal/worker`) is no longer needed and Hobby's once-per-day cron limit becomes irrelevant. Remove the block in a
+separate change after step 5 has run clean for a few days; CS-12 deliberately left `vercel.json` untouched.
