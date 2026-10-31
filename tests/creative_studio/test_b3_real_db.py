@@ -16,6 +16,10 @@ Run:  python3 -m pytest tests/creative_studio/test_b3_real_db.py -v
 """
 from __future__ import annotations
 
+import dataclasses
+
+from tests.creative_studio.assertion_support import KEY, GatewayApp
+
 import base64
 import json
 import subprocess
@@ -64,7 +68,7 @@ class CsB3RealDatabase(unittest.TestCase):
             jwt_secret=JWT_SECRET, jwks_url=None, storage_url="http://127.0.0.1:9/storage/v1",
             storage_anon_key="anon-public-test-key", signed_download_seconds=300, download_grant_seconds=60,
             worker_secret="worker-test-secret", runtime_principal="cs-worker:test")
-        cls.app = create_app(cls.settings)
+        cls.app = GatewayApp(create_app(dataclasses.replace(cls.settings, mos_assertion_key=KEY)), cls.pg.dsn())
         cls.fetcher = FakeFetcher(cls.tmp / "provider")
         cls.runtime = ProviderRuntime(cls.settings, cls.store, cls.fetcher, KEYRING)
         cls.users = {}

@@ -10,6 +10,10 @@ Proves:
 """
 from __future__ import annotations
 
+import dataclasses
+
+from tests.creative_studio.assertion_support import KEY, GatewayApp
+
 import base64
 import copy
 import hashlib
@@ -98,7 +102,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
 
         cls.auth.users["machine@example.test"] = ("machine-pw-test", cls.users["machine"])
         cls.tok = {k: token(v) for k, v in cls.users.items()}
-        cls.app = create_app(cls.settings)
+        cls.app = GatewayApp(create_app(dataclasses.replace(cls.settings, mos_assertion_key=KEY)), cls.pg.dsn())
 
         # Setup accounts and workspaces for tests
         cls.acct_a = cls._ok(call(cls.app, "POST", "/api/v1/accounts", tok=cls.tok["owner_a"],
@@ -148,7 +152,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_01_all_cs_migrations_and_provisioning_applied(self):
         """All 4 CS migrations applied, roles exist with least privilege, RLS is forced."""
-        self.assertEqual(len(self.applied), 9)  # 2 legacy + 4 CS migrations + CS-12 + 2 CS-INT2
+        self.assertEqual(len(self.applied), 10)  # 2 legacy + 4 CS migrations + CS-12 + 2 CS-INT2 + CS-15
         with self.pg.connect() as conn:
             cur = conn.cursor()
             # Prove roles exist without superuser or bypassrls

@@ -27,6 +27,7 @@ EXPECTED_CS_CHAIN = [
     "20261031190100_cs_12_use_time_kick.sql",
     "20261031190200_cs_int2_register_runtime_principal.sql",
     "20261031190300_cs_int2_paid_provider_gate.sql",
+    "20261031210100_cs_15_service_assertion.sql",
 ]
 
 _CS_REL = "((n.nspname = 'public' and c.relname like 'cs\\_%%') or n.nspname = 'cs_private')"

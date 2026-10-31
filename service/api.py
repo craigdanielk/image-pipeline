@@ -16,6 +16,7 @@ import uuid
 from datetime import datetime
 from urllib.parse import parse_qs
 
+from . import assertion as _assertion
 from .auth import TokenVerifier
 from .config import Settings
 from .db import actor_transaction
@@ -62,16 +63,22 @@ class Request:
         self.idempotency_key = environ.get("HTTP_IDEMPOTENCY_KEY")
         self._environ = environ
         self._body = None
+        self._raw = None
 
-    def json(self) -> dict:
-        if self._body is None:
+    def raw_body(self) -> bytes:
+        if self._raw is None:
             try:
                 length = int(self._environ.get("CONTENT_LENGTH") or 0)
             except ValueError:
                 raise ServiceError(400, "invalid_body") from None
             if length > _MAX_BODY:
                 raise ServiceError(413, "body_too_large")
-            raw = self._environ["wsgi.input"].read(length) if length else b""
+            self._raw = self._environ["wsgi.input"].read(length) if length else b""
+        return self._raw
+
+    def json(self) -> dict:
+        if self._body is None:
+            raw = self.raw_body()
             try:
                 self._body = json.loads(raw.decode() or "{}")
             except (UnicodeDecodeError, json.JSONDecodeError):
@@ -98,6 +105,8 @@ class CreativeStudioApi:
         self.settings = settings
         self.verifier = verifier or TokenVerifier(settings)
         self.signer = signer or StorageSigner(settings)
+        from .db import _connect as _db_connect
+        self.assertion_guard = _assertion.AssertionGuard(settings, _db_connect)
 
     # -- WSGI ----------------------------------------------------------------
     def __call__(self, environ, start_response):
@@ -128,10 +137,21 @@ class CreativeStudioApi:
                 continue
             path_matched = True
             if method == req.method:
+                self._assert_gateway(req, name, m.groups())
                 return getattr(self, name)(req, *m.groups())
         if path_matched:
             raise ServiceError(405, "method_not_allowed")
         raise ServiceError(404, "not_found")
+
+    def _assert_gateway(self, req: Request, handler: str, groups) -> None:
+        """ENG-15: MOS gateway routes carry a signed service assertion next to the user's bearer."""
+        policy = _assertion.POLICY.get(handler)
+        if policy is None:
+            return
+        if not req._environ.get(_assertion.HEADER_ENV_KEY) and not policy.required:
+            return                      # native Studio-UI call on a shared/read route
+        actor = self.verifier.verify(req.authorization)
+        self.assertion_guard.check(req, policy, actor=actor, workspace_id=_uuid(groups[0]))
 
     def _tx(self, req: Request):
         actor = self.verifier.verify(req.authorization)

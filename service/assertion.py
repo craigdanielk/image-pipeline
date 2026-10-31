@@ -1,0 +1,171 @@
+"""MOS -> Creative Studio signed service assertion (ENG-15 Part CS).
+
+Header ``X-CS-Service-Assertion: <b64url(payload-json)>.<b64url(HMAC-SHA256(key, payload-json))>``
+payload = {aud, sub, act, bnd, bsha, nonce, iat, exp}. It rides ALONGSIDE the user's bearer token; it never
+replaces it. Verification order: bearer (caller) -> signature -> shape -> aud -> sub == bearer user -> act ==
+route action -> bsha == sha256(raw body) -> iat/exp window -> binding active for the URL workspace -> nonce
+consumed exactly once (insert-only table, unique nonce). Refusals are typed and echo no key or payload.
+
+Routes are declared in POLICY by handler name. ``required`` routes refuse a missing header; the others (reads and
+routes the native Studio UI also uses) are native when no header is sent, and fully verified when one is.
+"""
+from __future__ import annotations
+
+import base64
+import binascii
+import hashlib
+import hmac
+import json
+import time
+from dataclasses import dataclass
+
+from .errors import ServiceError
+
+HEADER_ENV_KEY = "HTTP_X_CS_SERVICE_ASSERTION"
+AUDIENCE = "creative-studio"
+MAX_LIFETIME_SECONDS = 60
+MIN_KEY_BYTES = 32
+MIN_NONCE_BYTES = 16
+_FIELDS = {"aud", "sub", "act", "bnd", "bsha", "nonce", "iat", "exp"}
+
+
+@dataclass(frozen=True)
+class Policy:
+    action: str
+    required: bool = True
+    binds: bool = False      # connection creation: no binding exists yet; bnd must equal body.external_workspace_id
+
+
+POLICY: dict[str, Policy] = {
+    # connections / bindings
+    "b2_create_connection": Policy("connection.bind", binds=True),
+    "b2_list_connections": Policy("connection.list", required=False),
+    "b2_refresh_connection": Policy("connection.refresh"),
+    # brand package import
+    "b2_import_brand_package": Policy("brand_package.import"),
+    "b2_get_operation": Policy("operation.read", required=False),
+    "b2_get_brand_package": Policy("brand_package.read", required=False),
+    # creative request intake, treatments, compile
+    "b2_intake_marketing_os": Policy("request.intake"),
+    "b2_create_request": Policy("request.create"),
+    "b2_revise_request": Policy("request.revise"),
+    "b2_get_request": Policy("request.read", required=False),
+    "b2_create_treatment": Policy("treatment.create"),
+    "b2_revise_treatment": Policy("treatment.revise"),
+    "b2_accept_treatment": Policy("treatment.accept"),
+    "b2_get_treatment": Policy("treatment.read", required=False),
+    "b2_compile_mapping": Policy("compile.map"),
+    "cs_b3_quote": Policy("compile.quote"),
+    # run admission
+    "cs_b3_admit_run": Policy("run.admit"),
+    "cs_b3_cancel_run": Policy("run.cancel"),
+    "cs_b3_run_costs": Policy("run.costs", required=False),
+    # export / handoff (the native Studio UI also calls handoff create/read)
+    "cs_b4_create_handoff": Policy("handoff.create", required=False),
+    "cs_b4_get_handoff": Policy("handoff.read", required=False),
+    "cs_b4_get_export": Policy("export.read", required=False),
+}
+
+
+def _refuse(code: str, status: int = 401) -> ServiceError:
+    return ServiceError(status, code)
+
+
+def _b64d(text: str) -> bytes:
+    if not text or len(text) > 4096:
+        raise _refuse("assertion_invalid")
+    try:
+        return base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
+    except (binascii.Error, ValueError):
+        raise _refuse("assertion_invalid") from None
+
+
+def b64e(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
+
+
+def sign(key: str, payload: dict) -> str:
+    """Reference signer (tests, and the contract MOS implements)."""
+    raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+    return f"{b64e(raw)}.{b64e(hmac.new(key.encode(), raw, hashlib.sha256).digest())}"
+
+
+def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes, now: float, skew: int) -> dict:
+    """Pure checks (everything except binding and nonce). Returns the payload."""
+    if not key or len(key.encode()) < MIN_KEY_BYTES:
+        raise ServiceError(503, "assertion_unconfigured")
+    parts = header.split(".")
+    if len(parts) != 2:
+        raise _refuse("assertion_invalid")
+    raw, sig = _b64d(parts[0]), _b64d(parts[1])
+    expect = hmac.new(key.encode(), raw, hashlib.sha256).digest()
+    if not hmac.compare_digest(sig, expect):
+        raise _refuse("assertion_invalid")
+    try:
+        p = json.loads(raw.decode())
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise _refuse("assertion_invalid") from None
+    if not isinstance(p, dict) or set(p) != _FIELDS:
+        raise _refuse("assertion_invalid")
+    for name in ("aud", "sub", "act", "bnd", "bsha", "nonce"):
+        if not isinstance(p[name], str):
+            raise _refuse("assertion_invalid")
+    for name in ("iat", "exp"):
+        if isinstance(p[name], bool) or not isinstance(p[name], int):
+            raise _refuse("assertion_invalid")
+    if p["aud"] != AUDIENCE:
+        raise _refuse("assertion_invalid")
+    if not hmac.compare_digest(p["sub"].lower().encode(), user_id.lower().encode()):
+        raise _refuse("assertion_invalid")
+    if p["act"] != action:
+        raise _refuse("assertion_invalid")
+    if not hmac.compare_digest(p["bsha"].lower().encode(), hashlib.sha256(raw_body).hexdigest().encode()):
+        raise _refuse("assertion_invalid")
+    if not 0 < p["exp"] - p["iat"] <= MAX_LIFETIME_SECONDS:
+        raise _refuse("assertion_invalid")
+    try:
+        nonce_bytes = _b64d(p["nonce"])
+    except ServiceError:
+        raise _refuse("assertion_invalid") from None
+    if len(nonce_bytes) < MIN_NONCE_BYTES or len(p["nonce"]) > 128:
+        raise _refuse("assertion_invalid")
+    if now > p["exp"] + skew:
+        raise _refuse("assertion_expired")
+    if p["iat"] > now + skew:
+        raise _refuse("assertion_invalid")
+    return p
+
+
+class AssertionGuard:
+    def __init__(self, settings, connect, clock=time.time):
+        self.settings = settings
+        self._connect = connect
+        self.clock = clock
+
+    def check(self, req, policy: Policy, *, actor, workspace_id: str) -> dict | None:
+        header = req._environ.get(HEADER_ENV_KEY)
+        if not header:
+            if policy.required:
+                raise _refuse("assertion_missing")
+            return None
+        payload = verify(header.strip(), key=self.settings.mos_assertion_key or "", user_id=actor.user_id,
+                         action=policy.action, raw_body=req.raw_body(), now=self.clock(),
+                         skew=self.settings.assertion_skew_seconds)
+        if policy.binds:
+            if payload["bnd"] != str(req.json().get("external_workspace_id")):
+                raise _refuse("binding_inactive", 403)
+        expires = payload["exp"] + self.settings.assertion_skew_seconds
+        conn = self._connect(self.settings.api_database_url)
+        try:
+            with conn:
+                cur = conn.cursor()
+                if not policy.binds:
+                    cur.execute("select public.cs_assertion_binding_ok(%s::uuid, %s)", (workspace_id, payload["bnd"]))
+                    if not cur.fetchone()[0]:
+                        raise _refuse("binding_inactive", 403)
+                cur.execute("select public.cs_consume_assertion_nonce(%s, to_timestamp(%s))", (payload["nonce"], expires))
+                if not cur.fetchone()[0]:
+                    raise _refuse("assertion_replayed")
+        finally:
+            conn.close()
+        return payload

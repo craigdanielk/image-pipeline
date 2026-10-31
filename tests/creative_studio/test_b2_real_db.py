@@ -16,6 +16,10 @@ Run:  python3 -m pytest tests/creative_studio/test_b2_real_db.py -v
 """
 from __future__ import annotations
 
+import dataclasses
+
+from tests.creative_studio.assertion_support import KEY, GatewayApp
+
 import copy
 import hashlib
 import io
@@ -88,7 +92,7 @@ class CsB2RealDatabase(unittest.TestCase):
         cls.kitchen, cls.kitchen_camp = fx.kitchenware()
         cls.gw = FakeMos = fx.FakeMarketingOs((cls.home, cls.home_camp), (cls.physio, cls.physio_camp),
                                                (cls.kitchen, cls.kitchen_camp))
-        cls.app = create_app(cls.settings)
+        cls.app = GatewayApp(create_app(dataclasses.replace(cls.settings, mos_assertion_key=KEY)), cls.pg.dsn())
         cls.app.mos_gateway = FakeMos
 
         cls.acct_a = cls._ok(call(cls.app, "POST", "/api/v1/accounts", tok=cls.tok["owner_a"],

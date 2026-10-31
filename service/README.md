@@ -24,3 +24,14 @@ python3 -m venv .venv && .venv/bin/pip install -r service/requirements-test.txt
 .venv/bin/python -m pytest tests            # Creative Studio + legacy compiler suite
 ```
 The Creative Studio real-database tests need PostgreSQL 17 binaries (`PG_BIN`, or Homebrew `postgresql@17`); the suite builds a private throwaway cluster and applies every migration in filename order. The CS-B4 UI tests need `npm ci` in `ui/app`.
+
+## MOS gateway service assertion (CS-15 / ENG-15)
+Routes a Marketing OS gateway calls (connection bind/refresh, brand package import, creative request intake and revision,
+treatment create/revise/accept, compile mapping and quote, run admit/cancel) require `X-CS-Service-Assertion` next to the
+user's bearer: `b64url(payload).b64url(HMAC-SHA256(CS_MOS_ASSERTION_KEY, payload))`, payload
+`{aud:"creative-studio", sub, act, bnd, bsha, nonce, iat, exp}` (exp-iat ≤ 60 s; key ≥ 32 bytes, deployment env only;
+`CS_ASSERTION_SKEW_SECONDS` default 30). Checked: signature, aud, sub == bearer user, act == route action (`service/assertion.py` POLICY),
+bsha == SHA-256(raw body), window, active `marketing-os` binding `bnd` for the URL workspace (for `connection.bind`: `bnd` == body
+`external_workspace_id`), nonce consumed once (`cs_private.cs_assertion_nonces`, swept by `cs_safety_net_sweep`).
+Refusals: `assertion_missing|invalid|expired|replayed` (401), `binding_inactive` (403), `assertion_unconfigured` (503, fail closed).
+Read routes and routes the native Studio UI shares (handoffs) accept no header; if one is sent it is fully verified.

@@ -10,6 +10,10 @@ Run:  python3 -m pytest tests/creative_studio/test_b4_real_db.py -v
 """
 from __future__ import annotations
 
+import dataclasses
+
+from tests.creative_studio.assertion_support import KEY, GatewayApp
+
 import copy
 import hashlib
 import json
@@ -52,7 +56,7 @@ class CsB4RealDatabase(unittest.TestCase):
         cls.applied = cls.pg.install()
         cls.storage = FakeStorage(cls.pg.dsn(), JWT_SECRET, ISSUER).start()
         cls.settings = cls._settings()
-        cls.app = create_app(cls.settings)
+        cls.app = GatewayApp(create_app(dataclasses.replace(cls.settings, mos_assertion_key=KEY)), cls.pg.dsn())
         cls.users = {}
         with cls.pg.connect() as conn:
             cur = conn.cursor()

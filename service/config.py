@@ -42,6 +42,8 @@ class Settings:
     storage_worker_id: str | None = None
     mos_gateway_url: str | None = None
     mos_service_token: str | None = None
+    mos_assertion_key: str | None = field(default=None, repr=False)   # CS_MOS_ASSERTION_KEY (>= 32 bytes)
+    assertion_skew_seconds: int = 30
 
     @property
     def auth_base_url(self) -> str:
@@ -92,6 +94,9 @@ def load(env=None) -> Settings:
     hosted = bool(env.get("VERCEL", "").strip()) or env.get("CS_HOSTED", "").strip().lower() in ("1", "true", "yes")
     if hosted and not (worker_email and worker_password):
         raise WorkerIdentityUnconfigured("CS_STORAGE_WORKER_EMAIL and CS_STORAGE_WORKER_PASSWORD are required")
+    assertion_key = env.get("CS_MOS_ASSERTION_KEY", "").strip() or None
+    if assertion_key and len(assertion_key.encode()) < 32:
+        raise ConfigError("CS_MOS_ASSERTION_KEY must be at least 32 bytes")
     return Settings(
         api_database_url=_req(env, "CS_API_DATABASE_URL"),
         worker_database_url=env.get("CS_WORKER_DATABASE_URL", "").strip() or None,
@@ -115,4 +120,6 @@ def load(env=None) -> Settings:
         storage_worker_id=env.get("CS_STORAGE_WORKER_ID", "").strip() or None,
         mos_gateway_url=env.get("CS_MOS_GATEWAY_URL", "").strip() or env.get("MOS_GATEWAY_URL", "").strip() or None,
         mos_service_token=env.get("CS_MOS_SERVICE_TOKEN", "").strip() or env.get("MOS_SERVICE_TOKEN", "").strip() or None,
+        mos_assertion_key=assertion_key,
+        assertion_skew_seconds=_bounded_int(env, "CS_ASSERTION_SKEW_SECONDS", 30, 0, 300),
     )
