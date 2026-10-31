@@ -1,0 +1,279 @@
+{
+  "schema_version": "brand-package-v1",
+  "id": "a929f084-87b2-5785-bbe7-e497a3b421e6",
+  "version_id": "3999487f-55da-5e12-b216-d1482b559676",
+  "revision": 1,
+  "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+  "created_at": "2026-10-31T09:00:00Z",
+  "created_by": "ba847825-df97-564b-b97c-0bc2e79224dc",
+  "sha256": "06ddbc8fe6216caff421a881e14b907376a9cd180ce36f62a1091dc979a0415c",
+  "authority": "brand-ci-studio",
+  "brand_id": "ee7d20f8-7dfc-501d-89f9-6eec7b677b4d",
+  "brand_name": "Example Home Services Co",
+  "source": {
+    "bci_version_id": "c8c2efde-418b-5f12-9072-7a8e71d8de43",
+    "bci_revision": 1,
+    "document_digest": "2a69fbaa7219424dbe3a9d00137bbf0c6f2aea6b0606d44f56f71b57758c2a46",
+    "document_digest_algorithm": "sha256",
+    "document_jcs_sha256": "2a69fbaa7219424dbe3a9d00137bbf0c6f2aea6b0606d44f56f71b57758c2a46",
+    "approval_receipt_id": "31bfe296-b2f0-5dcc-880b-8e0da67a5ff1",
+    "guide_document": {
+      "authority": "brand-ci-studio",
+      "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+      "kind": "brand_guide",
+      "id": "c4963f93-1235-511d-8298-527bd5615367",
+      "version_id": "c8c2efde-418b-5f12-9072-7a8e71d8de43",
+      "revision": 1,
+      "sha256": "2a69fbaa7219424dbe3a9d00137bbf0c6f2aea6b0606d44f56f71b57758c2a46"
+    },
+    "approved_pdf": {
+      "authority": "brand-ci-studio",
+      "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+      "asset_id": "9c2abf66-8482-5aab-bce2-6197a784c3b5",
+      "asset_version_id": "9c2abf66-8482-5aab-bce2-6197a784c3b5",
+      "revision": 1,
+      "sha256": "e602418adb0683d3ad89945fe3a5b416c3a5bbe9c0874d452221a540713ee7c1",
+      "mime_type": "application/pdf"
+    },
+    "document_created_by": "ba847825-df97-564b-b97c-0bc2e79224dc"
+  },
+  "approval": {
+    "receipt_id": "31bfe296-b2f0-5dcc-880b-8e0da67a5ff1",
+    "authority": "brand-ci-studio",
+    "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+    "subject": {
+      "authority": "brand-ci-studio",
+      "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+      "kind": "brand_guide",
+      "id": "c4963f93-1235-511d-8298-527bd5615367",
+      "version_id": "c8c2efde-418b-5f12-9072-7a8e71d8de43",
+      "revision": 1,
+      "sha256": "2a69fbaa7219424dbe3a9d00137bbf0c6f2aea6b0606d44f56f71b57758c2a46"
+    },
+    "decision": "approved",
+    "actor_id": "ba847825-df97-564b-b97c-0bc2e79224dc",
+    "actor_role": "owner",
+    "approved_at": "2026-10-31T09:00:00Z",
+    "policy_revision": "bci-owner-approval-v1",
+    "sha256": "68b74c885d46d4a87bda5b1b2b96ae34e82856b7680e33742bc1e202053fb7d9"
+  },
+  "assets": [
+    {
+      "ref": {
+        "authority": "brand-ci-studio",
+        "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+        "asset_id": "56c0037b-98c6-55b1-a38e-7ce6ecd5de0f",
+        "asset_version_id": "56c0037b-98c6-55b1-a38e-7ce6ecd5de0f",
+        "revision": 1,
+        "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+        "mime_type": "image/png"
+      },
+      "name": "example-logo-primary.png",
+      "size_bytes": 1290,
+      "width_px": 480,
+      "height_px": 192,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "27ff5111-d2d2-55d7-a0b3-eceb7826f3c1",
+        "revision": 1,
+        "sha256": "0cf5ad1d1db57be9af9dc18290f3480cda05eac8bcbff1200a95b15ce516c1c8",
+        "status": "permitted",
+        "holder": "Example Home Services Co",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference",
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-01-01T00:00:00Z",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "ba847825-df97-564b-b97c-0bc2e79224dc"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": null,
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "brand-ci-studio",
+        "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+        "asset_id": "36a1bdd5-2be4-588e-8ce6-75f664e22ac7",
+        "asset_version_id": "36a1bdd5-2be4-588e-8ce6-75f664e22ac7",
+        "revision": 1,
+        "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+        "mime_type": "font/ttf"
+      },
+      "name": "aileron-regular.ttf",
+      "size_bytes": 12676,
+      "width_px": null,
+      "height_px": null,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "bb84d241-7c1f-5dac-87b0-7b5b6dbce30d",
+        "revision": 1,
+        "sha256": "1513b9f690bbffb8c4b811f6055803e8963620508e37c30a0ba61b38b215ced3",
+        "status": "permitted",
+        "holder": "Aileron (dotcolon.net) CC0 1.0",
+        "basis": "licence",
+        "evidence": [],
+        "allowed_uses": [
+          "embed",
+          "redistribute"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-01-01T00:00:00Z",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "ba847825-df97-564b-b97c-0bc2e79224dc"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": null,
+      "parent_assets": []
+    },
+    {
+      "ref": {
+        "authority": "brand-ci-studio",
+        "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+        "asset_id": "9c2abf66-8482-5aab-bce2-6197a784c3b5",
+        "asset_version_id": "9c2abf66-8482-5aab-bce2-6197a784c3b5",
+        "revision": 1,
+        "sha256": "e602418adb0683d3ad89945fe3a5b416c3a5bbe9c0874d452221a540713ee7c1",
+        "mime_type": "application/pdf"
+      },
+      "name": "example-guide.pdf",
+      "size_bytes": 87,
+      "width_px": null,
+      "height_px": null,
+      "duration_ms": null,
+      "rights": {
+        "receipt_id": "c8b0e84a-0295-5cb0-bfc3-36a3a81bb675",
+        "revision": 1,
+        "sha256": "d6eaff09cb9bec84083c1871a0d3edcf41419ef09b251697d0af13774ee6784b",
+        "status": "permitted",
+        "holder": "Example Home Services Co",
+        "basis": "owned",
+        "evidence": [],
+        "allowed_uses": [
+          "reference"
+        ],
+        "channels": [
+          "*"
+        ],
+        "territories": [
+          "*"
+        ],
+        "valid_from": "2026-01-01T00:00:00Z",
+        "expires_at": "2030-01-01T00:00:00Z",
+        "attribution": null,
+        "restrictions": [],
+        "recorded_by": "ba847825-df97-564b-b97c-0bc2e79224dc"
+      },
+      "origin": "upload",
+      "source_url": null,
+      "captured_at": null,
+      "parent_assets": []
+    }
+  ],
+  "logos": [
+    {
+      "id": "primary",
+      "asset": {
+        "authority": "brand-ci-studio",
+        "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+        "asset_id": "56c0037b-98c6-55b1-a38e-7ce6ecd5de0f",
+        "asset_version_id": "56c0037b-98c6-55b1-a38e-7ce6ecd5de0f",
+        "revision": 1,
+        "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+        "mime_type": "image/png"
+      },
+      "role": "primary",
+      "allowed_backgrounds": [
+        "dark",
+        "photo"
+      ],
+      "min_width_px": 160,
+      "clear_space_ratio": 0.25,
+      "allow_crop": false,
+      "allow_distort": false
+    }
+  ],
+  "palette": [
+    {
+      "token": "navy",
+      "hex": "#0B1F33",
+      "role": "primary text and scrims"
+    },
+    {
+      "token": "amber",
+      "hex": "#E88828",
+      "role": "call to action"
+    },
+    {
+      "token": "white",
+      "hex": "#FFFFFF",
+      "role": "text on dark"
+    }
+  ],
+  "typography": [
+    {
+      "id": "body",
+      "family": "Aileron",
+      "role": "headline and CTA",
+      "font_assets": [
+        {
+          "authority": "brand-ci-studio",
+          "workspace_id": "7ce1d687-6011-58b9-b109-4f72a5a3e337",
+          "asset_id": "36a1bdd5-2be4-588e-8ce6-75f664e22ac7",
+          "asset_version_id": "36a1bdd5-2be4-588e-8ce6-75f664e22ac7",
+          "revision": 1,
+          "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+          "mime_type": "font/ttf"
+        }
+      ],
+      "weights": [
+        400
+      ],
+      "fallback_family": null
+    }
+  ],
+  "imagery": {
+    "principles": [
+      "Real homes, natural light"
+    ],
+    "reference_assets": [],
+    "prohibited": []
+  },
+  "voice": {
+    "principles": [
+      "Plain and friendly"
+    ],
+    "preferred_terms": [],
+    "prohibited_terms": []
+  },
+  "usage_rules": [
+    {
+      "id": "logo-clear-space",
+      "instruction": "Keep clear space of 0.25x logo height",
+      "severity": "required",
+      "source_path": "guide/logo"
+    }
+  ],
+  "unresolved_decisions": []
+}

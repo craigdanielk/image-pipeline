@@ -1,0 +1,12 @@
+{
+  "square": null,
+  "portrait": null,
+  "landscape": null,
+  "story": {
+    "top_pct": 14,
+    "right_pct": 0,
+    "bottom_pct": 14,
+    "left_pct": 0,
+    "source": "marketing-os registry/channel-specs.yaml@9a9caa07 meta_ads image 9:16 safe_zone"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "request": {
+    "authority": "creative-studio",
+    "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+    "kind": "creative_request",
+    "id": "bec2a6c1-2034-562c-9389-5b795241401a",
+    "version_id": "aed1dc63-f84e-5274-b048-aaf38af6ecdd",
+    "revision": 1,
+    "sha256": "7d77529579e0ab49ba9297cfb4fd826f44ff3f7cae81e7d1b6ff8c9d098a1da1"
+  },
+  "treatment": {
+    "authority": "creative-studio",
+    "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+    "kind": "treatment",
+    "id": "4e1d367b-6efb-5b54-824a-655f7172d632",
+    "version_id": "766428e4-513f-50fc-9ee2-cbf8422e5944",
+    "revision": 1,
+    "sha256": "aa5ec109cb88d936b06d935303c4a545f68c7f5d0d2b8cca4ad5c3dc45459409"
+  },
+  "recipe": {
+    "authority": "creative-studio",
+    "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+    "kind": "recipe",
+    "id": "dd79cc8d-54bb-5b46-80e3-7283cd0e2552",
+    "version_id": "4ca12d9f-45bc-5b53-a260-6c0f32d5021c",
+    "revision": 1,
+    "sha256": "604b6b579d7279aeed7cfe5d273f3d0b7f27c4f6adacb48fceddc3d4578723cf"
+  },
+  "plan": {
+    "authority": "creative-studio",
+    "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+    "kind": "execution_plan",
+    "id": "14ca252b-3ddd-5ab0-a026-8378f3e46667",
+    "version_id": "d6e4d95b-7288-50ff-b37f-1ba4b33e4733",
+    "revision": 1,
+    "sha256": "f4219191271c84f34f26af83cc32ce87e14cc146b373326504b0fb76b50d9d96"
+  },
+  "compile_hash": "f7671f5c9e859e794654519f9ab2c339f7d97222030470ccd0e5b8f5b5a90355",
+  "catalogue": {
+    "authority": "creative-studio",
+    "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+    "kind": "provider_catalogue",
+    "id": "93773e4b-836b-588e-a982-b871320cf1c2",
+    "version_id": "f9492f2c-fc11-507e-8492-6dee97a87f13",
+    "revision": 1,
+    "sha256": "75eefdb31347cbbe46a90eb0908ff9ed3770b29095dcf365c647d49b75d1d65b"
+  },
+  "generated_sources": [
+    {
+      "run_id": "cba1ad2f-048c-58d0-9470-5208f60ed2f6",
+      "plan_id": "14ca252b-3ddd-5ab0-a026-8378f3e46667",
+      "compile_hash": "f7671f5c9e859e794654519f9ab2c339f7d97222030470ccd0e5b8f5b5a90355",
+      "node_id": "hero",
+      "attempt_id": "5b8e04f4-f31b-5a4f-898a-c5e68e517fd1",
+      "output_port": "image",
+      "asset": {
+        "authority": "creative-studio",
+        "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+        "asset_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+        "asset_version_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+        "revision": 1,
+        "sha256": "5e35c139339e8b12ce1cec23ade2e3bac8b9754fb7dedf421f63558ac0e0e53d",
+        "mime_type": "image/png"
+      }
+    }
+  ],
+  "cost": {
+    "currency": "USD",
+    "state": "unknown",
+    "estimated_micros": 120000,
+    "reserved_micros": 150000,
+    "settled_micros": 0,
+    "unresolved_micros": 150000,
+    "receipt_ids": [
+      "377fdcd6-cbe9-5c53-bdc4-38cfde639374"
+    ]
+  }
+}

@@ -16,6 +16,7 @@ import ProductNewPage from "./pages/ProductNewPage";
 import ProductsPage from "./pages/ProductsPage";
 import RunsPage from "./pages/RunsPage";
 import StubPage from "./pages/StubPage";
+import StudioRoutes from "./studio/StudioRoutes";
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
                   <Route path="/generate" element={<BoardPage />} />
                   <Route path="/generate-form" element={<GeneratePage />} />
                   <Route path="/runs" element={<RunsPage />} />
+                  <Route path="/studio/*" element={<StudioRoutes />} />
                   <Route path="/pipelines" element={<PipelinesPage />} />
                   <Route
                     path="/knowledge"

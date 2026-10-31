@@ -1,0 +1,850 @@
+{
+  "schema_version": "cs-composition-v1",
+  "id": "2c4b5c8d-a09c-5e3d-b7b1-dfa58efd66f0",
+  "version_id": "bd6dfa98-27e7-50e3-a935-5fef8b0dc9f5",
+  "revision": 1,
+  "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+  "created_at": "2026-10-31T09:00:00Z",
+  "created_by": "e0f38aea-37e2-56fa-b5b1-2f4bf8d75c7c",
+  "sha256": "2b6cf737095269829b50cf7c9a5943a0a4877c39682d2ba7689e37c7e120d8cd",
+  "kind": "image",
+  "basis_recipe": {
+    "authority": "creative-studio",
+    "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+    "kind": "recipe",
+    "id": "e784d1d0-d621-5803-b874-9d98c31f8bc9",
+    "version_id": "2b7adc5f-db54-5a09-b4ce-acb36af92a05",
+    "revision": 1,
+    "sha256": "aa36ba7d214c122c03443da8bd5d2b447717049c96913228d9610ba6e1f9a729"
+  },
+  "basis_run": null,
+  "artboards": [
+    {
+      "id": "square",
+      "width": 1080,
+      "height": 1080,
+      "color_space": "srgb",
+      "background": "#0B1F33",
+      "layers": [
+        {
+          "id": "scene",
+          "name": "Generated scene",
+          "type": "image",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 1080,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": true,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "asset_version_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "revision": 1,
+              "sha256": "5e35c139339e8b12ce1cec23ade2e3bac8b9754fb7dedf421f63558ac0e0e53d",
+              "mime_type": "image/png"
+            },
+            "fit": "cover",
+            "crop": null
+          }
+        },
+        {
+          "id": "scrim",
+          "name": "Scrim",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 600,
+            "width": 1080,
+            "height": 480,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#0B1F33B3",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 0
+          }
+        },
+        {
+          "id": "logo",
+          "name": "Logo",
+          "type": "logo",
+          "transform": {
+            "x": 60,
+            "y": 60,
+            "width": 300,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 2,
+          "locked": false,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "asset_version_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "revision": 1,
+              "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+              "mime_type": "image/png"
+            },
+            "brand_logo_id": "primary",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "headline",
+          "name": "Headline",
+          "type": "text",
+          "transform": {
+            "x": 60,
+            "y": 640,
+            "width": 960,
+            "height": 200,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 3,
+          "locked": false,
+          "content": {
+            "text": "Fast, friendly home repairs",
+            "copy_id": "headline",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 72,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#FFFFFF",
+              "align": "left",
+              "vertical_align": "top"
+            }
+          }
+        },
+        {
+          "id": "cta-group",
+          "name": "CTA",
+          "type": "group",
+          "transform": {
+            "x": 60,
+            "y": 880,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 4,
+          "locked": false,
+          "content": {
+            "child_ids": [
+              "cta-bg",
+              "cta-text"
+            ]
+          }
+        },
+        {
+          "id": "cta-bg",
+          "name": "CTA button",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#E88828",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 60
+          }
+        },
+        {
+          "id": "cta-text",
+          "name": "CTA text",
+          "type": "text",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "text": "Book a visit today",
+            "copy_id": "cta",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 40,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#0B1F33",
+              "align": "center",
+              "vertical_align": "center"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "portrait",
+      "width": 1080,
+      "height": 1350,
+      "color_space": "srgb",
+      "background": "#0B1F33",
+      "layers": [
+        {
+          "id": "scene",
+          "name": "Generated scene",
+          "type": "image",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 1350,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": true,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "asset_version_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "revision": 1,
+              "sha256": "5e35c139339e8b12ce1cec23ade2e3bac8b9754fb7dedf421f63558ac0e0e53d",
+              "mime_type": "image/png"
+            },
+            "fit": "cover",
+            "crop": {
+              "x": 0.1,
+              "y": 0,
+              "width": 0.8,
+              "height": 1
+            }
+          }
+        },
+        {
+          "id": "scrim",
+          "name": "Scrim",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 780,
+            "width": 1080,
+            "height": 570,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#0B1F33B3",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 0
+          }
+        },
+        {
+          "id": "logo",
+          "name": "Logo",
+          "type": "logo",
+          "transform": {
+            "x": 60,
+            "y": 60,
+            "width": 300,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 2,
+          "locked": false,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "asset_version_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "revision": 1,
+              "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+              "mime_type": "image/png"
+            },
+            "brand_logo_id": "primary",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "headline",
+          "name": "Headline",
+          "type": "text",
+          "transform": {
+            "x": 60,
+            "y": 830,
+            "width": 960,
+            "height": 220,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 3,
+          "locked": false,
+          "content": {
+            "text": "Fast, friendly home repairs",
+            "copy_id": "headline",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 72,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#FFFFFF",
+              "align": "left",
+              "vertical_align": "top"
+            }
+          }
+        },
+        {
+          "id": "cta-group",
+          "name": "CTA",
+          "type": "group",
+          "transform": {
+            "x": 60,
+            "y": 1150,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 4,
+          "locked": false,
+          "content": {
+            "child_ids": [
+              "cta-bg",
+              "cta-text"
+            ]
+          }
+        },
+        {
+          "id": "cta-bg",
+          "name": "CTA button",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#E88828",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 60
+          }
+        },
+        {
+          "id": "cta-text",
+          "name": "CTA text",
+          "type": "text",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "text": "Book a visit today",
+            "copy_id": "cta",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 40,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#0B1F33",
+              "align": "center",
+              "vertical_align": "center"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "story",
+      "width": 1080,
+      "height": 1920,
+      "color_space": "srgb",
+      "background": "#0B1F33",
+      "layers": [
+        {
+          "id": "scene",
+          "name": "Generated scene",
+          "type": "image",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 1920,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": true,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "asset_version_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "revision": 1,
+              "sha256": "5e35c139339e8b12ce1cec23ade2e3bac8b9754fb7dedf421f63558ac0e0e53d",
+              "mime_type": "image/png"
+            },
+            "fit": "cover",
+            "crop": {
+              "x": 0.25,
+              "y": 0,
+              "width": 0.5,
+              "height": 1
+            }
+          }
+        },
+        {
+          "id": "scrim",
+          "name": "Scrim",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 1120,
+            "width": 1080,
+            "height": 800,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#0B1F33B3",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 0
+          }
+        },
+        {
+          "id": "logo",
+          "name": "Logo",
+          "type": "logo",
+          "transform": {
+            "x": 60,
+            "y": 300,
+            "width": 300,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 2,
+          "locked": false,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "asset_version_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "revision": 1,
+              "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+              "mime_type": "image/png"
+            },
+            "brand_logo_id": "primary",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "headline",
+          "name": "Headline",
+          "type": "text",
+          "transform": {
+            "x": 60,
+            "y": 1180,
+            "width": 960,
+            "height": 220,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 3,
+          "locked": false,
+          "content": {
+            "text": "Fast, friendly home repairs",
+            "copy_id": "headline",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 72,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#FFFFFF",
+              "align": "left",
+              "vertical_align": "top"
+            }
+          }
+        },
+        {
+          "id": "cta-group",
+          "name": "CTA",
+          "type": "group",
+          "transform": {
+            "x": 60,
+            "y": 1440,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 4,
+          "locked": false,
+          "content": {
+            "child_ids": [
+              "cta-bg",
+              "cta-text"
+            ]
+          }
+        },
+        {
+          "id": "cta-bg",
+          "name": "CTA button",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#E88828",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 60
+          }
+        },
+        {
+          "id": "cta-text",
+          "name": "CTA text",
+          "type": "text",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "text": "Book a visit today",
+            "copy_id": "cta",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 40,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#0B1F33",
+              "align": "center",
+              "vertical_align": "center"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "landscape",
+      "width": 1920,
+      "height": 1080,
+      "color_space": "srgb",
+      "background": "#0B1F33",
+      "layers": [
+        {
+          "id": "scene",
+          "name": "Generated scene",
+          "type": "image",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 1080,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": true,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "asset_version_id": "98215ee1-595b-5c2a-a6b1-1310271a9098",
+              "revision": 1,
+              "sha256": "5e35c139339e8b12ce1cec23ade2e3bac8b9754fb7dedf421f63558ac0e0e53d",
+              "mime_type": "image/png"
+            },
+            "fit": "cover",
+            "crop": null
+          }
+        },
+        {
+          "id": "scrim",
+          "name": "Scrim",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 1240,
+            "height": 1080,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#0B1F33B3",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 0
+          }
+        },
+        {
+          "id": "logo",
+          "name": "Logo",
+          "type": "logo",
+          "transform": {
+            "x": 80,
+            "y": 80,
+            "width": 300,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 2,
+          "locked": false,
+          "content": {
+            "asset": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "asset_version_id": "f118824e-f049-552d-b098-c076dc7b541c",
+              "revision": 1,
+              "sha256": "e59471bf91bc47572a2d4013089e86b4ec7f0a6a8a0c5d28d0d0b7bf98a71af7",
+              "mime_type": "image/png"
+            },
+            "brand_logo_id": "primary",
+            "fit": "contain"
+          }
+        },
+        {
+          "id": "headline",
+          "name": "Headline",
+          "type": "text",
+          "transform": {
+            "x": 80,
+            "y": 560,
+            "width": 1100,
+            "height": 220,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 3,
+          "locked": false,
+          "content": {
+            "text": "Fast, friendly home repairs",
+            "copy_id": "headline",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 72,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#FFFFFF",
+              "align": "left",
+              "vertical_align": "top"
+            }
+          }
+        },
+        {
+          "id": "cta-group",
+          "name": "CTA",
+          "type": "group",
+          "transform": {
+            "x": 80,
+            "y": 860,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 4,
+          "locked": false,
+          "content": {
+            "child_ids": [
+              "cta-bg",
+              "cta-text"
+            ]
+          }
+        },
+        {
+          "id": "cta-bg",
+          "name": "CTA button",
+          "type": "shape",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 0,
+          "locked": false,
+          "content": {
+            "shape": "rectangle",
+            "fill": "#E88828",
+            "stroke": null,
+            "stroke_width_px": 0,
+            "corner_radius_px": 60
+          }
+        },
+        {
+          "id": "cta-text",
+          "name": "CTA text",
+          "type": "text",
+          "transform": {
+            "x": 0,
+            "y": 0,
+            "width": 460,
+            "height": 120,
+            "rotation_deg": 0,
+            "opacity": 1
+          },
+          "order": 1,
+          "locked": false,
+          "content": {
+            "text": "Book a visit today",
+            "copy_id": "cta",
+            "font": {
+              "authority": "creative-studio",
+              "workspace_id": "661fc8b7-df2f-5e3f-9474-736eb9a91579",
+              "asset_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "asset_version_id": "d05f8a79-85de-5aba-8666-cd5294ff785c",
+              "revision": 1,
+              "sha256": "69853909b940023570964e29cffe30da95aea8de3627736b5cd15ab30143169f",
+              "mime_type": "font/ttf"
+            },
+            "style": {
+              "font_size_px": 40,
+              "weight": 400,
+              "line_height": 1.1,
+              "letter_spacing_px": 0,
+              "fill": "#0B1F33",
+              "align": "center",
+              "vertical_align": "center"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "video": null
+}
