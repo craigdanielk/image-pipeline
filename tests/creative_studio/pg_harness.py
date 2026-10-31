@@ -177,9 +177,29 @@ class ThrowawayCluster:
                         "values ('test', true) on conflict do nothing")
         return applied
 
-    def reapply_cs_b1(self) -> None:
+    def reapply_cs_b1(self) -> list[str]:
+        """Re-apply the CS-B1 migration and then every later migration in filename order.
+
+        This is the supported re-run unit: B1 is the foundation and later files build on
+        (and redefine some of) its objects, so the chain is replayed, never B1 alone.
+        Returns the filenames re-applied, in order.
+        """
+        chain = [p for p in sorted(MIGRATIONS_DIR.glob("*.sql")) if p.name >= CS_B1_MIGRATION.name]
         with self.connect() as conn:
-            conn.cursor().execute(CS_B1_MIGRATION.read_text(encoding="utf-8"))
+            cur = conn.cursor()
+            for path in chain:
+                cur.execute(path.read_text(encoding="utf-8"))
+        return [p.name for p in chain]
+
+    def apply_file(self, path: Path) -> None:
+        """Apply exactly one migration file (used to prove a standalone re-run is non-destructive)."""
+        with self.connect() as conn:
+            conn.cursor().execute(Path(path).read_text(encoding="utf-8"))
+
+
+def cs_migrations() -> list[str]:
+    """Creative Studio migrations (B1 onwards) in the order they apply."""
+    return [p.name for p in sorted(MIGRATIONS_DIR.glob("*.sql")) if p.name >= CS_B1_MIGRATION.name]
 
 
 def claims_json(user_id: str, role: str = "authenticated") -> str:

@@ -20,8 +20,11 @@
 -- pg_cron dispatcher (CS-B3), exports/compositions/handoffs (CS-B4),
 -- runtime login credentials and deployment (CS-B5).
 --
--- Re-runnable: every object is created IF NOT EXISTS / OR REPLACE, policies are
--- dropped and re-created, the bucket insert is ON CONFLICT DO NOTHING.
+-- Re-runnable: every object is created IF NOT EXISTS / OR REPLACE, B1's own
+-- policies are dropped and re-created, the bucket insert is ON CONFLICT DO NOTHING.
+-- Re-running this file on a database that already carries later CS migrations
+-- touches only B1's own policies and function privileges, and never replaces a
+-- function body a later migration has redefined (section 0b / 16).
 -- No project-wide default privileges are changed.
 -- =============================================================================
 
@@ -46,6 +49,21 @@ begin
     raise exception 'cs_b1: auth.users and storage.objects/buckets are required';
   end if;
 end $$;
+
+-- -----------------------------------------------------------------------------
+-- 0b. Re-run guard (CS-INT F1). Later CS migrations (e.g. CS-B2) redefine some
+--     B1 functions (cs_claim_work, cs_finish_work, cs_reschedule_work,
+--     cs_extension_for_mime). Re-running this file must not revert them: every
+--     cs_* function body that already exists is snapshotted here and restored in
+--     section 16 if this file replaced it. On a fresh database the snapshot is
+--     empty and nothing is restored.
+-- -----------------------------------------------------------------------------
+drop table if exists pg_temp.cs_b1_function_snapshot;
+create temp table cs_b1_function_snapshot as
+  select p.oid as fn_oid, pg_get_functiondef(p.oid) as fn_def
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+   where p.prokind = 'f'
+     and ((n.nspname = 'public' and p.proname like 'cs\_%') or n.nspname = 'cs_private');
 
 -- -----------------------------------------------------------------------------
 -- 1. Runtime roles. NOLOGIN here: login credentials are provisioned at
@@ -590,12 +608,51 @@ begin
   end loop;
 end $$;
 
--- drop all existing cs_ policies so the migration re-runs cleanly
+-- drop exactly the policies this file creates below so it re-runs cleanly; policies
+-- added by later migrations (including on B1 tables, e.g. CS-B2's
+-- cs_b2_api_insert on cs_work_items) are never touched (CS-INT F1)
 do $$
 declare r record;
 begin
-  for r in select schemaname, tablename, policyname from pg_policies
-            where (schemaname = 'public' and tablename like 'cs\_%') or schemaname = 'cs_private' loop
+  for r in select p.schemaname, p.tablename, p.policyname
+             from pg_policies p
+             join (values
+    ('public', 'cs_accounts', 'cs_api_select'),
+    ('public', 'cs_accounts', 'cs_api_insert'),
+    ('public', 'cs_account_members', 'cs_api_select'),
+    ('public', 'cs_account_members', 'cs_api_insert'),
+    ('public', 'cs_workspaces', 'cs_api_select'),
+    ('public', 'cs_workspaces', 'cs_api_insert'),
+    ('public', 'cs_workspace_members', 'cs_api_select'),
+    ('public', 'cs_workspace_members', 'cs_api_insert'),
+    ('public', 'cs_workspace_members', 'cs_api_update'),
+    ('public', 'cs_runs', 'cs_api_select'),
+    ('public', 'cs_run_nodes', 'cs_api_select'),
+    ('public', 'cs_run_events', 'cs_api_select'),
+    ('public', 'cs_assets', 'cs_api_select'),
+    ('public', 'cs_asset_versions', 'cs_api_select'),
+    ('public', 'cs_idempotency', 'cs_api_select'),
+    ('public', 'cs_idempotency', 'cs_api_insert'),
+    ('public', 'cs_audit_events', 'cs_api_select'),
+    ('public', 'cs_audit_events', 'cs_api_insert'),
+    ('cs_private', 'cs_runtime_limits', 'cs_api_select'),
+    ('cs_private', 'cs_upload_intents', 'cs_api_select'),
+    ('cs_private', 'cs_upload_intents', 'cs_api_insert'),
+    ('cs_private', 'cs_download_grants', 'cs_api_select'),
+    ('cs_private', 'cs_download_grants', 'cs_api_insert'),
+    ('public', 'cs_runs', 'cs_worker_all'),
+    ('public', 'cs_run_nodes', 'cs_worker_all'),
+    ('public', 'cs_run_events', 'cs_worker_all'),
+    ('public', 'cs_work_items', 'cs_worker_all'),
+    ('public', 'cs_stage_results', 'cs_worker_all'),
+    ('public', 'cs_assets', 'cs_worker_all'),
+    ('public', 'cs_asset_versions', 'cs_worker_all'),
+    ('public', 'cs_audit_events', 'cs_worker_insert'),
+    ('cs_private', 'cs_runtime_limits', 'cs_worker_select'),
+    ('cs_private', 'cs_upload_intents', 'cs_worker_select'),
+    ('cs_private', 'cs_upload_intents', 'cs_worker_update'),
+    ('public', 'cs_workspaces', 'cs_worker_select')) as own(schemaname, tablename, policyname)
+               on own.schemaname = p.schemaname and own.tablename = p.tablename and own.policyname = p.policyname loop
     execute format('drop policy %I on %I.%I', r.policyname, r.schemaname, r.tablename);
   end loop;
 end $$;
@@ -1245,9 +1302,20 @@ end $$;
 do $$
 declare r record;
 begin
+  -- B1's own functions only (CS-INT F1); later migrations manage their own privileges
   for r in select p.oid::regprocedure as sig
              from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-            where (n.nspname = 'public' and p.proname like 'cs\_%') or n.nspname = 'cs_private' loop
+            where n.nspname || '.' || p.proname = any (array[
+      'cs_private.cs_account_admin', 'cs_private.cs_account_bootstrap_allowed', 'cs_private.cs_actor_id',
+      'cs_private.cs_append_run_event', 'cs_private.cs_assert_asset_refs', 'cs_private.cs_can',
+      'cs_private.cs_extension_for_mime', 'cs_private.cs_idempotency_replay', 'cs_private.cs_lock_live_lease',
+      'cs_private.cs_paid_stages', 'cs_private.cs_reject_mutation', 'cs_private.cs_require_actor',
+      'cs_private.cs_role_allows', 'cs_private.cs_storage_allowed', 'cs_private.cs_touch',
+      'cs_private.cs_workspace_identity_fixed', 'public.cs_claim_work', 'public.cs_commit_asset_version',
+      'public.cs_create_account', 'public.cs_create_download_grant', 'public.cs_create_upload_intent',
+      'public.cs_create_workspace', 'public.cs_finalize_asset', 'public.cs_finish_work',
+      'public.cs_heartbeat_work', 'public.cs_reschedule_work', 'public.cs_revoke_workspace_member',
+      'public.cs_set_workspace_member']) loop
     execute format('revoke all on function %s from public, anon, authenticated', r.sig);
   end loop;
 end $$;
@@ -1300,3 +1368,20 @@ create policy cs_creative_studio_select on storage.objects for select to authent
 drop policy if exists cs_creative_studio_insert on storage.objects;
 create policy cs_creative_studio_insert on storage.objects for insert to authenticated
   with check (bucket_id = 'creative-studio' and cs_private.cs_storage_allowed(bucket_id, name, 'insert'));
+
+-- -----------------------------------------------------------------------------
+-- 16. Re-run guard, restore (CS-INT F1): any cs_* function body that existed
+--     before this file ran and was replaced by it is put back verbatim, so a
+--     re-run never reverts a later migration's version. CREATE OR REPLACE keeps
+--     owner, ACL and comment.
+-- -----------------------------------------------------------------------------
+do $$
+declare r record;
+begin
+  for r in select s.fn_def from pg_temp.cs_b1_function_snapshot s
+            where exists (select 1 from pg_proc p where p.oid = s.fn_oid)
+              and pg_get_functiondef(s.fn_oid) is distinct from s.fn_def loop
+    execute r.fn_def;
+  end loop;
+end $$;
+drop table if exists pg_temp.cs_b1_function_snapshot;
