@@ -61,8 +61,9 @@ class Blocked(Exception):
 
 
 def _iso(value) -> str:
+    """Whole-second UTC timestamp (identical across retries of the same stage)."""
     if isinstance(value, str):
-        return value
+        value = datetime.fromisoformat(value.replace("Z", "+00:00"))
     return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -406,6 +407,8 @@ class PostRunRuntime:
                 self._set_handoff(lease, doc["id"], "failed", None)
                 return self._finish(lease, "handoff_failed", f"mos_refused_{err.refused_status}",
                                     {"message": str(err)[:300]}, patch, None)
+            if ctx["work"]["attempt_count"] >= ctx["work"]["max_attempts"]:
+                self._set_handoff(lease, doc["id"], "failed", None)       # bounded retries spent; never `received`
             raise Retryable("upstream_unavailable", str(err)[:200]) from None
         receipt = reply.get("receipt") if isinstance(reply, dict) and "schema_version" not in reply else reply
         if not isinstance(receipt, dict) or receipt.get("schema_version") != "cs-mos-ingestion-receipt-v1":

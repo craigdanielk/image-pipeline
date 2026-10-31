@@ -67,8 +67,15 @@ def _lum(hex_color: str) -> float:
 
 
 def cta_colors(palette: list[dict]) -> tuple[str, str]:
-    by_role = {p["role"]: p["hex"] for p in palette if _HEX.match(p.get("hex") or "")}
-    fill = next((by_role[r] for r in ("accent", "cta", "secondary", "primary") if r in by_role), "#FFFFFF")
+    """Button fill from the brand palette (first role mentioning accent / cta / call to action / secondary / primary),
+    text colour by contrast; white button when the palette names none (explicit, recorded default)."""
+    usable = [p for p in palette if _HEX.match(p.get("hex") or "")]
+    fill = "#FFFFFF"
+    for key in ("accent", "cta", "call to action", "secondary", "primary"):
+        hit = next((p for p in usable if key in (p.get("role") or "").lower()), None)
+        if hit:
+            fill = hit["hex"]
+            break
     return fill.upper(), (DARK_FILL if _lum(fill) > 0.5 else TEXT_FILL)
 
 

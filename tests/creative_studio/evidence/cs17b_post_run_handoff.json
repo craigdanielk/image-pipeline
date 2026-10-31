@@ -1,0 +1,180 @@
+{
+ "handoff": {
+  "brand_package": {
+   "authority": "brand-ci-studio",
+   "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+   "kind": "brand_package",
+   "revision": 1,
+   "sha256": "81defb269f369a0221c0d33340b66948354361e8fa9988075626a0afbf9dcb47",
+   "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+   "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+  },
+  "cost": {
+   "currency": "USD",
+   "estimated_micros": 50000,
+   "receipt_ids": [
+    "789de6ea-46d8-4105-b418-6dbb7da789da",
+    "ba10023e-25dd-41ce-9576-0db01cf624c1"
+   ],
+   "reserved_micros": 50000,
+   "settled_micros": 50000,
+   "state": "settled",
+   "unresolved_micros": 0
+  },
+  "created_at": "2026-10-31T19:34:46Z",
+  "created_by": "1fb96402-86be-470f-857f-5b3f909cd4f3",
+  "creative_request": {
+   "authority": "creative-studio",
+   "id": "6d486825-2687-44da-b247-3f2915459c55",
+   "kind": "creative-request",
+   "revision": 1,
+   "sha256": "33daeb1f69058beee26bc92f6a3f8a8cee1be2560bf521aaf08f567079006595",
+   "version_id": "7067a52a-1c2c-4b19-bc0a-f5fef8f8f343",
+   "workspace_id": "f067b4a2-bef4-4071-aa27-9744502e48e4"
+  },
+  "exports": [
+   {
+    "authority": "creative-studio",
+    "id": "9afabf02-3a31-5300-a17b-af50e39f9032",
+    "kind": "export",
+    "revision": 1,
+    "sha256": "a42387a32187551e09fa6865103da83d1c6b42b542d3e64e338be9b848457e02",
+    "version_id": "9442183f-d369-554e-967d-03b9a976bc25",
+    "workspace_id": "f067b4a2-bef4-4071-aa27-9744502e48e4"
+   }
+  ],
+  "id": "3551b36b-e805-5fac-a22d-a535bd04dab4",
+  "idempotency_key": "68c16ea4-868e-531b-85ac-e9de9aceba52",
+  "requires_mos_review": true,
+  "revision": 1,
+  "schema_version": "cs-mos-handoff-v1",
+  "sha256": "52a52cc01418ac5de7b9fee1760fc21122b7ecc3c06aa0742e0cf23c7eab8e79",
+  "target": {
+   "authority": "marketing-os",
+   "claim_set": {
+    "authority": "marketing-os",
+    "id": "87f631e9-4e14-51d4-a6cc-188f797e6d0a",
+    "kind": "ClaimSet",
+    "revision": 1,
+    "sha256": "083b168773cd49acfd52a10ca53d6443f1aef517464026e1997fdb51528c1150",
+    "version_id": "a6d0ae4e-0ac7-52d3-ae6f-c3d086388154",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "concept": {
+    "authority": "marketing-os",
+    "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+    "kind": "Concept",
+    "revision": 1,
+    "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72",
+    "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "copy_versions": [
+    {
+     "authority": "marketing-os",
+     "id": "94969fa6-ddf3-5b11-ad6b-fa94be84ada6",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "b6fc9fe8f235a27c7e79306237849b606524cfd691ca0354408781c21a74c8a2",
+     "version_id": "d901b3ea-2eaf-5fc3-8475-5cf54c437686",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    }
+   ],
+   "destination": {
+    "authority": "marketing-os",
+    "id": "386b25b0-0fd3-55e7-80fc-8610aaaa4ce6",
+    "kind": "Destination",
+    "revision": 1,
+    "sha256": "779b5bc09f11f72e184e060fee25f44df519122a6e356e75c47a24d1075f0d0b",
+    "version_id": "1b47fa7c-ca22-586d-968b-920c335e2993",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "placement": {
+    "authority": "marketing-os",
+    "id": "6b7be4ee-6f36-59ae-9828-36af052c2c4d",
+    "kind": "ContentPack",
+    "revision": 1,
+    "sha256": "626b236bbcc522dad8f517120161e51cc3edffd68914448db27310e21ebfd217",
+    "version_id": "f41542d9-dcab-5b8a-8e31-eb09e41fbe67",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "policy": {
+    "authority": "marketing-os",
+    "id": "12f8431a-b794-5ee4-84f3-8607d43aa603",
+    "kind": "GenerationPolicy",
+    "revision": 1,
+    "sha256": "45ae3a9de84d9b55e3451187369001edd9a54da50bf8fe57788ff44ff40d7c1b",
+    "version_id": "5887cd45-3215-515e-8d69-ada2c43718ce",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+  },
+  "version_id": "e49d839f-4e8b-5397-ac55-b2d1e1164691",
+  "workspace_id": "f067b4a2-bef4-4071-aa27-9744502e48e4"
+ },
+ "run_status": {
+  "actual_cost": {
+   "certainty": "settled",
+   "currency": "USD",
+   "micros": 50000,
+   "receipt_ids": [
+    "ba10023e-25dd-41ce-9576-0db01cf624c1",
+    "789de6ea-46d8-4105-b418-6dbb7da789da"
+   ],
+   "unresolved_micros": 0
+  },
+  "actual_usd": "0.05",
+  "charge": {
+   "certainty": "balance_delta",
+   "credits": "1.0",
+   "scope": "call",
+   "source": "creative_studio_provider_receipts"
+  },
+  "handoff": {
+   "authority": "creative-studio",
+   "id": "3551b36b-e805-5fac-a22d-a535bd04dab4",
+   "kind": "handoff",
+   "revision": 1,
+   "sha256": "52a52cc01418ac5de7b9fee1760fc21122b7ecc3c06aa0742e0cf23c7eab8e79",
+   "state": "received",
+   "version_id": "e49d839f-4e8b-5397-ac55-b2d1e1164691",
+   "workspace_id": "f067b4a2-bef4-4071-aa27-9744502e48e4"
+  },
+  "post_run": [
+   {
+    "canvas_node_id": "render-square_1080-slot-1",
+    "composition_version_id": "6382cd47-ceb1-58db-b26c-5b0e62d56c31",
+    "detail": {
+     "receipt_sha256": "b6deef2f7beb4c70dab78c7df853aee9fbd66c392d6eec894fc39f653a7d50e2"
+    },
+    "export_version_id": "9442183f-d369-554e-967d-03b9a976bc25",
+    "exported_at": "2026-10-31T21:34:46.820162+02:00",
+    "handoff": {
+     "authority": "creative-studio",
+     "id": "3551b36b-e805-5fac-a22d-a535bd04dab4",
+     "kind": "handoff",
+     "revision": 1,
+     "sha256": "52a52cc01418ac5de7b9fee1760fc21122b7ecc3c06aa0742e0cf23c7eab8e79",
+     "state": "received",
+     "version_id": "e49d839f-4e8b-5397-ac55-b2d1e1164691",
+     "workspace_id": "f067b4a2-bef4-4071-aa27-9744502e48e4"
+    },
+    "handoff_id": "3551b36b-e805-5fac-a22d-a535bd04dab4",
+    "reason": null,
+    "render_sha256": "f2c1d9acf5585ccd33c6df8ab4480395da54791294fa8ba66d22fcd7b8eddcb9",
+    "state": "handoff_delivered",
+    "updated_at": "2026-10-31T21:34:46.860715+02:00"
+   }
+  ],
+  "state": "completed"
+ }
+}

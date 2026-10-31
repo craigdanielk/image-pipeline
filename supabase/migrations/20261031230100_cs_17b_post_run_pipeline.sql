@@ -443,6 +443,8 @@ begin
     if v_existing.sha256 <> p_payload ->> 'sha256' then
       raise exception 'handoff_version_conflict' using errcode = 'CS409';
     end if;
+    update public.cs_post_run_state s set handoff_id = v_id, updated_at = clock_timestamp()
+     where s.workspace_id = v.workspace_id and s.run_id = v.run_id and s.canvas_node_id = v.payload_ref ->> 'canvas_node_id';
     return query select v_id, v_existing.state, true;
     return;
   end if;
@@ -473,6 +475,8 @@ begin
   if i = 0 then
     raise exception 'invalid_mos_handoff' using errcode = 'CS422';
   end if;
+  update public.cs_post_run_state s set handoff_id = v_id, updated_at = clock_timestamp()
+   where s.workspace_id = v.workspace_id and s.run_id = v.run_id and s.canvas_node_id = v.payload_ref ->> 'canvas_node_id';
   select w.account_id into v_account from public.cs_workspaces w where w.id = v.workspace_id;
   insert into public.cs_audit_events (workspace_id, account_id, runtime_principal, action, input_sha256, affected_refs)
   values (v.workspace_id, v_account, p_runtime_principal, 'handoff.enqueue', p_request_sha256,
