@@ -1,0 +1,162 @@
+{
+  "schema_version": "cs-execution-plan-v1",
+  "id": "11111111-2222-4333-8444-555555555555",
+  "version_id": "11111111-2222-4333-8444-555555555556",
+  "revision": 1,
+  "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+  "created_at": "2026-10-31T09:00:00Z",
+  "created_by": "6a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d",
+  "sha256": "027a27256c7ab24fb26c40a43127c5e496e8004d2be28ed1de71ed79e1e6e13b",
+  "compile_hash_algorithm": "sha256-rfc8785-cs-program-v1",
+  "compile_hash": "7735d8cd83b9c77ba576c0ffbd5cf2cda4fb19763983f19b4047c36e0909df6f",
+  "program": {
+    "schema_version": "cs-program-v1",
+    "compiler_version": "cs-b2-provisional",
+    "lowering_version": "1",
+    "node_registry_sha256": "a6cc1fa6ac1460b5918f3e6002f400c6f0b46ca1d863811cbdd6f57902795166",
+    "catalogue_sha256": "de38c3bde27fb0028f521c7c9fc81b2b3e3f443d0ee73bd87324a7c8c6c87fdd",
+    "template_sha256": null,
+    "source_semantics": {
+      "request_sha256": "d2c9ba89ebd8c081c5d75d1ae0a857843c1ee3aa93e45d0515ddc29bd741779d",
+      "treatment_sha256": "21fb89f2a4439802d85d87cbcdef642bda57bf3f4c954b53a67a5d4989dd0030",
+      "recipe_graph_sha256": "27cbc4d89eedf088911fec622009159a51d0d7bf5cca2cefb53d92d6a6634fc3",
+      "composition_sha256": null
+    },
+    "asset_inputs": [],
+    "nodes": [
+      {
+        "id": "headline-draft",
+        "kind": "provider_generate",
+        "implementation_version": "cs-b3-test-1",
+        "dependencies": [],
+        "inputs": [],
+        "provider_call": {
+          "provider": "higgsfield",
+          "model_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+          "catalogue_entry_id": "hf-ms-headline-0f6c2a7e-low",
+          "endpoint_key": "marketing-studio-dtc-ads",
+          "adapter_version": "engine_higgsfield@<revision>",
+          "request_schema_sha256": "ccb5a9d66e068ea8f4e205788589675a48e9e3754a840d8ac10120d14238e914",
+          "positive_prompt": "Square headline ad for a generic home services offer, clean layout.",
+          "negative_prompt": null,
+          "parameters": {
+            "batch_size": 1,
+            "format_id": "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11",
+            "quality": "low"
+          },
+          "media_bindings": [],
+          "seed": null,
+          "retries": {
+            "automatic_resubmits": 0,
+            "transport_before_dispatch_max": 2,
+            "same_intent_replay_max": 0
+          }
+        },
+        "transform": null,
+        "output_contract": [
+          {
+            "port": "image",
+            "media_kind": "image",
+            "mime_type": "image/png",
+            "width_px": null,
+            "height_px": null,
+            "duration_frames": null
+          }
+        ],
+        "estimated_cost_micros": 50000,
+        "maximum_cost_micros": 100000
+      }
+    ],
+    "outputs": [
+      {
+        "id": "out-headline-draft",
+        "node_id": "headline-draft",
+        "port": "image",
+        "format": {
+          "id": "square",
+          "kind": "image",
+          "preset": "square_1080",
+          "width_px": 1080,
+          "height_px": 1080,
+          "mime_type": "image/png",
+          "duration_frames": null,
+          "frame_rate": null,
+          "count": 1,
+          "channel": "feed"
+        }
+      }
+    ],
+    "budget_ceiling_micros": 100000,
+    "currency": "USD"
+  },
+  "sources": {
+    "request": {
+      "authority": "creative-studio",
+      "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+      "kind": "creative_request",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "version_id": "00000000-0000-4000-8000-000000000002",
+      "revision": 1,
+      "sha256": "76b7a8cce426c8093dff95b2bc7469af6051610b7e99a269aeca472bd29fc92a"
+    },
+    "treatment": {
+      "authority": "creative-studio",
+      "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+      "kind": "treatment",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "version_id": "00000000-0000-4000-8000-000000000004",
+      "revision": 1,
+      "sha256": "8fb55e9729b045486509568e511535740bad4652343936670ddde28107ab8149"
+    },
+    "recipe": {
+      "authority": "creative-studio",
+      "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+      "kind": "recipe",
+      "id": "00000000-0000-4000-8000-000000000005",
+      "version_id": "00000000-0000-4000-8000-000000000006",
+      "revision": 1,
+      "sha256": "bfe35c09332dd15045f927367517605c93b4048016647e9c3838e14b81759916"
+    },
+    "composition": null,
+    "brand_package": {
+      "authority": "creative-studio",
+      "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+      "kind": "brand_package",
+      "id": "00000000-0000-4000-8000-000000000007",
+      "version_id": "00000000-0000-4000-8000-000000000008",
+      "revision": 1,
+      "sha256": "c27139575ccda4f18c169d00cf3131658122cf67a80e142bcef9fd98ee1c4c62"
+    },
+    "catalogue": {
+      "authority": "creative-studio",
+      "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+      "kind": "provider_catalogue",
+      "id": "00000000-0000-4000-8000-000000000009",
+      "version_id": "00000000-0000-4000-8000-000000000010",
+      "revision": 1,
+      "sha256": "719eefa3cf91335e5f6f37582b85cf29c13599e433b96fd0688e5a0441e60f90"
+    }
+  },
+  "admission": {
+    "budget": {
+      "currency": "USD",
+      "max_cost_micros": 100000,
+      "funding_source": "workspace",
+      "credential_binding_id": "00000000-0000-4000-8000-000000000011",
+      "policy": {
+        "authority": "creative-studio",
+        "workspace_id": "5f0c1d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f",
+        "kind": "budget_policy",
+        "id": "00000000-0000-4000-8000-000000000012",
+        "version_id": "00000000-0000-4000-8000-000000000013",
+        "revision": 1,
+        "sha256": "036221fc1897c19b947ce2c064ca3e9e1c40a0fb3db0aa9def7bf8e4524c3918"
+      },
+      "expires_at": "2099-01-01T00:00:00Z"
+    },
+    "estimated_cost_micros": 50000,
+    "maximum_cost_micros": 100000,
+    "expires_at": "2099-01-01T00:00:00Z"
+  },
+  "legacy_artifacts": []
+}

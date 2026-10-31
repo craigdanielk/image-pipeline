@@ -340,3 +340,9 @@ _cs_b2_brand_routes.register(CreativeStudioApi, route)
 _cs_b2_request_routes.register(CreativeStudioApi, route)
 _REASONS.setdefault(202, "Accepted")
 # --- end CS-B2 routes ---
+
+# --- CS-B3 routes ---
+from .runtime.routes import register as _cs_b3_register  # noqa: E402
+
+_cs_b3_register(CreativeStudioApi, route)
+# --- end CS-B3 routes ---
