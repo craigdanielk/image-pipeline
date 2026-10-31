@@ -59,7 +59,9 @@ class Request:
     def __init__(self, environ):
         self.method = environ.get("REQUEST_METHOD", "GET").upper()
         self.path = environ.get("PATH_INFO", "") or "/"
-        self.query = {k: v[-1] for k, v in parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True).items()}
+        raw_query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
+        self.query = {k: v[-1] for k, v in raw_query.items()}
+        self.query_counts = {k: len(v) for k, v in raw_query.items()}
         self.authorization = environ.get("HTTP_AUTHORIZATION")
         self.idempotency_key = environ.get("HTTP_IDEMPOTENCY_KEY")
         self._environ = environ
@@ -127,8 +129,20 @@ class CreativeStudioApi:
                         ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")])
         return [body]
 
+    @staticmethod
+    def _rewrite_injected_path(req: Request) -> bool:
+        """CS-17c: Vercel's `/api/v1/:path*` rewrite appends `path=<remaining route>`. Accept exactly that
+        (single occurrence, value == the request's own remaining path); anything else stays unknown."""
+        if req.query_counts.get("path") != 1:
+            return False
+        prefix = "/api/v1/"
+        return req.path.startswith(prefix) and req.query["path"] == req.path[len(prefix):]
+
     def dispatch(self, req: Request):
-        unknown = set(req.query) - _ALLOWED_QUERY
+        keys = set(req.query)
+        if self._rewrite_injected_path(req):
+            keys.discard("path")
+        unknown = keys - _ALLOWED_QUERY
         if unknown:
             raise ServiceError(400, "unsupported_parameter", ",".join(sorted(unknown)))
         path_matched = False
