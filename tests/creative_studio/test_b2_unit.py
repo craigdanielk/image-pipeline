@@ -20,6 +20,9 @@ B2_FILES = (sorted((ROOT / "service" / "brand").glob("*.py")) + sorted((ROOT / "
             + sorted((ROOT / "tests" / "creative_studio" / "b2_fixtures").glob("*.json"))
             + [ROOT / "supabase" / "migrations" / "20261031140100_cs_b2_brand_campaign_inputs.sql"])
 B1_BASE = "37de2c7"
+# CS-B2's delivered commit; ownership is judged on B1_BASE..B2_COMMIT so later, ratified
+# integration fixes (CS-INT) to B1 files do not read as B2 edits.
+B2_COMMIT = "4ff583c"
 
 
 class CanonicalJsonTests(unittest.TestCase):
@@ -218,7 +221,7 @@ class HygieneTests(unittest.TestCase):
 
     def test_legacy_compiler_and_b1_files_untouched(self):
         try:
-            out = subprocess.run(["git", "diff", "--name-only", B1_BASE, "--", "core", "schemas", "knowledge",
+            out = subprocess.run(["git", "diff", "--name-only", B1_BASE, B2_COMMIT, "--", "core", "schemas", "knowledge",
                                   "service/auth.py", "service/config.py", "service/db.py", "service/errors.py",
                                   "service/storage.py", "service/worker.py", "api",
                                   "supabase/migrations/20261030210000_cs_b1_platform_foundation.sql",
@@ -228,7 +231,7 @@ class HygieneTests(unittest.TestCase):
         except (OSError, subprocess.CalledProcessError):
             self.skipTest("git history unavailable")
         self.assertEqual(out.strip(), "")
-        diff = subprocess.run(["git", "diff", B1_BASE, "--", "service/api.py"], cwd=ROOT, capture_output=True,
+        diff = subprocess.run(["git", "diff", B1_BASE, B2_COMMIT, "--", "service/api.py"], cwd=ROOT, capture_output=True,
                               text=True, check=True).stdout
         added = [l for l in diff.splitlines() if l.startswith(("+", "-")) and not l.startswith(("+++", "---"))]
         self.assertTrue(all(l.startswith("+") for l in added), "api.py: additions only")

@@ -328,28 +328,35 @@ _REASONS = {200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 
             503: "Service Unavailable"}
 
 
-# --- CS-B4 routes ---
-from .composition.routes import register as _register_cs_b4  # noqa: E402
-_register_cs_b4(CreativeStudioApi, route)
-_REASONS.setdefault(202, "Accepted")
-_REASONS.setdefault(428, "Precondition Required")
-# --- end CS-B4 routes ---
-
 def create_app(settings: Settings, **kwargs) -> CreativeStudioApi:
     return CreativeStudioApi(settings, **kwargs)
 
 
-# --- CS-B2 routes ---
+# --- Creative Studio domain routes (CS-B2 inputs, CS-B3 runtime, CS-B4 composition) ---
+# One registration point (CS-INT). Each domain module owns its handlers and patterns;
+# registration order is fixed and a domain module may neither replace an existing
+# handler/attribute nor register a second handler for the same method + path pattern.
 from .brand import routes as _cs_b2_brand_routes  # noqa: E402
+from .composition import routes as _cs_b4_composition_routes  # noqa: E402
 from .requests import routes as _cs_b2_request_routes  # noqa: E402
+from .runtime import routes as _cs_b3_runtime_routes  # noqa: E402
 
-_cs_b2_brand_routes.register(CreativeStudioApi, route)
-_cs_b2_request_routes.register(CreativeStudioApi, route)
+DOMAIN_ROUTE_MODULES = (_cs_b2_brand_routes, _cs_b2_request_routes, _cs_b3_runtime_routes,
+                        _cs_b4_composition_routes)
+
+
+def _register_domain_routes() -> None:
+    before = dict(vars(CreativeStudioApi))
+    for module in DOMAIN_ROUTE_MODULES:
+        module.register(CreativeStudioApi, route)
+    replaced = sorted(k for k, v in before.items() if vars(CreativeStudioApi).get(k) is not v)
+    names = [name for _, _, name in _ROUTES]
+    keys = [(method, pattern.pattern) for method, pattern, _ in _ROUTES]
+    if replaced or len(set(names)) != len(names) or len(set(keys)) != len(keys):
+        raise RuntimeError(f"creative studio route registration conflict: replaced={replaced}")
+
+
+_register_domain_routes()
 _REASONS.setdefault(202, "Accepted")
-# --- end CS-B2 routes ---
-
-# --- CS-B3 routes ---
-from .runtime.routes import register as _cs_b3_register  # noqa: E402
-
-_cs_b3_register(CreativeStudioApi, route)
-# --- end CS-B3 routes ---
+_REASONS.setdefault(428, "Precondition Required")
+# --- end Creative Studio domain routes ---

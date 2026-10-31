@@ -198,7 +198,8 @@ class CsB2RealDatabase(unittest.TestCase):
 
     # -- 01 schema hygiene ---------------------------------------------------------
     def test_01_migrations_and_hygiene(self):
-        self.assertEqual(self.applied[-1], B2_MIGRATION.name)
+        self.assertIn(B2_MIGRATION.name, self.applied)          # applied, in filename order (CS-INT)
+        self.assertEqual(self.applied, sorted(self.applied))
         with self.pg.connect() as conn:
             cur = conn.cursor()
             cur.execute("""select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace

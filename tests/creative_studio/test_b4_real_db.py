@@ -179,7 +179,8 @@ class CsB4RealDatabase(unittest.TestCase):
     # -- 01 install ------------------------------------------------------------
     def test_01_all_migrations_applied_in_order_with_forced_rls(self):
         self.assertEqual(self.applied, sorted(p.name for p in MIGRATIONS_DIR.glob("*.sql")))
-        self.assertEqual(self.applied[-1], CS_B4_MIGRATION.name)
+        self.assertIn(CS_B4_MIGRATION.name, self.applied)          # applied, in filename order (CS-INT)
+        self.assertEqual(self.applied, sorted(self.applied))
         with self.pg.connect() as conn:
             cur = conn.cursor()
             cur.execute("select relname, relrowsecurity, relforcerowsecurity from pg_class where relname = any(%s) "

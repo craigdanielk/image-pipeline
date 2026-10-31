@@ -767,7 +767,8 @@ class CsB3RealDatabase(unittest.TestCase):
             conn.cursor().execute(B3_MIGRATION.read_text(encoding="utf-8"))
         self.assertEqual({t: self.q(f"select count(*) as n from public.{t}")[0]["n"] for t in tables}, before)
         self.assertEqual(self.q("select count(*) as n from pg_policies where policyname like 'cs\\_b3\\_%'")[0]["n"], pol)
-        self.assertEqual(self.applied[-1], B3_MIGRATION.name)
+        self.assertIn(B3_MIGRATION.name, self.applied)          # applied, in filename order (CS-INT)
+        self.assertEqual(self.applied, sorted(self.applied))
         st, _ = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/runs/{self.__class__.draft_run}/costs",
                      tok=self.tok["viewer_a"])
         self.assertEqual(st, 200)
