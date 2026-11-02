@@ -57,6 +57,9 @@ class HttpMarketingOsGateway:
         headers = self._headers()
         key = key or self.assertion_key
         if key and user_id:
+            # The signed assertion IS the authentication. Marketing OS treats any Authorization bearer as a user
+            # session and refuses a service token with 401 before reading the assertion, so never send both.
+            headers.pop("Authorization", None)
             now = int(self._clock())
             headers[ASSERTION_HEADER] = _assertion.sign(key, {
                 "aud": MOS_AUDIENCE, "sub": user_id, "act": act, "bnd": mos_workspace_id,

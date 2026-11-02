@@ -201,5 +201,17 @@ class RouteBinding(unittest.TestCase):
                          "GET /api/v1/x?a=1&b=2&path=other")
 
 
+class CallbackHeaders(unittest.TestCase):
+    """2026-11-02 production: CS sent a stale service bearer with its signed callback; MOS answered 401."""
+    def test_signed_callback_carries_no_bearer(self):
+        from service.runtime.gateway import HttpMarketingOsGateway
+        g = HttpMarketingOsGateway("https://mos.example.test", "stale-service-token", assertion_key="k" * 48)
+        h = g._signed_headers(method="GET", url="https://mos.example.test/api/creative-studio?action=authorize&workspace_id=w",
+                              body=b"", act="connection.authorize", user_id="66666666-7777-4888-9999-aaaaaaaaaaaa",
+                              mos_workspace_id="11111111-2222-4333-8444-555555555555")
+        self.assertNotIn("Authorization", h)
+        self.assertIn("X-CS-Service-Assertion", h)
+
+
 if __name__ == "__main__":
     unittest.main()

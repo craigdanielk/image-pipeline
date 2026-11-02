@@ -96,7 +96,8 @@ class FakeMos:
         self.nonces.add(p["nonce"])
         if self.expect_sub:
             assert p["sub"] == self.expect_sub
-        assert dict(req.header_items()).get("Authorization") == "Bearer svc-token"
+        # Real MOS refuses a non-user bearer (401) before reading the assertion: signed callbacks carry none.
+        assert dict(req.header_items()).get("Authorization") is None, "signed callback must not carry a bearer"
         return p
 
     def export_of(self, version_id):
