@@ -234,12 +234,18 @@ class CreativeStudioApi:
             raise ServiceError(503, "renderer_version_mismatch",
                                f"expected prefix {expected_prefix!r}, got {current_version!r}")
 
+        # 4. Provider CLI (reported, not gating: preparation and composition do not need it; Produce refuses
+        #    before dispatch when it cannot run).
+        from .providers.adapter import engine_higgsfield as _hf_adapter
+        provider_cli = _hf_adapter.cli_version() or "unavailable"
+
         return 200, {
             "status": "ready",
             "release_id": self.settings.release_id,
             "database_role": role,
             "renderer_version": current_version,
             "storage": "configured",
+            "provider_cli": provider_cli,
         }
 
     @route("GET", r"/api/v1/me/workspaces")

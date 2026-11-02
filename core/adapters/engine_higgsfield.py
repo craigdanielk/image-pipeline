@@ -321,6 +321,21 @@ def _job_reported_credits(job) -> Optional[Decimal]:
     return None
 
 
+def cli_version() -> Optional[str]:
+    """`higgsfield --version` of the binary this runtime would execute (no account, no network); None if it cannot run."""
+    binary = cli_binary()
+    if binary is None:
+        return None
+    try:
+        r = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=15,
+                           env=dict(os.environ, HOME=tempfile.gettempdir(), HIGGSFIELD_NO_UPDATE_CHECK="1",
+                                    HIGGSFIELD_DISABLE_TELEMETRY="1"))
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    out = (r.stdout or "").strip().splitlines()
+    return out[0][:80] if r.returncode == 0 and out else None
+
+
 def account_status(credential: WorkspaceCredential) -> dict:
     """Free check of a workspace login: `account status --json` creates no job and charges nothing."""
     out = _run(["account", "status", "--json"], _cli_env(credential))

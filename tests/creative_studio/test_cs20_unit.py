@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import subprocess
 import tempfile
 import time
 import unittest
@@ -158,6 +159,18 @@ class CliBinary(unittest.TestCase):
             self.assertFalse(os.path.islink(copy))
             with open(copy, "rb") as fh:
                 self.assertEqual(fh.read(), b"#!/bin/sh\nexit 0\n")
+
+    def test_cli_version_reports_or_none(self):
+        with mock.patch.object(hf, "cli_binary", lambda: None):
+            self.assertIsNone(hf.cli_version())
+        ok = lambda cmd, **kw: SimpleNamespace(returncode=0, stdout="higgsfield 1.1.26 (abc)\n", stderr="")
+        with mock.patch.object(hf, "cli_binary", lambda: "/opt/hf"), mock.patch.object(hf, "subprocess",
+                SimpleNamespace(run=ok, TimeoutExpired=subprocess.TimeoutExpired)):
+            self.assertEqual(hf.cli_version(), "higgsfield 1.1.26 (abc)")
+        bad = lambda cmd, **kw: SimpleNamespace(returncode=126, stdout="", stderr="exec format error")
+        with mock.patch.object(hf, "cli_binary", lambda: "/opt/hf"), mock.patch.object(hf, "subprocess",
+                SimpleNamespace(run=bad, TimeoutExpired=subprocess.TimeoutExpired)):
+            self.assertIsNone(hf.cli_version())
 
     def test_missing_binary_refuses_before_dispatch(self):
         from service.providers import higgsfield
