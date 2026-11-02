@@ -458,9 +458,11 @@ from .requests import routes as _cs_b2_request_routes  # noqa: E402
 from .plans import routes as _cs16_plan_routes  # noqa: E402
 from .postrun import routes as _cs17b_postrun_routes  # noqa: E402
 from .runtime import routes as _cs_b3_runtime_routes  # noqa: E402
+from .byok import routes as _cs19_byok_routes  # noqa: E402
 
 DOMAIN_ROUTE_MODULES = (_cs_b2_brand_routes, _cs_b2_request_routes, _cs_b3_runtime_routes,
-                        _cs_b4_composition_routes, _cs16_plan_routes, _cs17b_postrun_routes)
+                        _cs_b4_composition_routes, _cs16_plan_routes, _cs17b_postrun_routes,
+                        _cs19_byok_routes)
 
 
 def _register_domain_routes() -> None:

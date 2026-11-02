@@ -25,7 +25,7 @@ class IntegratedRouteTable(unittest.TestCase):
     def test_every_domain_module_registered_once_in_order(self):
         self.assertEqual([m.__name__ for m in api.DOMAIN_ROUTE_MODULES],
                          ["service.brand.routes", "service.requests.routes", "service.runtime.routes",
-                          "service.composition.routes", "service.plans.routes", "service.postrun.routes"])
+                          "service.composition.routes", "service.plans.routes", "service.postrun.routes", "service.byok.routes"])
         names = [n for _, _, n in api._ROUTES]
         self.assertEqual(len(names), len(set(names)), "one handler per name")
         keys = [(m, p.pattern) for m, p, _ in api._ROUTES]

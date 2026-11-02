@@ -109,6 +109,9 @@ def _now() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
 
+BYOK_MESSAGE = "add your Higgsfield key in Integrations"
+
+
 @dataclass
 class ProviderRuntime:
     settings: Settings
@@ -179,9 +182,15 @@ class ProviderRuntime:
     # -- provider_submit -----------------------------------------------------------
     def provider_submit(self, item) -> dict:
         lease = self._lease(item)
-        with self._tx() as cur:
-            cur.execute("select * from public.cs_prepare_attempt(%s, %s, %s, %s)", (*lease, higgsfield.ADAPTER_REVISION))
-            att = dict(cur.fetchone())
+        try:
+            with self._tx() as cur:
+                cur.execute("select * from public.cs_prepare_attempt(%s, %s, %s, %s)",
+                            (*lease, higgsfield.ADAPTER_REVISION))
+                att = dict(cur.fetchone())
+        except ServiceError as err:
+            if err.code == "byok_required":      # CS-19: funding flipped to byok_only after admission
+                return self._abandon(item, None, "refused", higgsfield.error_doc("byok_required", BYOK_MESSAGE))
+            raise
         if att["attempt_state"] != "prepared":
             # A paid attempt already passed its dispatch marker: never call the provider again.
             if att["attempt_state"] == "dispatching":
@@ -198,7 +207,13 @@ class ProviderRuntime:
 
         with tempfile.TemporaryDirectory(prefix="cs-b3-job-") as job_dir:
             refs = self._materialise_references(item, att, job_dir)              # Retryable
-            sealed = self._credential(item, att)
+            try:
+                sealed = self._credential(item, att)
+            except ServiceError as err:
+                if err.code == "byok_required":
+                    return self._abandon(item, att["attempt_id"], "refused",
+                                         higgsfield.error_doc("byok_required", BYOK_MESSAGE))
+                raise
             if sealed is None:
                 return self._abandon(item, att["attempt_id"], "refused", higgsfield.error_doc(
                     "provider_credentials_missing", "the admitted credential is no longer active"))
@@ -222,6 +237,9 @@ class ProviderRuntime:
                 if err.code == "credential_revoked":
                     return self._abandon(item, att["attempt_id"], "refused",
                                          higgsfield.error_doc("credential_revoked", "credential revoked before dispatch"))
+                if err.code == "byok_required":
+                    return self._abandon(item, att["attempt_id"], "refused",
+                                         higgsfield.error_doc("byok_required", BYOK_MESSAGE))
                 if err.code == "attempt_already_dispatched":
                     return {"status": "duplicate_dispatch_refused"}
                 raise
