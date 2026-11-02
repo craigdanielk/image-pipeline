@@ -28,7 +28,8 @@ def _postrun(settings, store):
     gateway = None
     if settings.mos_gateway_url and settings.mos_assertion_key:
         from .gateway import HttpMarketingOsGateway
-        gateway = HttpMarketingOsGateway(settings.mos_gateway_url, settings.mos_service_token)
+        gateway = HttpMarketingOsGateway(settings.mos_gateway_url, settings.mos_service_token,
+                                         assertion_key=settings.mos_assertion_key)
     return PostRunRuntime(settings, store, gateway=gateway)
 
 

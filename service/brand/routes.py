@@ -19,7 +19,8 @@ def gateway_of(api):
     if gw is None:
         if getattr(api, "settings", None) and api.settings.mos_gateway_url:
             from ..runtime.gateway import HttpMarketingOsGateway
-            gw = HttpMarketingOsGateway(api.settings.mos_gateway_url, api.settings.mos_service_token)
+            gw = HttpMarketingOsGateway(api.settings.mos_gateway_url, api.settings.mos_service_token,
+                                        assertion_key=api.settings.mos_assertion_key)
             api.mos_gateway = gw
             return gw
         raise ServiceError(503, "upstream_unavailable", "no Marketing OS gateway is configured")
@@ -89,7 +90,7 @@ def register(api_cls, route):
     def b2_refresh_connection(self, req, workspace_id, binding_id):
         """Re-read MOS's current BrandKit head for the last imported package; record it; report eligibility."""
         workspace_id, binding_id = _uuid(workspace_id), _uuid(binding_id)
-        _, tx = self._tx(req)
+        actor, tx = self._tx(req)
         with tx as cur:
             self._require_read(cur, workspace_id)
             cur.execute("""select b.external_workspace_id, s.source_version_id, s.version_id
@@ -105,7 +106,8 @@ def register(api_cls, route):
                 return 200, {"current": None, "eligibility": None}
             try:
                 export = gateway_of(self).export_brand_kit(mos_workspace_id=row["external_workspace_id"],
-                                                           artifact_id=str(row["source_version_id"]))
+                                                           artifact_id=str(row["source_version_id"]),
+                                                           user_id=actor.user_id)
             except GatewayUnavailable:
                 raise ServiceError(502, "upstream_unavailable") from None
             cur_head = export["current"]

@@ -17,13 +17,14 @@ class MarketingOsGateway(Protocol):
     def authorize_binding(self, *, user_id: str, mos_workspace_id: str) -> dict:
         """MOS's own authorization response for binding this user's Studio workspace to the MOS workspace."""
 
-    def export_brand_kit(self, *, mos_workspace_id: str, artifact_id: str) -> dict:
+    def export_brand_kit(self, *, mos_workspace_id: str, artifact_id: str, user_id: str | None = None) -> dict:
         """``mos-brand-export-v1`` for one exact BrandKit artifact version (plus MOS's current head)."""
 
-    def fetch_asset(self, *, mos_workspace_id: str, ref: dict, purpose: str, max_bytes: int) -> bytes:
+    def fetch_asset(self, *, mos_workspace_id: str, ref: dict, purpose: str, max_bytes: int,
+                    user_id: str | None = None) -> bytes:
         """Bytes of one exact MOS asset version via a fresh, scoped download ticket."""
 
-    def campaign_sources(self, *, mos_workspace_id: str, visual_request: dict) -> dict:
+    def campaign_sources(self, *, mos_workspace_id: str, visual_request: dict, user_id: str | None = None) -> dict:
         """``mos-campaign-sources-v1``: immutable source versions for one visual request."""
 
     def eligibility(self, *, mos_workspace_id: str, user_id: str, action: str, source_versions: list) -> dict:

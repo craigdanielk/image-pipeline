@@ -73,16 +73,20 @@ def make_import_handler(settings: Settings, gateway: MarketingOsGateway, writer:
     def handler(item: dict, ctx: WorkContext) -> StageResult:
         lease = _lease(item)
         with worker_transaction(settings.worker_database_url) as cur:
-            cur.execute("""select w.payload_ref, w.operation_id, b.external_workspace_id, b.authority::text as authority
+            cur.execute("""select w.payload_ref, w.operation_id, b.external_workspace_id, b.authority::text as authority,
+                                  r.requested_by
                              from public.cs_work_items w
                              join public.cs_external_bindings b
                                on b.workspace_id = w.workspace_id and b.id = (w.payload_ref ->> 'binding_id')::uuid
+                             left join public.cs_runs r on r.workspace_id = w.workspace_id and r.id = w.run_id
                             where w.id = %s""", (lease[0],))
             row = cur.fetchone()
         package_ref = row["payload_ref"]["package_ref"]
         mos_ws = row["external_workspace_id"]
+        # The person who started the import; MOS re-checks that person's current role on every callback.
+        requester = str(row["requested_by"]) if row.get("requested_by") else None
         try:
-            export = gateway.export_brand_kit(mos_workspace_id=mos_ws, artifact_id=package_ref["id"])
+            export = gateway.export_brand_kit(mos_workspace_id=mos_ws, artifact_id=package_ref["id"], user_id=requester)
         except GatewayUnavailable:
             raise RetryableStageError("upstream_unavailable", 30) from None
         current = export.get("current") or {}
@@ -97,7 +101,7 @@ def make_import_handler(settings: Settings, gateway: MarketingOsGateway, writer:
                 raise InputRefusal("source_revision_changed", "exported BrandKit differs from the admitted reference")
             mirrored = []
             for f in build.files:
-                mirrored.append(_mirror(settings, gateway, writer, item, lease, mos_ws, f))
+                mirrored.append(_mirror(settings, gateway, writer, item, lease, mos_ws, f, requester))
             with worker_transaction(settings.worker_database_url) as cur:
                 cur.execute("select * from public.cs_import_attach_package(%s,%s,%s,%s,%s,%s,%s,%s)",
                             (*lease, json.dumps(build.document), canonical_text(
@@ -117,7 +121,7 @@ def make_import_handler(settings: Settings, gateway: MarketingOsGateway, writer:
     return handler
 
 
-def _mirror(settings, gateway, writer, item, lease, mos_ws, f: dict) -> dict:
+def _mirror(settings, gateway, writer, item, lease, mos_ws, f: dict, requester: str | None = None) -> dict:
     ref = f["ref"]
     ws = str(item["workspace_id"])
     with worker_transaction(settings.worker_database_url) as cur:
@@ -134,7 +138,8 @@ def _mirror(settings, gateway, writer, item, lease, mos_ws, f: dict) -> dict:
     if ext is None:
         raise InputRefusal("unsupported_media_type", f"{f['name']}: {ref['mime_type']}")
     try:
-        data = gateway.fetch_asset(mos_workspace_id=mos_ws, ref=ref, purpose="embed", max_bytes=MAX_FILE_BYTES)
+        data = gateway.fetch_asset(mos_workspace_id=mos_ws, ref=ref, purpose="embed", max_bytes=MAX_FILE_BYTES,
+                                   user_id=requester)
     except GatewayUnavailable:
         raise RetryableStageError("upstream_unavailable", 30) from None
     if len(data) > MAX_FILE_BYTES:

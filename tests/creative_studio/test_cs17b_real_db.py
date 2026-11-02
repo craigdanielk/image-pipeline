@@ -85,7 +85,9 @@ class FakeMos:
         assert hmac.compare_digest(base64.urlsafe_b64decode(pad(sig_b64)),
                                    hmac.new(self.key.encode(), raw, hashlib.sha256).digest()), "bad signature"
         p = json.loads(raw)
-        assert set(p) == {"aud", "sub", "act", "bnd", "bsha", "nonce", "iat", "exp"}
+        # Exactly the claim set MOS `verifyServiceAssertion` requires, including the method+target binding.
+        assert set(p) == {"aud", "sub", "act", "bnd", "bsha", "nonce", "iat", "exp", "pth"}
+        assert p["pth"] == f"{req.get_method()} {HttpMarketingOsGateway.service_target(req.full_url)}", "pth"
         assert p["aud"] == "marketing-os" and p["act"] == "handoff.deliver" and p["bnd"] == self.mos_ws
         assert p["bsha"] == hashlib.sha256(req.data).hexdigest(), "body digest"
         assert 0 < p["exp"] - p["iat"] <= 60 and p["iat"] <= time.time() + 30 and time.time() <= p["exp"] + 30

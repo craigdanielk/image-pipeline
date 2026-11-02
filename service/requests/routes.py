@@ -77,7 +77,7 @@ def register(api_cls, route):
                 return 200, {"request": sel["request"], "treatment": sel["treatment"], "draft_id": draft_id,
                              "replayed": True}
             try:
-                sources = gw.campaign_sources(mos_workspace_id=mos_ws, visual_request=visual)
+                sources = gw.campaign_sources(mos_workspace_id=mos_ws, visual_request=visual, user_id=actor.user_id)
             except GatewayUnavailable:
                 raise ServiceError(502, "upstream_unavailable") from None
             if sources.get("workspace_id") != mos_ws or visual.get("workspace_id") != mos_ws:

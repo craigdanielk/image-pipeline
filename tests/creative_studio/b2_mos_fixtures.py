@@ -385,18 +385,18 @@ class FakeMarketingOs:
                 "decision": "allowed" if allowed else "refused", "role": "owner",
                 "checked_at": datetime.now(timezone.utc).isoformat()}
 
-    def export_brand_kit(self, *, mos_workspace_id, artifact_id):
+    def export_brand_kit(self, *, mos_workspace_id, artifact_id, user_id=None):
         self._check()
         self.calls.append(("export_brand_kit", mos_workspace_id, artifact_id))
         return self.biz[mos_workspace_id].export()
 
-    def fetch_asset(self, *, mos_workspace_id, ref, purpose, max_bytes):
+    def fetch_asset(self, *, mos_workspace_id, ref, purpose, max_bytes, user_id=None):
         self._check()
         self.calls.append(("fetch_asset", ref["asset_version_id"]))
         data = self.tamper.get(ref["asset_version_id"]) or self.biz[mos_workspace_id].blobs[ref["asset_version_id"]]
         return data[:max_bytes + 1]
 
-    def campaign_sources(self, *, mos_workspace_id, visual_request):
+    def campaign_sources(self, *, mos_workspace_id, visual_request, user_id=None):
         self._check()
         self.calls.append(("campaign_sources", visual_request["placement_id"]))
         return self.campaigns[visual_request["placement_id"]].sources()

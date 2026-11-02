@@ -11,6 +11,7 @@ import json
 import secrets
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
@@ -33,10 +34,36 @@ class GatewayRefused(GatewayUnavailable):
 class HttpMarketingOsGateway:
     """Real HTTP client for the Marketing OS gateway."""
 
-    def __init__(self, base_url: str, service_token: str | None = None, opener=None):
+    def __init__(self, base_url: str, service_token: str | None = None, opener=None,
+                 assertion_key: str | None = None, clock=time.time):
         self.base_url = base_url.rstrip("/")
         self.service_token = service_token
+        self.assertion_key = assertion_key
+        self._clock = clock
         self._open = opener or urllib.request.urlopen
+
+    @staticmethod
+    def service_target(url: str) -> str:
+        """Path + query sorted by (key, value), exactly as MOS ``serviceTarget`` rebuilds it for the ``pth`` claim."""
+        parts = urllib.parse.urlsplit(url)
+        query = sorted(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
+        return parts.path + ("?" + urllib.parse.urlencode(query) if query else "")
+
+    def _signed_headers(self, *, method: str, url: str, body: bytes, act: str, user_id: str | None,
+                        mos_workspace_id: str, key: str | None = None) -> dict[str, str]:
+        """Bearer (if any) plus, when a key and requester exist, the signed MOS service assertion. MOS authorizes the
+        requester's current workspace role server-side; the assertion binds method+path, body hash and a single-use
+        nonce so it cannot be replayed against another action, workspace or request."""
+        headers = self._headers()
+        key = key or self.assertion_key
+        if key and user_id:
+            now = int(self._clock())
+            headers[ASSERTION_HEADER] = _assertion.sign(key, {
+                "aud": MOS_AUDIENCE, "sub": user_id, "act": act, "bnd": mos_workspace_id,
+                "bsha": hashlib.sha256(body).hexdigest(), "nonce": _assertion.b64e(secrets.token_bytes(24)),
+                "iat": now, "exp": now + ASSERTION_TTL_SECONDS,
+                "pth": f"{method.upper()} {self.service_target(url)}"})
+        return headers
 
     def _headers(self) -> dict[str, str]:
         h = {"Content-Type": "application/json"}
@@ -46,7 +73,9 @@ class HttpMarketingOsGateway:
 
     def authorize_binding(self, *, user_id: str, mos_workspace_id: str) -> dict:
         url = f"{self.base_url}/api/creative-studio?action=authorize&workspace_id={mos_workspace_id}"
-        req = urllib.request.Request(url, method="GET", headers=self._headers())
+        req = urllib.request.Request(url, method="GET", headers=self._signed_headers(
+            method="GET", url=url, body=b"", act="connection.authorize", user_id=user_id,
+            mos_workspace_id=mos_workspace_id))
         try:
             with self._open(req, timeout=15) as resp:
                 data = json.loads(resp.read().decode())
@@ -62,31 +91,48 @@ class HttpMarketingOsGateway:
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise GatewayUnavailable(f"failed to authorize binding: {exc}") from None
 
-    def export_brand_kit(self, *, mos_workspace_id: str, artifact_id: str) -> dict:
+    def export_brand_kit(self, *, mos_workspace_id: str, artifact_id: str, user_id: str | None = None) -> dict:
         url = f"{self.base_url}/api/brand-studio?action=export&workspace_id={mos_workspace_id}&artifact_id={artifact_id}"
-        req = urllib.request.Request(url, method="GET", headers=self._headers())
+        req = urllib.request.Request(url, method="GET", headers=self._signed_headers(
+            method="GET", url=url, body=b"", act="brand.export", user_id=user_id, mos_workspace_id=mos_workspace_id))
         try:
             with self._open(req, timeout=20) as resp:
                 return json.loads(resp.read().decode())
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise GatewayUnavailable(f"failed to export brand kit: {exc}") from None
 
-    def fetch_asset(self, *, mos_workspace_id: str, ref: dict, purpose: str, max_bytes: int) -> bytes:
-        url = ref.get("source_url") or f"{self.base_url}/api/assets/{ref.get('asset_id') or ref.get('asset_version_id')}"
-        req = urllib.request.Request(url, method="GET", headers=self._headers())
+    def fetch_asset(self, *, mos_workspace_id: str, ref: dict, purpose: str, max_bytes: int,
+                    user_id: str | None = None) -> bytes:
+        if self.assertion_key and user_id:
+            # MOS serves exact brand-file bytes only to a signed, rights-checked, workspace-scoped request.
+            url = f"{self.base_url}/api/brand-studio?action=asset&workspace_id={mos_workspace_id}"
+            body = json.dumps({"ref": ref, "purpose": purpose, "max_bytes": max_bytes},
+                              sort_keys=True, separators=(",", ":")).encode()
+            headers = self._signed_headers(method="POST", url=url, body=body, act="brand.asset", user_id=user_id,
+                                           mos_workspace_id=mos_workspace_id)
+            req = urllib.request.Request(url, method="POST", data=body, headers=headers)
+        else:
+            url = ref.get("source_url") or f"{self.base_url}/api/assets/{ref.get('asset_id') or ref.get('asset_version_id')}"
+            req = urllib.request.Request(url, method="GET", headers=self._headers())
         try:
             with self._open(req, timeout=30) as resp:
                 data = resp.read(max_bytes + 1)
                 if len(data) > max_bytes:
                     raise GatewayUnavailable(f"asset exceeds maximum allowed bytes ({max_bytes})")
                 return data
+        except urllib.error.HTTPError as exc:
+            if 400 <= exc.code < 500 and exc.code not in (408, 429):
+                raise GatewayRefused(exc.code, f"Marketing OS refused the asset ({exc.code})") from None
+            raise GatewayUnavailable(f"failed to fetch asset: HTTP {exc.code}") from None
         except (urllib.error.URLError, TimeoutError) as exc:
             raise GatewayUnavailable(f"failed to fetch asset: {exc}") from None
 
-    def campaign_sources(self, *, mos_workspace_id: str, visual_request: dict) -> dict:
+    def campaign_sources(self, *, mos_workspace_id: str, visual_request: dict, user_id: str | None = None) -> dict:
         concept_id = visual_request.get("concept_id") or visual_request.get("placement_id") or ""
         url = f"{self.base_url}/api/creative-studio?action=sources&workspace_id={mos_workspace_id}&concept_id={concept_id}"
-        req = urllib.request.Request(url, method="GET", headers=self._headers())
+        req = urllib.request.Request(url, method="GET", headers=self._signed_headers(
+            method="GET", url=url, body=b"", act="campaign.sources", user_id=user_id,
+            mos_workspace_id=mos_workspace_id))
         try:
             with self._open(req, timeout=20) as resp:
                 return json.loads(resp.read().decode())
@@ -96,7 +142,9 @@ class HttpMarketingOsGateway:
     def eligibility(self, *, mos_workspace_id: str, user_id: str, action: str, source_versions: list) -> dict:
         url = f"{self.base_url}/api/creative-studio?action=eligibility&workspace_id={mos_workspace_id}"
         body = json.dumps({"action": action, "source_versions": source_versions}).encode()
-        req = urllib.request.Request(url, method="POST", data=body, headers=self._headers())
+        req = urllib.request.Request(url, method="POST", data=body, headers=self._signed_headers(
+            method="POST", url=url, body=body, act="generation.eligibility", user_id=user_id,
+            mos_workspace_id=mos_workspace_id))
         try:
             with self._open(req, timeout=15) as resp:
                 return json.loads(resp.read().decode())
@@ -111,13 +159,12 @@ class HttpMarketingOsGateway:
         treats a response as delivery unless it carries a verifiable ingestion receipt."""
         url = f"{self.base_url}/api/creative-studio?action=ingest&workspace_id={mos_workspace_id}"
         body = json.dumps({"handoff": handoff}, sort_keys=True, separators=(",", ":")).encode()
-        headers = self._headers()
-        if assertion_key and user_id:
-            now = int(clock())
-            headers[ASSERTION_HEADER] = _assertion.sign(assertion_key, {
-                "aud": MOS_AUDIENCE, "sub": user_id, "act": "handoff.deliver", "bnd": mos_workspace_id,
-                "bsha": hashlib.sha256(body).hexdigest(), "nonce": _assertion.b64e(secrets.token_bytes(24)),
-                "iat": now, "exp": now + ASSERTION_TTL_SECONDS})
+        saved, self._clock = self._clock, clock
+        try:
+            headers = self._signed_headers(method="POST", url=url, body=body, act="handoff.deliver", user_id=user_id,
+                                           mos_workspace_id=mos_workspace_id, key=assertion_key)
+        finally:
+            self._clock = saved
         req = urllib.request.Request(url, method="POST", data=body, headers=headers)
         try:
             with self._open(req, timeout=30) as resp:
