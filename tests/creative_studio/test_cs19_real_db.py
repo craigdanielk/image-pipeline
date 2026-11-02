@@ -213,6 +213,15 @@ class Cs19RealDb(unittest.TestCase):
         self.assertEqual(st, 401, body)                    # no assertion header: bearer alone is not enough
         self.assertNotIn(SECRET_A, json.dumps(body))
 
+    def test_14_marketing_os_key_version_is_accepted(self):
+        st, body = call(self.app, "PUT", f"/api/v1/workspaces/{self.ws_a}/provider-credentials/higgsfield",
+                        tok=self.tok["owner_a"], body={"credential": SECRET_A, "key_version": 3})
+        self.assertEqual(st, 200, body)
+        for bad in (0, -1, "3", True):
+            st, _ = call(self.app, "PUT", f"/api/v1/workspaces/{self.ws_a}/provider-credentials/higgsfield",
+                         tok=self.tok["owner_a"], body={"credential": SECRET_A, "key_version": bad})
+            self.assertEqual(st, 422, bad)
+
     def test_13_malformed_credentials_refused(self):
         for bad in ("", "short", "x" * 20000, "ok-key-12345\x00", None, 5,
                     "hf-key-plain-api-key-" + "f" * 24,                                    # API keys: CLI cannot use

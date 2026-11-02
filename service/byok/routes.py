@@ -13,6 +13,7 @@ returned. Rotation = a new PUT (the previous version is revoked in the same tran
 """
 from __future__ import annotations
 
+import logging
 import re
 
 from ..errors import ServiceError
@@ -21,6 +22,7 @@ from ..providers import higgsfield_oauth as hf_login
 
 _UUID = r"[0-9a-fA-F-]{36}"
 PROVIDER = "higgsfield"
+log = logging.getLogger(__name__)
 _MAX_CREDENTIAL_CHARS = 16384
 _MIN_CREDENTIAL_CHARS = 8
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -35,8 +37,12 @@ def _uuid(value: str) -> str:
 
 
 def _credential_from(body: dict) -> str:
-    if set(body) - {"credential"}:
-        raise ServiceError(422, "invalid_credential", "only the credential field is accepted")
+    # Marketing OS also sends its own key_version (it acknowledges the sync per version); nothing else is accepted.
+    if set(body) - {"credential", "key_version"}:
+        raise ServiceError(422, "invalid_credential", "only the credential and key_version fields are accepted")
+    version = body.get("key_version")
+    if version is not None and (isinstance(version, bool) or not isinstance(version, int) or version < 1):
+        raise ServiceError(422, "invalid_credential", "key_version must be a positive integer")
     value = body.get("credential")
     if not isinstance(value, str) or not value.strip():
         raise ServiceError(422, "invalid_credential", "credential is required")
@@ -66,6 +72,7 @@ def register(api_cls, route) -> None:
             hf_login.parse_login(credential)
             account = hf_login.account_status(credential.encode())
         except hf_login.LoginError as exc:
+            log.warning("higgsfield login not stored: %s", exc.code)          # code only, never the login
             status = 422 if exc.code in ("invalid_login", "login_rejected") else 503
             raise ServiceError(status, exc.code, exc.detail) from None
         fp = hf_login.account_fingerprint(account["email"])
