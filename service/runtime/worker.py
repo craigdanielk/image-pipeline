@@ -258,7 +258,7 @@ class ProviderRuntime:
             with materialise(plaintext) as cred_path:
                 credential = _hf.WorkspaceCredential(workspace_id=str(item["workspace_id"]),
                                                  credential_id=str(sealed_id(att)), credentials_path=cred_path,
-                                                 provider_workspace_id=None)
+                                                 provider_workspace_id=_billed_workspace(plaintext))
                 try:
                     results = higgsfield.execute(att["catalogue_surface"], att["provider_call"], att["adapter_config"],
                                                  refs, credential, job_dir)
@@ -353,6 +353,8 @@ class ProviderRuntime:
                                      None, None, None, self.settings.runtime_principal))
                 log.warning("higgsfield login refused at refresh; workspace must sign in again")
                 return None
+            if login.get("workspace_id"):
+                fresh["workspace_id"] = login["workspace_id"]          # keep the billed Higgsfield workspace
             resealed = self.keyring.seal(json.dumps(fresh).encode(), provider=higgsfield.PROVIDER_ID,
                                          fingerprint=row["provider_account_fingerprint"])
             cur.execute(settle, (*self._lease(item), att["attempt_id"], row["version_id"], "refreshed",
@@ -430,6 +432,15 @@ class ProviderRuntime:
                         (*lease, json.dumps(refs), self.settings.release_id))
             run_state = cur.fetchone()["s"]
         return {"status": "ingested", "run_state": run_state, "outputs": refs}
+
+
+def _billed_workspace(plaintext: bytes) -> str | None:
+    """The Higgsfield workspace stored with an account login (None for other credential shapes)."""
+    try:
+        value = json.loads(plaintext).get("workspace_id")
+    except (ValueError, AttributeError):
+        return None
+    return value if isinstance(value, str) and value else None
 
 
 def sealed_id(att) -> str:

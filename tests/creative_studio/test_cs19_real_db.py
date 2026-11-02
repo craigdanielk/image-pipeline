@@ -46,6 +46,7 @@ def _login(access: str, refresh: str, expires_in: int = 86400) -> str:
 SECRET_A = _login("oat_ALPHA" + "a1b2c3d4" * 3, "RT-ALPHA-" + "a1b2" * 8)
 SECRET_B = _login("oat_BRAVO" + "e5f6a7b8" * 3, "RT-BRAVO-" + "e5f6" * 8)
 ACCOUNTS = {"oat_ALPHA": "alpha.owner@example.test", "oat_BRAVO": "bravo.owner@example.test"}
+HF_WS = "283c6ef0-daba-4e2c-9e28-2bbdd03b214a"
 
 
 def fake_account_status(login_json: bytes, **_kw) -> dict:
@@ -65,9 +66,10 @@ class Cs19RealDb(unittest.TestCase):
     @classmethod
     def _cs19_setup(cls):
         cls.app._app.credential_keyring = KEYRING
-        patcher = mock.patch("service.providers.higgsfield_oauth.account_status", fake_account_status)
-        patcher.start()
-        cls._patchers = [patcher]
+        cls._patchers = [mock.patch("service.providers.higgsfield_oauth.account_status", fake_account_status),
+                         mock.patch("service.providers.higgsfield_oauth.choose_workspace", lambda *_a, **_k: HF_WS)]
+        for p in cls._patchers:
+            p.start()
         with cls.pg.connect() as conn:
             conn.cursor().execute(
                 "insert into cs_private.cs_credentials (id, workspace_id, environment_id, provider, mode, "
@@ -177,7 +179,9 @@ class Cs19RealDb(unittest.TestCase):
         opened = KEYRING.open(SealedCredential(bytes(active[0]["ciphertext"]), bytes(active[0]["nonce"]),
                                                active[0]["encryption_key_version"]),
                               provider="higgsfield", fingerprint=active[0]["provider_account_fingerprint"])
-        self.assertEqual(opened, SECRET_B.encode())
+        stored = json.loads(opened)
+        self.assertEqual(stored.pop("workspace_id"), HF_WS)              # billed Higgsfield workspace kept with it
+        self.assertEqual(stored, json.loads(SECRET_B))
         with self.assertRaises(Exception):          # ciphertext cannot be moved to another account label
             KEYRING.open(SealedCredential(bytes(active[0]["ciphertext"]), bytes(active[0]["nonce"]),
                                           active[0]["encryption_key_version"]),
@@ -393,6 +397,7 @@ class Cs19RealDb(unittest.TestCase):
         self.assertEqual((opened["access_token"], opened["refresh_token"], opened["auth_version"]),
                          (rotated["access_token"], rotated["refresh_token"], 2))
         self.assertGreater(opened["expires_at"], int(time.time()) + 80000)
+        self.assertEqual(opened["workspace_id"], HF_WS)                   # survives the refresh
         self.assertEqual(self.run_state(run["run_id"])["state"], "completed")
         self.assertGreater(self.fake.creates(), creates)
         audit = self.q("select action, affected_refs::text r from public.cs_audit_events where workspace_id = %s "

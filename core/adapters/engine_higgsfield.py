@@ -336,6 +336,15 @@ def cli_version() -> Optional[str]:
     return out[0][:80] if r.returncode == 0 and out else None
 
 
+def workspace_list(credential: WorkspaceCredential) -> list:
+    """Higgsfield workspaces the login can bill (free; works before one is selected)."""
+    out = _run(["workspace", "list", "--json"], _cli_env(credential))
+    items = out.get("workspaces") if isinstance(out, dict) else out
+    if not isinstance(items, list):
+        raise RuntimeError("higgsfield workspace list returned no list")
+    return items
+
+
 def account_status(credential: WorkspaceCredential) -> dict:
     """Free check of a workspace login: `account status --json` creates no job and charges nothing."""
     out = _run(["account", "status", "--json"], _cli_env(credential))

@@ -213,5 +213,39 @@ class CallbackHeaders(unittest.TestCase):
         self.assertIn("X-CS-Service-Assertion", h)
 
 
+class ChooseWorkspace(unittest.TestCase):
+    """Production: the CLI refuses every call without a selected Higgsfield workspace ("No workspace selected")."""
+    def pick(self, items):
+        return hl.choose_workspace(json.dumps(login()).encode(), list_workspaces=lambda c: items)
+
+    def test_only_owned_else_first(self):
+        self.assertEqual(self.pick([{"id": "w1", "user_role": "member"}]), "w1")
+        self.assertEqual(self.pick([{"id": "w1", "user_role": "member"}, {"id": "w2", "user_role": "owner"}]), "w2")
+        self.assertEqual(self.pick([{"id": "w1", "user_role": "member"}, {"id": "w2", "user_role": "editor"}]), "w1")
+
+    def test_none_or_refused(self):
+        with self.assertRaises(hl.LoginError) as ctx:
+            self.pick([])
+        self.assertEqual(ctx.exception.code, "no_higgsfield_workspace")
+        def boom(c):
+            raise RuntimeError("higgsfield failed (2): Session expired.")
+        with self.assertRaises(hl.LoginError) as ctx:
+            hl.choose_workspace(b"{}", list_workspaces=boom)
+        self.assertEqual(ctx.exception.code, "login_rejected")
+
+    def test_workspace_id_is_kept_in_the_login_and_passed_to_the_cli(self):
+        self.assertEqual(hl.parse_login(json.dumps(login(workspace_id="w1")))["workspace_id"], "w1")
+        with self.assertRaises(hl.LoginError):
+            hl.parse_login(json.dumps(login(workspace_id=5)))
+        seen = {}
+        hl.account_status(json.dumps(login()).encode(), workspace_id="w1",
+                          status=lambda c: seen.update(ws=c.provider_workspace_id) or {"credits": 1, "email": "a@b.c"})
+        self.assertEqual(seen["ws"], "w1")
+        from service.runtime.worker import _billed_workspace
+        self.assertEqual(_billed_workspace(json.dumps(login(workspace_id="w1")).encode()), "w1")
+        self.assertIsNone(_billed_workspace(b'{"token":"x"}'))
+        self.assertIsNone(_billed_workspace(b"not json"))
+
+
 if __name__ == "__main__":
     unittest.main()

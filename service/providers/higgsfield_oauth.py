@@ -32,6 +32,9 @@ USER_AGENT = "MarketingOS-CreativeStudio/1.0"
 AUTH_VERSION = 2                       # the CLI rejects older files ("older auth flow")
 REFRESH_MARGIN_SECONDS = 3600          # refresh when less than this remains (tokens live 24h)
 REQUIRED_KEYS = ("auth_version", "access_token", "refresh_token", "expires_at", "token_type", "scope")
+# The Higgsfield workspace this login bills. The CLI refuses to work without one ("No workspace selected") and
+# ignores this extra field in its credentials file; Creative Studio also passes it as HIGGSFIELD_WORKSPACE_ID.
+OPTIONAL_KEYS = ("workspace_id",)
 
 
 class LoginError(RuntimeError):
@@ -47,7 +50,8 @@ def parse_login(raw: str | bytes) -> dict:
         login = json.loads(raw)
     except (TypeError, ValueError):
         raise LoginError("invalid_login", "sign in to Higgsfield; API keys are not supported") from None
-    if not isinstance(login, dict) or set(login) - set(REQUIRED_KEYS) or any(k not in login for k in REQUIRED_KEYS):
+    if not isinstance(login, dict) or set(login) - set(REQUIRED_KEYS) - set(OPTIONAL_KEYS) \
+            or any(k not in login for k in REQUIRED_KEYS):
         raise LoginError("invalid_login", "the login does not have the Higgsfield CLI credential fields")
     if login["auth_version"] != AUTH_VERSION:
         raise LoginError("invalid_login", "unsupported auth_version")
@@ -58,6 +62,8 @@ def parse_login(raw: str | bytes) -> dict:
         raise LoginError("invalid_login", "expires_at must be an integer epoch")
     if "offline_access" not in login["scope"].split():
         raise LoginError("invalid_login", "the login cannot be refreshed (offline_access missing)")
+    if "workspace_id" in login and not (isinstance(login["workspace_id"], str) and 0 < len(login["workspace_id"]) <= 64):
+        raise LoginError("invalid_login", "workspace_id is invalid")
     return login
 
 
@@ -116,12 +122,31 @@ def refresh(login: dict, *, client_id: Optional[str] = None,
     raise LoginError("refresh_unavailable", f"token endpoint answered {status}")
 
 
-def account_status(login_json: bytes, *, status: Callable = None) -> dict:
+def choose_workspace(login_json: bytes, *, list_workspaces: Callable = None) -> str:
+    """The Higgsfield workspace to bill: the only one, else the first the user owns, else the first listed."""
+    list_workspaces = list_workspaces or hf.workspace_list
+    with materialise(login_json) as path:
+        credential = hf.WorkspaceCredential(workspace_id="verification", credential_id="verification",
+                                            credentials_path=path)
+        try:
+            items = list_workspaces(credential)
+        except hf.ProviderRefusal as exc:
+            raise LoginError(exc.code, exc.detail) from None
+        except RuntimeError:
+            raise LoginError("login_rejected", "Higgsfield did not accept this sign-in") from None
+    usable = [w for w in items if isinstance(w, dict) and isinstance(w.get("id"), str) and w["id"]]
+    if not usable:
+        raise LoginError("no_higgsfield_workspace", "this Higgsfield account has no workspace to bill")
+    owned = [w for w in usable if w.get("user_role") == "owner"]
+    return (usable if len(usable) == 1 else owned or usable)[0]["id"]
+
+
+def account_status(login_json: bytes, *, status: Callable = None, workspace_id: Optional[str] = None) -> dict:
     """Free check through the adapter (`account status --json`) with this login. Returns {credits, email}."""
     status = status or hf.account_status
     with materialise(login_json) as path:
         credential = hf.WorkspaceCredential(workspace_id="verification", credential_id="verification",
-                                            credentials_path=path)
+                                            credentials_path=path, provider_workspace_id=workspace_id)
         try:
             data = status(credential)
         except hf.ProviderRefusal as exc:

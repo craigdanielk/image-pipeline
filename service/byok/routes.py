@@ -13,6 +13,7 @@ returned. Rotation = a new PUT (the previous version is revoked in the same tran
 """
 from __future__ import annotations
 
+import json
 import logging
 import re
 
@@ -69,8 +70,10 @@ def register(api_cls, route) -> None:
         # The credential is a Higgsfield account login (CLI credentials-file shape) from Marketing OS's sign-in.
         # Verify it with the free balance check before storing: "connected" must mean Higgsfield accepted it.
         try:
-            hf_login.parse_login(credential)
-            account = hf_login.account_status(credential.encode())
+            login = hf_login.parse_login(credential)
+            login["workspace_id"] = hf_login.choose_workspace(credential.encode())
+            credential = json.dumps(login)
+            account = hf_login.account_status(credential.encode(), workspace_id=login["workspace_id"])
         except hf_login.LoginError as exc:
             log.warning("higgsfield login not stored: %s", exc.code)          # code only, never the login
             status = 422 if exc.code in ("invalid_login", "login_rejected") else 503
