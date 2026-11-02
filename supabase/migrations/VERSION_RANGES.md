@@ -11,3 +11,4 @@ so two files with the same version collide at apply time.
 ## Changelog
 - CS-17d: `20261031230100_cs_17b_post_run_pipeline.sql` renamed to `20261031240100_cs_17b_post_run_pipeline.sql`
   (the old version was already live as Marketing OS `mos_awaiting_user_and_spend_switch`).
+- CS-19: `20261031280100_cs_19_byok_funding.sql` (CS slot `…28xxxx`; Marketing OS ENG-19 uses `…27xxxx`, S3 uses `…29xxxx`).

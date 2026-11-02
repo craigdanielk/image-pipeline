@@ -736,7 +736,7 @@ class CsB3RealDatabase(unittest.TestCase):
             self.assertEqual(self.run_state(run["run_id"])["state"], "failed")
             self.assertEqual(self.reservation(run["run_id"])["state"], "released")
             st, body, _ = self.admit("producer_a", self.ws_a, [provider_node("n1", self.low, prompt="x")])
-            self.assertEqual((st, body["error"]), (422, "provider_credentials_missing"))
+            self.assertEqual((st, body["error"]), (403, "byok_required"))
         finally:
             self._store_credential("owner_a", self.ws_a)
 

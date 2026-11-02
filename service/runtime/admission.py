@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import json
 
+import psycopg2
+
 from ..errors import ServiceError
 from ..providers.canonical import CanonicalError, artifact_digest, digest
 from ..providers.contracts import ContractViolation, validate
@@ -61,9 +63,17 @@ def quote(cur, workspace_id: str, body: dict) -> dict:
 def admit(cur, settings, workspace_id: str, body: dict, idempotency_key: str, request_sha256: str) -> dict:
     checked = validate_plan(body.get("plan"), workspace_id)
     approval = body.get("draft_approval_id")
-    cur.execute("""select * from public.cs_admit_run(%s, %s, %s, %s, %s, %s, %s, %s::jsonb,
-                                                     %s::public.cs_render_tier, %s, %s, %s)""",
-                (workspace_id, settings.environment_id, settings.release_id, checked["version_id"], checked["sha256"],
-                 checked["compile_hash"], checked["budget_ceiling_micros"], json.dumps(checked["nodes"]),
-                 _tier(body), approval, idempotency_key, request_sha256))
+    try:
+        cur.execute("""select * from public.cs_admit_run(%s, %s, %s, %s, %s, %s, %s, %s::jsonb,
+                                                         %s::public.cs_render_tier, %s, %s, %s)""",
+                    (workspace_id, settings.environment_id, settings.release_id, checked["version_id"],
+                     checked["sha256"], checked["compile_hash"], checked["budget_ceiling_micros"],
+                     json.dumps(checked["nodes"]), _tier(body), approval, idempotency_key, request_sha256))
+    except psycopg2.Error as exc:
+        diag = getattr(exc, "diag", None)
+        message = (getattr(diag, "message_primary", None) or "")
+        if message.startswith("provider_credentials_missing") and "no active workspace credential" in message:
+            # CS-19: the workspace-funded path has no workspace key -> plain, typed BYOK refusal.
+            raise ServiceError(403, "byok_required", "add your Higgsfield key in Integrations") from None
+        raise
     return dict(cur.fetchone())

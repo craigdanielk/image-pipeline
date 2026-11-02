@@ -39,6 +39,8 @@ def run_costs(cur, workspace_id: str, run_id: str) -> dict:
     """cs_api transaction: authority is checked in SQL (definer reads re-check current membership)."""
     cur.execute("select public.cs_get_run_cost(%s, %s) as cost", (workspace_id, run_id))
     cost = cur.fetchone()["cost"]
+    cur.execute("select public.cs_run_payer(%s, %s) as payer", (workspace_id, run_id))
+    paid_by = cur.fetchone()["payer"]          # CS-19: workspace | platform (None before admission)
     cur.execute("select * from public.cs_list_run_receipts(%s, %s)", (workspace_id, run_id))
     receipts, ledger_lines = [], []
     for row in cur.fetchall():
@@ -51,4 +53,6 @@ def run_costs(cur, workspace_id: str, run_id: str) -> dict:
                                  "certainty": row["charge_certainty"],
                                  "provider_units": None if row["provider_units"] is None else str(row["provider_units"]),
                                  "provider_unit_name": "credits" if row["provider_units"] is not None else None})
-    return {"run_id": run_id, "cost": cost, "receipts": receipts, "ledger_lines": ledger_lines}
+    for line in ledger_lines:
+        line["paid_by"] = paid_by
+    return {"run_id": run_id, "paid_by": paid_by, "cost": cost, "receipts": receipts, "ledger_lines": ledger_lines}

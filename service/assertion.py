@@ -69,6 +69,13 @@ POLICY: dict[str, Policy] = {
     # CS-17b: MOS pulls the exported file / reports its ingestion receipt
     "cs17b_export_download_ticket": Policy("export.download", required=False),
     "cs17b_record_handoff_receipt": Policy("handoff.receipt"),
+    # CS-19: BYOK credential forwarded once at connect/rotation; funding policy. `funding.platform` is signed by
+    # MOS only for an operator-authorised workspace.
+    "cs19_store_credential": Policy("credential.store"),
+    "cs19_revoke_credential": Policy("credential.revoke"),
+    "cs19_funding_state": Policy("funding.read"),
+    "cs19_funding_byok": Policy("funding.byok"),
+    "cs19_funding_platform": Policy("funding.platform"),
 }
 
 
