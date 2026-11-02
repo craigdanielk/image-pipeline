@@ -182,5 +182,24 @@ class CliBinary(unittest.TestCase):
         self.assertEqual(higgsfield.classify(ctx.exception)[0], "refused")
 
 
+class RouteBinding(unittest.TestCase):
+    """2026-11-02 production: Vercel's rewrite appended ?path=<suffix>, so every MOS route binding was refused."""
+    def req(self, method, path, qs):
+        return SimpleNamespace(method=method, path=path, _environ={"QUERY_STRING": qs})
+
+    def test_vercel_rewrite_path_param_is_not_part_of_the_route(self):
+        from service.assertion import request_target
+        ws = "2d5f1aa9-8577-45d1-a5e0-30d30f9dcff4"
+        self.assertEqual(request_target(self.req("GET", f"/api/v1/workspaces/{ws}/connections",
+                                                 f"path=workspaces%2F{ws}%2Fconnections")),
+                         f"GET /api/v1/workspaces/{ws}/connections")
+        self.assertEqual(request_target(self.req("GET", "/api/v1/me/workspaces", "")), "GET /api/v1/me/workspaces")
+
+    def test_other_query_parameters_still_bind(self):
+        from service.assertion import request_target
+        self.assertEqual(request_target(self.req("GET", "/api/v1/x", "path=other&b=2&a=1")),
+                         "GET /api/v1/x?a=1&b=2&path=other")
+
+
 if __name__ == "__main__":
     unittest.main()

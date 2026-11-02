@@ -157,7 +157,10 @@ def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes,
 def request_target(req) -> str:
     """The route an assertion may be bound to: method + path (+ query sorted by key, then value)."""
     from urllib.parse import parse_qsl, urlencode
-    query = sorted(parse_qsl(req._environ.get("QUERY_STRING", ""), keep_blank_values=True))
+    query = parse_qsl(req._environ.get("QUERY_STRING", ""), keep_blank_values=True)
+    # Vercel's `/api/v1/:path*` rewrite appends `path=<the matched suffix>`; that is platform routing, not the request.
+    suffix = req.path[len("/api/v1/"):] if req.path.startswith("/api/v1/") else None
+    query = sorted((k, v) for k, v in query if not (k == "path" and v == suffix))
     return f"{req.method} {req.path}" + (f"?{urlencode(query)}" if query else "")
 
 
