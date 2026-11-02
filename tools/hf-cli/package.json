@@ -1,0 +1,8 @@
+{
+  "name": "cs-hf-cli",
+  "private": true,
+  "description": "Pins the Higgsfield CLI that Creative Studio's hosted functions execute (binary fetched + checksum-verified by its postinstall).",
+  "dependencies": {
+    "@higgsfield/cli": "1.1.26"
+  }
+}

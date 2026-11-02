@@ -1,0 +1,4 @@
+#!/bin/sh
+# Test-only stand-in for the Higgsfield CLI: tests replace subprocess.run, so this never runs.
+echo "test stub: the Higgsfield CLI must not execute in tests" >&2
+exit 97

@@ -62,6 +62,30 @@ CATALOGUE_ENV = "CS_HIGGSFIELD_MARKETING_CATALOGUE"
 CATALOGUE_SCHEMA = "cs-higgsfield-marketing-catalogue-v1"
 DEV_LOGIN_ENV = "IP_HIGGSFIELD_DEV_CLI_LOGIN"
 HOSTED_RUNTIME_ENV = "CS_HOSTED_RUNTIME"
+CLI_BIN_ENV = "CS_HIGGSFIELD_BIN"
+# Hosted runtimes get the CLI from tools/hf-cli (npm postinstall verifies the release checksum); Vercel ships it
+# into the Python functions via includeFiles. Local machines fall back to `higgsfield` on PATH.
+_BUNDLED_BIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "tools", "hf-cli", "node_modules",
+                            "@higgsfield", "cli", "vendor", "hf")
+
+
+def cli_binary() -> Optional[str]:
+    """Absolute path of the Higgsfield CLI binary this runtime will execute, or None when there is none."""
+    import shutil
+    for candidate in (os.environ.get(CLI_BIN_ENV), os.path.normpath(_BUNDLED_BIN)):
+        if not candidate or not os.path.isfile(candidate):
+            continue
+        if os.access(candidate, os.X_OK):
+            return candidate
+        # Function bundles can drop the execute bit; run a private executable copy from the writable temp dir.
+        copy = os.path.join(tempfile.gettempdir(), "cs-hf-cli-" + str(os.stat(candidate).st_size))
+        if not os.access(copy, os.X_OK):
+            tmp = copy + ".partial-" + uuid.uuid4().hex
+            shutil.copyfile(candidate, tmp)
+            os.chmod(tmp, 0o700)
+            os.replace(tmp, copy)
+        return copy
+    return shutil.which("higgsfield")
 
 _UUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 _HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
@@ -112,8 +136,15 @@ def _cli_env(credential: Optional[WorkspaceCredential]) -> Optional[dict]:
     if not os.path.isabs(path) or not os.path.isfile(path):
         raise ProviderRefusal("provider_credentials_missing",
                               f"Workspace credential {credential.credential_id} has no materialised credentials file.")
+    if cli_binary() is None:
+        raise ProviderRefusal("provider_runtime_unavailable",
+                              "The Higgsfield CLI is not installed in this runtime; nothing was sent to the provider.")
     env = dict(os.environ)
     env["HIGGSFIELD_CREDENTIALS_PATH"] = path
+    # The CLI keeps config/cache under $HOME; hosted function homes are read-only, so give it the private temp dir
+    # that already holds the materialised credential (removed after the call).
+    env["HOME"] = os.path.dirname(path)
+    env["HIGGSFIELD_DISABLE_TELEMETRY"] = "1"
     if credential.provider_workspace_id:
         env["HIGGSFIELD_WORKSPACE_ID"] = credential.provider_workspace_id
     else:
@@ -181,7 +212,7 @@ def _run(args, env=None):
             continue
         shown.append(args[i])
         i += 1
-    cmd = ["higgsfield"] + args
+    cmd = [cli_binary() or "higgsfield"] + args
     print("  $ higgsfield " + " ".join(shown))
     r = subprocess.run(cmd, capture_output=True, text=True, env=env)
     if r.returncode != 0:
@@ -277,6 +308,14 @@ def _job_reported_credits(job) -> Optional[Decimal]:
                 if d is not None:
                     return d
     return None
+
+
+def account_status(credential: WorkspaceCredential) -> dict:
+    """Free check of a workspace login: `account status --json` creates no job and charges nothing."""
+    out = _run(["account", "status", "--json"], _cli_env(credential))
+    if not isinstance(out, dict):
+        raise RuntimeError("higgsfield account status returned no object")
+    return out
 
 
 def _balance_from(out) -> Decimal:

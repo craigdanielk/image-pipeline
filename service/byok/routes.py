@@ -7,17 +7,17 @@
   PUT    /api/v1/workspaces/{ws}/funding/platform                 platform credential allowed (MOS signs this only for
                                                                   an operator-authorised workspace)
 
-The key arrives once in the request body, is sealed with AES-256-GCM (CS_CREDENTIAL_KEYS) and stored through
+The credential (a Higgsfield account login, verified with a free balance check) arrives once in the request body, is sealed with AES-256-GCM (CS_CREDENTIAL_KEYS) and stored through
 cs_store_workspace_credential. It is never logged, never echoed, never part of an idempotency digest, and never
 returned. Rotation = a new PUT (the previous version is revoked in the same transaction).
 """
 from __future__ import annotations
 
-import hashlib
 import re
 
 from ..errors import ServiceError
 from ..providers.credentials import CredentialError, KeyRing
+from ..providers import higgsfield_oauth as hf_login
 
 _UUID = r"[0-9a-fA-F-]{36}"
 PROVIDER = "higgsfield"
@@ -32,11 +32,6 @@ def _uuid(value: str) -> str:
         return str(uuid.UUID(value))
     except (ValueError, TypeError):
         raise ServiceError(404, "resource_unavailable") from None
-
-
-def fingerprint(credential: str) -> str:
-    """Stable, non-reversible account label (the key is high entropy). Only its last 4 chars are ever shown."""
-    return "byok-" + hashlib.sha256(credential.encode()).hexdigest()[:16]
 
 
 def _credential_from(body: dict) -> str:
@@ -65,7 +60,15 @@ def register(api_cls, route) -> None:
     def cs19_store_credential(self, req, workspace_id):
         workspace_id = _uuid(workspace_id)
         credential = _credential_from(req.json())
-        fp = fingerprint(credential)
+        # The credential is a Higgsfield account login (CLI credentials-file shape) from Marketing OS's sign-in.
+        # Verify it with the free balance check before storing: "connected" must mean Higgsfield accepted it.
+        try:
+            hf_login.parse_login(credential)
+            account = hf_login.account_status(credential.encode())
+        except hf_login.LoginError as exc:
+            status = 422 if exc.code in ("invalid_login", "login_rejected") else 503
+            raise ServiceError(status, exc.code, exc.detail) from None
+        fp = hf_login.account_fingerprint(account["email"])
         sealed = _keyring(self).seal(credential.encode(), provider=PROVIDER, fingerprint=fp)
         del credential
         _, tx = self._tx(req)
@@ -74,7 +77,8 @@ def register(api_cls, route) -> None:
                         (workspace_id, self.settings.environment_id, PROVIDER, fp, sealed.ciphertext, sealed.nonce,
                          sealed.key_version))
             version_id = cur.fetchone()["version_id"]
-        return 200, {"stored": True, "provider": PROVIDER, "version_id": str(version_id), "fingerprint_tail": fp[-4:]}
+        return 200, {"stored": True, "provider": PROVIDER, "version_id": str(version_id), "fingerprint_tail": fp[-4:],
+                     "account": hf_login.masked_email(account["email"]), "credits": account["credits"]}
 
     @route("DELETE", rf"/api/v1/workspaces/({_UUID})/provider-credentials/{PROVIDER}")
     def cs19_revoke_credential(self, req, workspace_id):

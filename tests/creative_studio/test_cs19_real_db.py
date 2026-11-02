@@ -12,8 +12,10 @@ from __future__ import annotations
 import io
 import json
 import logging
+import time
 import unittest
 import uuid
+from unittest import mock
 
 import psycopg2
 
@@ -32,17 +34,40 @@ del _b3
 from tests.creative_studio.test_cs_b1_real_db import call
 
 MIGRATION = MIGRATIONS_DIR / "20261031280100_cs_19_byok_funding.sql"
-SECRET_A = "hf-key-ALPHA-" + "a1b2c3d4" * 4
-SECRET_B = "hf-key-BRAVO-" + "e5f6a7b8" * 4
+
+
+def _login(access: str, refresh: str, expires_in: int = 86400) -> str:
+    """A Higgsfield account login in the CLI credentials-file shape (what Marketing OS's sign-in forwards)."""
+    return json.dumps({"auth_version": 2, "access_token": access, "refresh_token": refresh,
+                       "expires_at": int(time.time()) + expires_in, "token_type": "bearer",
+                       "scope": "user:org:read email profile offline_access"})
+
+
+SECRET_A = _login("oat_ALPHA" + "a1b2c3d4" * 3, "RT-ALPHA-" + "a1b2" * 8)
+SECRET_B = _login("oat_BRAVO" + "e5f6a7b8" * 3, "RT-BRAVO-" + "e5f6" * 8)
+ACCOUNTS = {"oat_ALPHA": "alpha.owner@example.test", "oat_BRAVO": "bravo.owner@example.test"}
+
+
+def fake_account_status(login_json: bytes, **_kw) -> dict:
+    """Free balance check stand-in: accepts known test logins only (never runs the CLI)."""
+    from service.providers.higgsfield_oauth import LoginError
+    access = json.loads(login_json)["access_token"]
+    for prefix, email in ACCOUNTS.items():
+        if access.startswith(prefix):
+            return {"credits": 1149.25, "email": email}
+    raise LoginError("login_rejected", "Higgsfield did not accept this sign-in")
 
 
 class Cs19RealDb(unittest.TestCase):
     setUpClass = classmethod(lambda cls: (_Base.cls.setUpClass.__func__(cls), cls._cs19_setup()) and None)
-    tearDownClass = classmethod(lambda cls: cls.pg.stop())
+    tearDownClass = classmethod(lambda cls: ([p.stop() for p in getattr(cls, "_patchers", [])], cls.pg.stop()) and None)
 
     @classmethod
     def _cs19_setup(cls):
         cls.app._app.credential_keyring = KEYRING
+        patcher = mock.patch("service.providers.higgsfield_oauth.account_status", fake_account_status)
+        patcher.start()
+        cls._patchers = [patcher]
         with cls.pg.connect() as conn:
             conn.cursor().execute(
                 "insert into cs_private.cs_credentials (id, workspace_id, environment_id, provider, mode, "
@@ -129,7 +154,8 @@ class Cs19RealDb(unittest.TestCase):
             st, body = self.put_key("owner_a", self.ws_a, SECRET_A)
             self.assertEqual(st, 200, body)
             self.assertNotIn(SECRET_A, json.dumps(body))
-            self.assertEqual(set(body), {"stored", "provider", "version_id", "fingerprint_tail"})
+            self.assertEqual(set(body), {"stored", "provider", "version_id", "fingerprint_tail", "account", "credits"})
+            self.assertEqual((body["account"], body["credits"]), ("al***@example.test", 1149.25))
             st, body2 = self.put_key("owner_a", self.ws_a, SECRET_B)         # rotation
             self.assertEqual(st, 200, body2)
             self.assertNotEqual(body["version_id"], body2["version_id"])
@@ -188,7 +214,10 @@ class Cs19RealDb(unittest.TestCase):
         self.assertNotIn(SECRET_A, json.dumps(body))
 
     def test_13_malformed_credentials_refused(self):
-        for bad in ("", "short", "x" * 20000, "ok-key-12345\x00", None, 5):
+        for bad in ("", "short", "x" * 20000, "ok-key-12345\x00", None, 5,
+                    "hf-key-plain-api-key-" + "f" * 24,                                    # API keys: CLI cannot use
+                    json.dumps({**json.loads(SECRET_A), "auth_version": 1}),              # CLI: "older auth flow"
+                    _login("oat_UNKNOWN" + "0" * 24, "RT-UNKNOWN-" + "0" * 24)):           # balance check refuses
             st, body = call(self.app, "PUT", f"/api/v1/workspaces/{self.ws_a}/provider-credentials/higgsfield",
                             tok=self.tok["owner_a"], body={"credential": bad})
             self.assertEqual(st, 422, (bad if not isinstance(bad, str) else len(bad), body))
@@ -315,6 +344,96 @@ class Cs19RealDb(unittest.TestCase):
                    where workspace_id = %s limit 1""", (self.ws_b,))
         self.assertSqlState("CS409", lambda: self.q("update cs_private.cs_credential_uses set credential_mode = 'platform'"))
         self.assertSqlState("CS409", lambda: self.q("delete from cs_private.cs_credential_uses"))
+
+    # -- 04 account-login refresh (CS-20): single writer, sealed in place, before the dispatch marker --------------
+    def _active_credential(self, ws):
+        return self.q("select version_id, ciphertext, nonce, encryption_key_version, provider_account_fingerprint, status "
+                      "from cs_private.cs_credentials where workspace_id = %s and provider = 'higgsfield' "
+                      "order by created_at desc limit 1", (ws,))[0]
+
+    def _open(self, row) -> dict:
+        from service.providers.credentials import SealedCredential
+        return json.loads(KEYRING.open(SealedCredential(bytes(row["ciphertext"]), bytes(row["nonce"]),
+                                                        row["encryption_key_version"]),
+                                       provider="higgsfield", fingerprint=row["provider_account_fingerprint"]))
+
+    def test_40_near_expiry_login_is_refreshed_in_place_then_dispatched(self):
+        from service.providers import higgsfield_oauth as hf_login
+        self.assertEqual(self.funding("owner_a", self.ws_a, "byok_only")[0], 200)
+        stale = _login("oat_ALPHA" + "5" * 24, "RT-ALPHA-OLD-" + "5" * 20, expires_in=600)
+        self.assertEqual(self.put_key("owner_a", self.ws_a, stale)[0], 200)
+        before = self._active_credential(self.ws_a)
+        rotated = {"access_token": "oat_ALPHA" + "6" * 24, "refresh_token": "RT-ALPHA-NEW-" + "6" * 20,
+                   "expires_in": 86400, "token_type": "bearer", "scope": "user:org:read email profile offline_access"}
+        seen = []
+
+        def fake_refresh(login, **_kw):
+            seen.append(login["refresh_token"])
+            return hf_login.login_from_token_response(rotated)
+
+        creates = self.fake.creates()
+        st, run, _ = self.one_run("producer_a", self.ws_a, "workspace")
+        self.assertEqual(st, 202, run)
+        with mock.patch.object(hf_login, "refresh", fake_refresh):
+            self.drain()
+        self.assertEqual(seen, ["RT-ALPHA-OLD-" + "5" * 20])                 # refreshed exactly once
+        after = self._active_credential(self.ws_a)
+        self.assertEqual((after["version_id"], after["status"]), (before["version_id"], "active"))   # same row
+        self.assertNotEqual(bytes(after["ciphertext"]), bytes(before["ciphertext"]))
+        opened = self._open(after)
+        self.assertEqual((opened["access_token"], opened["refresh_token"], opened["auth_version"]),
+                         (rotated["access_token"], rotated["refresh_token"], 2))
+        self.assertGreater(opened["expires_at"], int(time.time()) + 80000)
+        self.assertEqual(self.run_state(run["run_id"])["state"], "completed")
+        self.assertGreater(self.fake.creates(), creates)
+        audit = self.q("select action, affected_refs::text r from public.cs_audit_events where workspace_id = %s "
+                       "and action = 'credential.refresh'", (self.ws_a,))
+        self.assertEqual(len(audit), 1)
+        self.assertNotIn("RT-ALPHA", audit[0]["r"])
+
+    def test_41_refused_refresh_revokes_login_and_refuses_before_any_provider_call(self):
+        from service.providers import higgsfield_oauth as hf_login
+        self.assertEqual(self.funding("owner_a", self.ws_a, "byok_only")[0], 200)
+        stale = _login("oat_ALPHA" + "7" * 24, "RT-ALPHA-DEAD-" + "7" * 20, expires_in=60)
+        self.assertEqual(self.put_key("owner_a", self.ws_a, stale)[0], 200)
+        version = self._active_credential(self.ws_a)["version_id"]
+
+        def refused(login, **_kw):
+            raise hf_login.LoginError("reconnect_required", "refused")
+
+        creates = self.fake.creates()
+        st, run, _ = self.one_run("producer_a", self.ws_a, "workspace")
+        self.assertEqual(st, 202, run)
+        with mock.patch.object(hf_login, "refresh", refused):
+            self.drain()
+        self.assertEqual(self.fake.creates(), creates)                         # nothing sent, nothing charged
+        self.assertEqual(self.q("select status from cs_private.cs_credentials where version_id = %s", (version,))[0]["status"],
+                         "revoked")
+        err = self.q("select state::text, error from public.cs_attempts where run_id = %s", (run["run_id"],))[0]
+        self.assertEqual(err["error"]["code"], "higgsfield_reconnect_required", err)
+        self.assertIn("Integrations", err["error"]["message"])
+        st, state = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/funding", tok=self.tok["owner_a"])
+        self.assertFalse(state["workspace_credential"])
+
+    def test_42_transient_refresh_failure_keeps_login_and_retries_later(self):
+        from service.providers import higgsfield_oauth as hf_login
+        self.assertEqual(self.funding("owner_a", self.ws_a, "byok_only")[0], 200)
+        stale = _login("oat_ALPHA" + "8" * 24, "RT-ALPHA-KEEP-" + "8" * 20, expires_in=60)
+        self.assertEqual(self.put_key("owner_a", self.ws_a, stale)[0], 200)
+        before = self._active_credential(self.ws_a)
+
+        def down(login, **_kw):
+            raise hf_login.LoginError("refresh_unavailable", "token endpoint answered 503")
+
+        creates = self.fake.creates()
+        st, run, _ = self.one_run("producer_a", self.ws_a, "workspace")
+        self.assertEqual(st, 202, run)
+        with mock.patch.object(hf_login, "refresh", down):
+            self.drain()
+        after = self._active_credential(self.ws_a)
+        self.assertEqual((after["status"], bytes(after["ciphertext"])), ("active", bytes(before["ciphertext"])))
+        self.assertEqual(self.fake.creates(), creates)
+        self.assertNotEqual(self.run_state(run["run_id"])["state"], "completed")
 
 
 # borrow every non-test helper (classmethods stay classmethods) from the B3 fixture

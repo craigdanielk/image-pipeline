@@ -35,6 +35,7 @@ PRE_DISPATCH_REFUSALS = frozenset({
     "provider_credentials_missing", "provider_catalogue_missing", "provider_catalogue_invalid",
     "quality_unknown", "ad_format_unknown", "prompt_missing", "brand_kit_id_invalid", "aspect_ratio_unsupported",
     "resolution_unsupported", "batch_size_invalid", "references_exceed_limit", "reference_invalid",
+    "provider_runtime_unavailable",
 })
 # Refusals raised after the provider answered with a terminal job state.
 TERMINAL_FAILURES = frozenset({"generation_not_completed"})

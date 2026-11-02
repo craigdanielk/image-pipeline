@@ -24,6 +24,9 @@ B3_FIX = ROOT / "tests" / "fixtures" / "providers" / "csb3"
 HEADLINE = "0f6c2a7e-1d3b-4c55-9a10-5b7e8c9d0a11"
 TEST_KEYS = {"k1": base64.b64encode(b"k" * 32).decode()}   # test-only AES key, not a credential
 CREDENTIAL_PLAINTEXT = b'{"token":"test-only-provider-credential"}'
+# The adapter refuses before dispatch when no CLI binary exists; point it at a test stub (never executed: tests
+# replace subprocess.run) so suites do not depend on a developer's local install.
+os.environ.setdefault("CS_HIGGSFIELD_BIN", str(ROOT / "tests" / "fixtures" / "bin" / "higgsfield"))
 
 
 def fx(name: str):
@@ -85,7 +88,7 @@ class FakeHiggsfield:
 
     # -- transport ---------------------------------------------------------------
     def __call__(self, cmd, capture_output=False, text=False, env=None, **_kw):
-        if not isinstance(cmd, list) or cmd[0] != "higgsfield":
+        if not isinstance(cmd, list) or os.path.basename(cmd[0]) != "higgsfield":
             raise AssertionError(f"unexpected process {cmd!r}")
         args = cmd[1:]
         st = self.state()

@@ -164,9 +164,9 @@ class HostedSurfaceTests(unittest.TestCase):
 
     # Reviewed single Higgsfield adapter = ENG-04c amend 1 (b9d28a1). Content hashes, not a git
     # diff against a moving branch: the guard holds in any checkout, with or without history.
-    REVIEWED_ADAPTERS_B9D28A1 = {
+    REVIEWED_ADAPTERS = {
         "__init__.py": "bed4cdab39c506d407a75bf987362a6afd30f437ecca35a7e31d5a48a753742b",
-        "engine_higgsfield.py": "463ef28d40d0e379eb971950f4f076b8ba8fe2ea8d8de13c10f17174237f3efc",
+        "engine_higgsfield.py": "4f0d61fd03e04d26655c9d284af7f8046814e1a58e75b5cd92431192745fa947",  # CS-20: bundled CLI binary, writable HOME, free account-status check
         "intake_cli.py": "c705ed3afcecdcac5c20cdc239e7322ffa051be76e0bc6b19419496608267f5c",
         "output_local.py": "05f633caa0ef0d4c9c6f94cd30252ac0c4c5c96e955c62da2202cfc9cefd89ab",
         "reference_local.py": "43bfb35d95c4ee6bfc477c51bb5a2bfec0e4dc68cc78f7cdc9553760db0d3933",
@@ -177,8 +177,8 @@ class HostedSurfaceTests(unittest.TestCase):
         adapters = ROOT / "core" / "adapters"
         actual = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in sorted(adapters.iterdir()) if p.is_file()}
-        self.assertEqual(actual, self.REVIEWED_ADAPTERS_B9D28A1,
-                         "core/adapters/ must equal the reviewed single-adapter version (b9d28a1)")
+        self.assertEqual(actual, self.REVIEWED_ADAPTERS,
+                         "core/adapters/ must equal the reviewed single-adapter version (b9d28a1 + CS-20)")
 
 
 if __name__ == "__main__":

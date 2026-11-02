@@ -39,6 +39,7 @@ from ..providers.adapter import engine_higgsfield as _hf
 from ..providers.canonical import artifact_digest, digest
 from ..providers.contracts import validate
 from ..providers.credentials import CredentialError, KeyRing, SealedCredential, materialise
+from ..providers import higgsfield_oauth as hf_login
 
 log = logging.getLogger("creative_studio.runtime")
 
@@ -110,6 +111,7 @@ def _now() -> str:
 
 
 BYOK_MESSAGE = "add your Higgsfield key in Integrations"
+RECONNECT_MESSAGE = "Higgsfield no longer accepts this workspace's sign-in; sign in to Higgsfield again in Integrations"
 
 
 @dataclass
@@ -217,6 +219,10 @@ class ProviderRuntime:
             if sealed is None:
                 return self._abandon(item, att["attempt_id"], "refused", higgsfield.error_doc(
                     "provider_credentials_missing", "the admitted credential is no longer active"))
+            sealed = self._fresh_login(item, att, sealed)                     # before the dispatch marker
+            if sealed is None:
+                return self._abandon(item, att["attempt_id"], "refused", higgsfield.error_doc(
+                    "higgsfield_reconnect_required", RECONNECT_MESSAGE))
             envelope = self._envelope(item, att, refs)
             sealed_envelope = self.keyring.seal_envelope(envelope)          # encrypted at rest
             header = {k: envelope[k] for k in ("schema_version", "workspace_id", "attempt_id", "idempotency_key")}
@@ -312,6 +318,47 @@ class ProviderRuntime:
                 fh.write(data)
             refs.append({"path": path, "role": b["role"], "field": b["field"], "ordinal": b["ordinal"], "asset": asset})
         return refs
+
+    def _fresh_login(self, item, att, sealed: SealedCredential) -> SealedCredential | None:
+        """Refresh a Higgsfield account login that is close to expiry; None = Higgsfield refused it (sign in again).
+
+        Single writer: the refresh runs while this transaction holds the credential row lock, and the rotated login
+        is sealed into the same row before commit. Reusing an old refresh token would revoke the whole login.
+        """
+        try:
+            login = hf_login.parse_login(self.keyring.open(sealed, provider=higgsfield.PROVIDER_ID,
+                                                           fingerprint=att["provider_account_fingerprint"]))
+        except (CredentialError, hf_login.LoginError):
+            return sealed           # not an account login (e.g. operator platform credential): nothing to refresh
+        if not hf_login.needs_refresh(login):
+            return sealed
+        with self._tx() as cur:
+            cur.execute("select * from public.cs_lock_attempt_credential(%s, %s, %s, %s)",
+                        (*self._lease(item), att["attempt_id"]))
+            row = cur.fetchone()
+            if row is None:
+                return sealed       # workspace credential changed meanwhile; dispatch re-checks it is active
+            current = SealedCredential(bytes(row["ciphertext"]), bytes(row["nonce"]), row["encryption_key_version"])
+            login = hf_login.parse_login(self.keyring.open(current, provider=higgsfield.PROVIDER_ID,
+                                                           fingerprint=row["provider_account_fingerprint"]))
+            if not hf_login.needs_refresh(login):
+                return current      # another worker refreshed it while we waited for the lock
+            settle = ("select public.cs_settle_attempt_credential_refresh(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+            try:
+                fresh = hf_login.refresh(login)
+            except hf_login.LoginError as exc:
+                if exc.code != "reconnect_required":
+                    raise Retryable("credential_unavailable", exc.code) from None
+                cur.execute(settle, (*self._lease(item), att["attempt_id"], row["version_id"], "reconnect_required",
+                                     None, None, None, self.settings.runtime_principal))
+                log.warning("higgsfield login refused at refresh; workspace must sign in again")
+                return None
+            resealed = self.keyring.seal(json.dumps(fresh).encode(), provider=higgsfield.PROVIDER_ID,
+                                         fingerprint=row["provider_account_fingerprint"])
+            cur.execute(settle, (*self._lease(item), att["attempt_id"], row["version_id"], "refreshed",
+                                 resealed.ciphertext, resealed.nonce, resealed.key_version,
+                                 self.settings.runtime_principal))
+            return resealed
 
     def _credential(self, item, att) -> SealedCredential | None:
         with self._tx() as cur:

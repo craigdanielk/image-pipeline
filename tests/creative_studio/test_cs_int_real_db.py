@@ -31,6 +31,7 @@ EXPECTED_CS_CHAIN = [
     "20261031220100_cs_16_execution_plans.sql",
     "20261031240100_cs_17b_post_run_pipeline.sql",
     "20261031280100_cs_19_byok_funding.sql",
+    "20261102280100_cs_20_higgsfield_login_refresh.sql",
 ]
 
 _CS_REL = "((n.nspname = 'public' and c.relname like 'cs\\_%%') or n.nspname = 'cs_private')"
