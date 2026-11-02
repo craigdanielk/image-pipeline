@@ -27,6 +27,8 @@ MAX_LIFETIME_SECONDS = 60
 MIN_KEY_BYTES = 32
 MIN_NONCE_BYTES = 16
 _FIELDS = {"aud", "sub", "act", "bnd", "bsha", "nonce", "iat", "exp"}
+# Optional route binding Marketing OS signs: "<METHOD> <path>[?sorted query]". When present it must match this request.
+_OPTIONAL = {"pth"}
 
 
 @dataclass(frozen=True)
@@ -102,7 +104,8 @@ def sign(key: str, payload: dict) -> str:
     return f"{b64e(raw)}.{b64e(hmac.new(key.encode(), raw, hashlib.sha256).digest())}"
 
 
-def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes, now: float, skew: int) -> dict:
+def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes, now: float, skew: int,
+           target: str | None = None) -> dict:
     """Pure checks (everything except binding and nonce). Returns the payload."""
     if not key or len(key.encode()) < MIN_KEY_BYTES:
         raise ServiceError(503, "assertion_unconfigured")
@@ -117,7 +120,10 @@ def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes,
         p = json.loads(raw.decode())
     except (UnicodeDecodeError, json.JSONDecodeError):
         raise _refuse("assertion_invalid") from None
-    if not isinstance(p, dict) or set(p) != _FIELDS:
+    if not isinstance(p, dict) or set(p) - _OPTIONAL != _FIELDS:
+        raise _refuse("assertion_invalid")
+    if "pth" in p and (not isinstance(p["pth"], str) or target is None
+                      or not hmac.compare_digest(p["pth"].encode(), target.encode())):
         raise _refuse("assertion_invalid")
     for name in ("aud", "sub", "act", "bnd", "bsha", "nonce"):
         if not isinstance(p[name], str):
@@ -148,6 +154,13 @@ def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes,
     return p
 
 
+def request_target(req) -> str:
+    """The route an assertion may be bound to: method + path (+ query sorted by key, then value)."""
+    from urllib.parse import parse_qsl, urlencode
+    query = sorted(parse_qsl(req._environ.get("QUERY_STRING", ""), keep_blank_values=True))
+    return f"{req.method} {req.path}" + (f"?{urlencode(query)}" if query else "")
+
+
 class AssertionGuard:
     def __init__(self, settings, connect, clock=time.time):
         self.settings = settings
@@ -162,7 +175,7 @@ class AssertionGuard:
             return None
         payload = verify(header.strip(), key=self.settings.mos_assertion_key or "", user_id=actor.user_id,
                          action=policy.action, raw_body=req.raw_body(), now=self.clock(),
-                         skew=self.settings.assertion_skew_seconds)
+                         skew=self.settings.assertion_skew_seconds, target=request_target(req))
         if policy.binds:
             if payload["bnd"] != str(req.json().get("external_workspace_id")):
                 raise _refuse("binding_inactive", 403)
