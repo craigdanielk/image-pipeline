@@ -50,13 +50,9 @@ centerline) in plan view; the NFC disc and connector are centered on Y.
 
 ## 4. Face features between loop and NFC disc (+X of loop)
 
-Two small **molded, debossed** marks on the top face, same black as the body
-(tactile, not printed), aligned on the centerline:
-
-- **Upper:** a small **stadium / rounded-rectangle outline** ≈ 4 × 2 mm (recessed ring).
-- **Lower:** a short **horizontal bar / slot** ≈ 4 × 1.5 mm.
-
-Function: molded orientation / grip indices. Depth ≈ 0.3 mm.
+> **Rev 3 (2026-08-28, operator-directed):** NO separate face marks. The
+> PRIMIDS brand mark lives ON the brass disc (see §5); the body face between
+> the loop and the disc is clean, unbroken matte black.
 
 ## 5. NFC contact disc (center face)
 
@@ -66,8 +62,11 @@ Function: molded orientation / grip indices. Depth ≈ 0.3 mm.
   black rim/bezel (≈ 0.5 mm) around the disc.
 - **Material:** **brushed brass / gold-plated** contactless touch pad; concentric
   brush grain; slight dome.
-- **Glyph:** embossed **contactless / NFC "wave" mark** = three concentric arcs
-  radiating from the lower-left, dark on gold. Arc set spans ≈ 5 mm.
+- **Glyph (Rev 3):** the **PRIMIDS "X" brand mark** — four angled arms radiating
+  from a small central square (see `reference/primi-mark-icon.png` for exact
+  geometry) — engraved/debossed **dark on the brushed brass**, spanning ≈ 5.5 mm,
+  centered on the disc. This REPLACES the former three-arc contactless wave:
+  the wave glyph must NOT appear anywhere on the device. No lettering ever.
 
 ## 6. USB-C connector (+X end)
 
@@ -83,7 +82,7 @@ Function: molded orientation / grip indices. Depth ≈ 0.3 mm.
 2. Apply full edge-radius (≈1.6 mm) to both long edges → racetrack cross-section.
 3. Cut the keyring stadium slot (10.5 × 5.0 mm) at the -X end; radius the bore walls.
 4. Counterbore Ø9.0 mm × 0.3 mm at the disc location; inset the brass disc + 0.5 mm bezel.
-5. Deboss the wave glyph on the disc and the two orientation marks on the face.
+5. Engrave the PRIMIDS X mark (graphic only) dark-on-brass, centered on the disc. No other face marks.
 6. Co-mold the USB-C: 8.34 × 2.56 mm steel shell, 6.5 mm exposed, 2.5 mm neck,
    centered on Y and Z.
 7. Materials: body PA-GF matte (#0d0d0f); disc brushed brass; connector nickel steel.
@@ -91,7 +90,7 @@ Function: molded orientation / grip indices. Depth ≈ 0.3 mm.
 ## 8. Fixed invariants (must not drift in any render)
 
 - Keyring = a **molded slot through the body**, never a separate wire ring.
-- NFC disc = **brass/gold**, single disc, three-arc wave, centered on width.
+- NFC disc = **brass/gold**, single disc, bearing the PRIMIDS X mark (never the three-arc wave, never text), centered on width.
 - Connector = **USB-C** (oval), never USB-A, never micro/mini.
 - Body = **matte** textured black, never glossy piano-black.
 - Proportions: length:width ≈ **2.45 : 1**; disc Ø ≈ **0.49 × body width**.

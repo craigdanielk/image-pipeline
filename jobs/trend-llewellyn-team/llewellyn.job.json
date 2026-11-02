@@ -1,0 +1,26 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "trend-llewellyn-team-portrait",
+  "subject": {
+    "person": "Llewellyn — the man in reference image 1 (bald, light stubble goatee, blue-grey eyes, warm confident half-smile)"
+  },
+  "spec": {
+    "prompt_template": "Corporate studio headshot portrait for a fintech team page. Subject: {person}. PRESERVE the exact face, head shape and skin tone from reference image 1 — same person, photorealistic, no beautification. Restyle to match the studio look of reference images 2 and 3 exactly: chest-up crop, subject centred, wearing a dark navy-black button-up shirt with a small Trend Digital blades logo (teal/blue/green angular bird-like mark, as on the shirts in references 2 and 3) on the chest, plain charcoal dark-grey studio background with a soft vignette, soft even key light from the front-left, gentle rim separation, natural warm smile looking straight at camera. Professional corporate photography, 85mm look, shallow depth of field."
+  },
+  "reference": [
+    "reference/llewellyn-source.jpg",
+    "reference/ashton-brown.jpg",
+    "reference/bruce-parker.jpg"
+  ],
+  "output": {
+    "imgtype": "portrait",
+    "aspect_ratio": "4:3",
+    "resolution": "2k",
+    "count": 2
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2"
+  }
+}

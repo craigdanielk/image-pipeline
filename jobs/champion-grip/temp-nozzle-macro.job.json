@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "champion-grip-temp-nozzle-macro",
+  "subject": {
+    "brief": "TEMP placeholder — nozzle macro of current SA can, cap off"
+  },
+  "spec": {
+    "negative": "KEEP ON ROLLING, striped legacy label, Australian flag, green overcap still on, fat deodorant can, blurry orifice, logo floating off product, hands covering nozzle",
+    "prompt_template": "Extreme macro product photograph of a Champion Grip SA 120ml aerosol with the green overcap REMOVED: white plastic spray actuator and orifice sharp in focus, metal valve cup visible, slim Ø30mm can body falling soft behind. CURRENT SA wrap from the reference plates — white vesica, Champion/Grip script. Soft large softbox, deep forest-green soft background. Catalogue macro plate. TEMP until real HITL nozzle shoot. Object must stay slim 6:1 class — narrow tall can, not a fat deodorant."
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "macro",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {
+      "input_images": [
+        "/Users/craigkunte/Developer/GitHub/tenants/champion-grip/tools/image-pipeline/jobs/bowls-grip-polish/reference/label-flat.png",
+        "/Users/craigkunte/Developer/GitHub/tenants/champion-grip/tools/image-pipeline/jobs/bowls-grip-polish/reference/plates/plate-1-front.png",
+        "/Users/craigkunte/Developer/GitHub/tenants/champion-grip/tools/image-pipeline/jobs/bowls-grip-polish/out/champion-grip-bowls-scene-spray-hand__scene__v2.png"
+      ]
+    }
+  },
+  "meta": {
+    "section": "Features nozzle — TEMP until CG-UI-14 P2 shoot",
+    "class": "TEMP_GENERATED",
+    "replace_with": "HITL real photography"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "$schema": "../../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "champion-grip-temp-hand-bowl",
+  "subject": {
+    "brief": "TEMP placeholder — adult hand correct lawn bowls grip on green, no product can"
+  },
+  "spec": {
+    "negative": "aerosol can, spray bottle, logo, readable brand text, wrong bowls grip, purple neon, studio white void, multiple people",
+    "prompt_template": "Photoreal outdoor photograph on a manicured lawn bowls green: a single adult hand and forearm demonstrating the CORRECT lawn bowls delivery grip on a black lawn bowl — fingers under and around the bowl, thumb on top in a control position, bowl cradled naturally as for a draw shot. Shallow DOF, soft daylight, grass and distant rink soft in background. NO aerosol can, NO spray bottle, NO logos, NO readable text. Editorial sports photography, 3:2. This is a temporary placeholder until a real HITL shoot lands."
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "scene",
+    "aspect_ratio": "3:2",
+    "resolution": "1k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {}
+  },
+  "meta": {
+    "section": "Features / story — TEMP until CG-UI-14 P3 shoot",
+    "class": "TEMP_GENERATED",
+    "replace_with": "HITL real photography"
+  }
+}

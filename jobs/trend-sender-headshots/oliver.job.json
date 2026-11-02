@@ -1,0 +1,26 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "trend-sender-oliver",
+  "subject": {
+    "product_name": "Oliver Grant headshot",
+    "brand": "Trend Digital"
+  },
+  "spec": {
+    "prompt_template": "Photorealistic corporate headshot of a 29-year-old man, light-brown wavy hair, energetic, shoulders-up, 85mm lens look, soft diffused key light with gentle fill, neutral light-grey seamless studio background, business-casual attire in muted tones, warm confident natural smile, direct eye contact, natural skin texture with realistic pores and fine detail, subtle catchlights, no logos, no text, contemporary Australian professional, LinkedIn-style profile photo"
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "1:1",
+    "resolution": "2k",
+    "count": 3,
+    "background": "neutral light-grey seamless studio",
+    "composition": "centered head-and-shoulders, eyes on upper-third line"
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "recraft_v4_1",
+    "model_type": "standard"
+  }
+}

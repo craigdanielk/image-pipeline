@@ -4,6 +4,11 @@
       "slug": "joga",
       "label": "joga",
       "jobs_root": "/Users/craigkunte/Developer/GitHub/tenants/joga/tools/image-pipeline/jobs"
+    },
+    {
+      "slug": "champion-grip",
+      "label": "Champion Grip",
+      "jobs_root": "/Users/craigkunte/Developer/GitHub/tenants/champion-grip/tools/image-pipeline/jobs"
     }
   ]
 }

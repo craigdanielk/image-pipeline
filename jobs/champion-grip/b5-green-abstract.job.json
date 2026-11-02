@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "champion-grip-b5-green-abstract",
+  "subject": {
+    "brief": "B5 Felt-like green abstract texture with gold flecks"
+  },
+  "spec": {
+    "negative": "people, product, logos, smoke, purple, readable text, cans, hands",
+    "prompt_template": "Abstract close-up of felt-like bowling green texture, soft motion blur, subtle gold specular flecks and tiny dew sparkle, deep forest green to near-black gradient, premium athletic atmosphere plate, no people, no product, no logos, no smoke, no purple. Seamless enough for full-bleed CSS background."
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "texture",
+    "aspect_ratio": "16:9",
+    "resolution": "4k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {}
+  },
+  "meta": {
+    "section": "Global backgrounds",
+    "class": "CAN_BE_GENERATED"
+  }
+}

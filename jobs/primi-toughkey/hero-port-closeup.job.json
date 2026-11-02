@@ -1,0 +1,32 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "primi-toughkey-hero-port-closeup",
+  "subject": {
+    "view": "extreme macro close-up, the key FULLY INSERTED and seated in the side USB-C port of a dark slate laptop — the connector is hidden inside the port, the black overmold neck meeting the laptop edge flush — seen from a low three-quarter angle so the top face with the brushed-brass NFC disc faces the camera, the molded keyring loop hanging toward the lower foreground, the laptop edge and a sliver of its keyboard falling away into soft-focus bokeh at the top of frame"
+  },
+  "spec": {
+    "cad": "cad.md",
+    "prompt_template": "Ultra-premium cinematic macro product photograph: a single matte-black USB-C contactless hardware security key FULLY plugged into and seated in the side USB-C port of a dark charcoal-slate laptop. VIEW: {view}. Preserve the EXACT object shown in the first three reference images (the catalogue plates) — do not restyle, recolour, or change its geometry: matte-black glass-fibre-nylon body, ONE brushed-brass NFC disc with a three-arc contactless wave centred on the face, a single debossed PRIMIDS brand icon (the X glyph shown in the LAST reference image, molded tone-on-tone black, graphic only, NO lettering), nickel-steel USB-C connector, molded oval keyring through-slot. The FOURTH reference image defines ONLY the mood, camera angle, composition and depth of field — do NOT copy its navy-blue body colour or its gold disc position; the device must stay matte black with the brass disc per the plates. Lighting: moody near-black scene #0a0a0b, low-key cinematic; the key accent is BRAND ORANGE #FA582E — a crisp #FA582E rim light raking the top edge of the key and the laptop edge, and a soft deep #FA582E radial glow bleeding from behind the port area; faint neutral fill so the brass disc reads warm and brushed. Shallow depth of field, razor-sharp focus locked on the NFC disc and the debossed marks, laptop falling into creamy bokeh. ONLY the key and the laptop exist in the frame — no second device, no other objects, no props, no hands, no cables, no screen glow, no text overlays. CRITICAL: the body is a razor-thin flat slab only 3.35 mm thick against 44.8 mm length — elegant and blade-like, NOT chunky or wedge-shaped. Exactly ONE debossed mark on the face: the PRIMIDS X icon per the last reference image, tone-on-tone black, no text. Object geometry must match this spec exactly:\n\n{cad}"
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "16:9",
+    "resolution": "4k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {
+      "input_images": [
+        "reference/plates/plate-2-hero34.png",
+        "reference/plates/plate-1-plan.png",
+        "reference/plates/plate-3-profile.png",
+        "reference/mood-port-closeup.png",
+        "reference/primi-mark-icon.png"
+      ]
+    }
+  }
+}

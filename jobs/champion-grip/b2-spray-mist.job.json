@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "champion-grip-b2-spray-mist",
+  "subject": {
+    "brief": "B2 Spray mist macro plate \u2014 center clear for real can composite"
+  },
+  "spec": {
+    "negative": "aerosol can, label text, logo, hands, brand, product bottle, readable typography, purple neon",
+    "prompt_template": "Macro cinematic still of fine aerosol mist particles and soft water-droplet sparkle catching hard rim light over a deep forest-green field, dark abstract background, center 35 percent of frame kept empty and soft for later product composite, no can, no label text, no logo, no hands, no fake branding. Photoreal mist only. Palette: deep green, warm gold specular flecks, near-black."
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "4:5",
+    "resolution": "4k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {}
+  },
+  "meta": {
+    "section": "Home story beat 01",
+    "class": "CAN_BE_GENERATED"
+  }
+}

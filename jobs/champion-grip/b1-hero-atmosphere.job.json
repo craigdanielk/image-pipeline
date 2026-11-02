@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "champion-grip-b1-hero-atmosphere",
+  "subject": {
+    "brief": "B1 Hero atmosphere \u2014 empty outdoor lawn bowls green at dusk, no people, no product"
+  },
+  "spec": {
+    "negative": "people, hands, lawn bowls as heroes, aerosol cans, logos, readable text, purple neon, cannabis smoke, product packaging, brand marks",
+    "prompt_template": "Cinematic photograph of an empty outdoor lawn bowls green at dusk, manicured grass rink stretching into soft depth of field, low wooden ditch edge barely visible, cool shadows and warm golden rim light on the grass tips, shallow DOF 35mm look, quiet premium sports atmosphere. Optional soft dew / water droplets catching rim light on grass blades only. NO people, NO hands, NO bowls in focus as heroes, NO aerosol cans, NO logos, NO readable text, NO purple neon, NO smoke that looks like cannabis. Warm cream haze in the sky, deep forest green grass. Leave clear negative space on left and right thirds for typography. Photoreal, editorial, Arc'teryx-calm."
+  },
+  "reference": null,
+  "output": {
+    "imgtype": "hero",
+    "aspect_ratio": "16:9",
+    "resolution": "4k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2",
+    "params": {}
+  },
+  "meta": {
+    "section": "Home manifesto / atmosphere",
+    "class": "CAN_BE_GENERATED"
+  }
+}

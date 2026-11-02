@@ -1,0 +1,28 @@
+{
+  "$schema": "../../core/job.schema.json",
+  "schema_version": "job-v1",
+  "id": "regenic-scale-ludwig-3",
+  "subject": {
+    "sex": "female",
+    "stage_code": "III",
+    "pattern": "long hair with extensive crown hair loss, scalp fully visible over the top, only a thin fringe of hair at the front preserved"
+  },
+  "spec": {
+    "prompt_template": "Flat clinical medical illustration for a hair-loss assessment scale tile. A single generic {sex} head in three-quarter front-left view, minimal stylized facial features, neutral expression, same character design across a series. HAIR PATTERN (this stage): {pattern}. STYLE: clean flat vector-style medical illustration, NOT photorealistic, no real person likeness; hair solid navy #1b2846 with simple flat shading, scalp and skin a neutral warm light tone, background seamless very-light grey #f7f8fa, subtle soft shadow under the head. TEXT DISCIPLINE (critical): the ONLY text in the image is the stage code '{stage_code}' rendered small, centered near the bottom, in navy #1b2846 \u2014 absolutely NO other words, letters, numbers, labels, logos, brand marks, watermarks or captions anywhere. Do NOT render 'Novecy' or any branding. Match the attached reference image EXACTLY for character design, head angle, colors, lighting and layout if provided \u2014 change ONLY the hair pattern and the stage code. Clean, premium, clinical, sharp edges, sRGB. Square 1:1.",
+    "cad": "Assessment scale tile ludwig-3 (BRIEF #31008 / RL-0241). Style contract + canonical stage definitions: jobs/regenic-assessment-scales/README.md. Anchor: reference/style-anchor.png (from accepted norwood-4)."
+  },
+  "reference": {
+    "image": "reference/style-anchor.png",
+    "optional": true
+  },
+  "output": {
+    "imgtype": "scale",
+    "aspect_ratio": "1:1",
+    "resolution": "1k",
+    "count": 1
+  },
+  "engine": {
+    "name": "higgsfield",
+    "model": "nano_banana_2"
+  }
+}
