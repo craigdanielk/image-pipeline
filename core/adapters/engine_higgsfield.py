@@ -69,6 +69,22 @@ _BUNDLED_BIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".
                             "@higgsfield", "cli", "vendor", "hf")
 
 
+_PRIVATE_CLI: dict = {}
+
+
+def _private_copy(source: str) -> str:
+    """Executable copy of `source` inside a per-process private temp dir; created once, never reused from disk."""
+    cached = _PRIVATE_CLI.get(source)
+    if cached and os.access(cached, os.X_OK):
+        return cached
+    path = os.path.join(tempfile.mkdtemp(prefix="cs-hf-cli-"), "hf")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o700)
+    with os.fdopen(fd, "wb") as dst, open(source, "rb") as src:
+        dst.write(src.read())
+    _PRIVATE_CLI[source] = path
+    return path
+
+
 def cli_binary() -> Optional[str]:
     """Absolute path of the Higgsfield CLI binary this runtime will execute, or None when there is none."""
     import shutil
@@ -77,14 +93,9 @@ def cli_binary() -> Optional[str]:
             continue
         if os.access(candidate, os.X_OK):
             return candidate
-        # Function bundles can drop the execute bit; run a private executable copy from the writable temp dir.
-        copy = os.path.join(tempfile.gettempdir(), "cs-hf-cli-" + str(os.stat(candidate).st_size))
-        if not os.access(copy, os.X_OK):
-            tmp = copy + ".partial-" + uuid.uuid4().hex
-            shutil.copyfile(candidate, tmp)
-            os.chmod(tmp, 0o700)
-            os.replace(tmp, copy)
-        return copy
+        # Function bundles can drop the execute bit. Run an executable copy from a directory this process created
+        # (mkdtemp: 0700, unpredictable name), never from a shared, guessable path another user could pre-place.
+        return _private_copy(candidate)
     return shutil.which("higgsfield")
 
 _UUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")

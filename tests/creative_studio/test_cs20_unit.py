@@ -151,6 +151,11 @@ class CliBinary(unittest.TestCase):
                 copy = hf.cli_binary()
             self.assertNotEqual(copy, exe)
             self.assertTrue(os.access(copy, os.X_OK))
+            parent = os.path.dirname(copy)                              # private, unpredictable, owned by us
+            self.assertNotEqual(parent, tempfile.gettempdir())
+            self.assertEqual(stat.S_IMODE(os.stat(parent).st_mode), 0o700)
+            self.assertEqual(os.stat(copy).st_uid, os.getuid())
+            self.assertFalse(os.path.islink(copy))
             with open(copy, "rb") as fh:
                 self.assertEqual(fh.read(), b"#!/bin/sh\nexit 0\n")
 

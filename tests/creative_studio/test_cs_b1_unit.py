@@ -166,7 +166,7 @@ class HostedSurfaceTests(unittest.TestCase):
     # diff against a moving branch: the guard holds in any checkout, with or without history.
     REVIEWED_ADAPTERS = {
         "__init__.py": "bed4cdab39c506d407a75bf987362a6afd30f437ecca35a7e31d5a48a753742b",
-        "engine_higgsfield.py": "4f0d61fd03e04d26655c9d284af7f8046814e1a58e75b5cd92431192745fa947",  # CS-20: bundled CLI binary, writable HOME, free account-status check
+        "engine_higgsfield.py": "b08ec970b8450c0201dcc02b3dbc0619652cc3f50a2b60ecec8133f6ccc803f7",  # CS-20: bundled CLI binary, writable HOME, free account-status check
         "intake_cli.py": "c705ed3afcecdcac5c20cdc239e7322ffa051be76e0bc6b19419496608267f5c",
         "output_local.py": "05f633caa0ef0d4c9c6f94cd30252ac0c4c5c96e955c62da2202cfc9cefd89ab",
         "reference_local.py": "43bfb35d95c4ee6bfc477c51bb5a2bfec0e4dc68cc78f7cdc9553760db0d3933",
