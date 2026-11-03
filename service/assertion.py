@@ -36,6 +36,7 @@ class Policy:
     action: str
     required: bool = True
     binds: bool = False      # connection creation: no binding exists yet; bnd must equal body.external_workspace_id
+    resolves: bool = False   # binding lookup: the URL names the Marketing OS workspace; bnd must equal it
 
 
 POLICY: dict[str, Policy] = {
@@ -43,6 +44,7 @@ POLICY: dict[str, Policy] = {
     "b2_create_connection": Policy("connection.bind", binds=True),
     "b2_list_connections": Policy("connection.list", required=False),
     "b2_refresh_connection": Policy("connection.refresh"),
+    "cs21_resolve_binding": Policy("connection.resolve", resolves=True),
     # brand package import
     "b2_import_brand_package": Policy("brand_package.import"),
     "b2_get_operation": Policy("operation.read", required=False),
@@ -182,12 +184,14 @@ class AssertionGuard:
         if policy.binds:
             if payload["bnd"] != str(req.json().get("external_workspace_id")):
                 raise _refuse("binding_inactive", 403)
+        if policy.resolves and payload["bnd"] != workspace_id:
+            raise _refuse("binding_inactive", 403)
         expires = payload["exp"] + self.settings.assertion_skew_seconds
         conn = self._connect(self.settings.api_database_url)
         try:
             with conn:
                 cur = conn.cursor()
-                if not policy.binds:
+                if not policy.binds and not policy.resolves:
                     cur.execute("select public.cs_assertion_binding_ok(%s::uuid, %s)", (workspace_id, payload["bnd"]))
                     if not cur.fetchone()[0]:
                         raise _refuse("binding_inactive", 403)

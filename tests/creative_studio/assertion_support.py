@@ -54,6 +54,17 @@ class GatewayApp:
         conn = psycopg2.connect(self._dsn)
         try:
             cur = conn.cursor()
+            if sub:
+                # Real Marketing OS signs only for its own workspace members (CS-21: a signature admits the signer).
+                # Legacy suites model MOS membership as Studio membership, so a stranger's call stays unsigned.
+                cur.execute("""select exists (select 1 from public.cs_workspaces w
+                                 join public.cs_account_members am on am.account_id = w.account_id
+                                where w.id = %s and am.user_id = %s and am.revoked_at is null)
+                               or exists (select 1 from public.cs_workspace_members m
+                                where m.workspace_id = %s and m.user_id = %s and m.revoked_at is null)""",
+                            (workspace_id, sub, workspace_id, sub))
+                if not cur.fetchone()[0]:
+                    return None
             cur.execute("select external_workspace_id from public.cs_external_bindings "
                         "where workspace_id = %s and status = 'active'", (workspace_id,))
             row = cur.fetchone()

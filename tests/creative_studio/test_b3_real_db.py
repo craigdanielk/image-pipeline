@@ -672,7 +672,7 @@ class CsB3RealDatabase(unittest.TestCase):
         self.assertEqual(st, 403)
         st, _ = call(self.app, "POST", f"/api/v1/workspaces/{self.ws_a}/runs/{run2['run_id']}/cancel",
                      tok=self.tok["owner_b"], body={})
-        self.assertEqual(st, 404)
+        self.assertEqual(st, 401)  # CS-21: Marketing OS never signs for a non-member, so a stranger's gateway call is unsigned
 
     # -- 07 final tier ------------------------------------------------------------------------------------------
     def test_07_final_tier_refused_without_approved_draft(self):
@@ -748,7 +748,7 @@ class CsB3RealDatabase(unittest.TestCase):
         st, _ = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_b}/runs/{run_a}/costs", tok=self.tok["owner_b"])
         self.assertEqual(st, 404)
         st, body, _ = self.admit("outsider", self.ws_a, [provider_node("n1", self.low, prompt="x")])
-        self.assertEqual(st, 404)
+        self.assertEqual(st, 401)  # CS-21: Marketing OS never signs for a non-member, so a stranger's gateway call is unsigned
         st, body, _ = self.admit("viewer_a", self.ws_a, [provider_node("n1", self.low, prompt="x")])
         self.assertEqual(st, 403)
         conn, cur = self._sql_as("cs_api", self.users["owner_b"])

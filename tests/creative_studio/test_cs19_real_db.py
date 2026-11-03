@@ -110,7 +110,7 @@ class Cs19RealDb(unittest.TestCase):
             st, body = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/funding", tok=self.tok[who])
             self.assertEqual(st, 403, (who, body))
         st, body = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/funding", tok=self.tok["owner_b"])
-        self.assertEqual(st, 404, body)                       # workspace B cannot see A
+        self.assertEqual(st, 401, body)                       # workspace B cannot see A (CS-21: never signed for B)
 
     def test_02_db_privileges(self):
         for role in ("anon", "authenticated"):
@@ -198,7 +198,7 @@ class Cs19RealDb(unittest.TestCase):
         self.assertNotIn(SECRET_B, json.dumps(state, default=str))
 
     def test_11_other_workspace_and_roles_cannot_store_or_revoke(self):
-        for who, ws, want in (("owner_b", self.ws_a, 404), ("outsider", self.ws_a, 404), ("producer_a", self.ws_a, 403),
+        for who, ws, want in (("owner_b", self.ws_a, 401), ("outsider", self.ws_a, 401), ("producer_a", self.ws_a, 403),
                               ("reviewer_a", self.ws_a, 403), ("viewer_a", self.ws_a, 403)):
             st, body = self.put_key(who, ws, SECRET_A)
             self.assertEqual(st, want, (who, body))
@@ -341,7 +341,7 @@ class Cs19RealDb(unittest.TestCase):
     def test_33_only_managers_set_funding_and_spoofed_actor_is_ignored(self):
         for who in ("producer_a", "reviewer_a", "viewer_a"):
             self.assertEqual(self.funding(who, self.ws_a, "platform_funded")[0], 403, who)
-        self.assertEqual(self.funding("owner_b", self.ws_a, "platform_funded")[0], 404)
+        self.assertEqual(self.funding("owner_b", self.ws_a, "platform_funded")[0], 401)  # CS-21: Marketing OS never signs for a non-member, so a stranger's gateway call is unsigned
         st, body = call(self.app, "PUT", f"/api/v1/workspaces/{self.ws_a}/funding/platform", tok=self.tok["producer_a"],
                         body={"actor_id": self.users["owner_a"], "media_funding": "platform_funded"})
         self.assertEqual(st, 403, body)

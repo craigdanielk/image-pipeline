@@ -166,11 +166,15 @@ class CreativeStudioApi:
         if not req._environ.get(_assertion.HEADER_ENV_KEY) and not policy.required:
             return                      # native Studio-UI call on a shared/read route
         actor = self.verifier.verify(req.authorization)
-        self.assertion_guard.check(req, policy, actor=actor, workspace_id=_uuid(groups[0]))
+        payload = self.assertion_guard.check(req, policy, actor=actor, workspace_id=_uuid(groups[0]))
+        if payload is not None and not policy.binds and not policy.resolves:
+            # CS-21: Marketing OS checked this member's role before signing; the guard verified the signature, route,
+            # body, nonce and the active binding. Admit this user on this bound workspace for this request only.
+            req._mos_grant = f"{actor.user_id}:{_uuid(groups[0])}"
 
     def _tx(self, req: Request):
         actor = self.verifier.verify(req.authorization)
-        return actor, actor_transaction(self.settings.api_database_url, actor)
+        return actor, actor_transaction(self.settings.api_database_url, actor, getattr(req, "_mos_grant", None))
 
     @staticmethod
     def _require_read(cur, workspace_id: str) -> None:
@@ -260,6 +264,19 @@ class CreativeStudioApi:
                order by w.created_at, w.id""", (actor.user_id,))
             rows = cur.fetchall()
         return 200, {"workspaces": rows}
+
+    @route("GET", r"/api/v1/bindings/marketing-os/([0-9a-fA-F-]{36})")
+    def cs21_resolve_binding(self, req, external_workspace_id):
+        """CS-21: the one Studio workspace bound to a Marketing OS workspace, whoever created it (signed only)."""
+        external = _uuid(external_workspace_id)
+        _, tx = self._tx(req)
+        with tx as cur:
+            cur.execute("select * from public.cs_resolve_marketing_os_binding(%s)", (external,))
+            row = cur.fetchone()
+        if not row:
+            raise ServiceError(404, "binding_not_found")
+        return 200, {"workspace_id": str(row["workspace_id"]), "account_id": str(row["account_id"]),
+                     "connection_id": str(row["connection_id"])}
 
     @route("POST", r"/api/v1/accounts")
     def create_account(self, req):

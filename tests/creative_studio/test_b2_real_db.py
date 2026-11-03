@@ -624,7 +624,7 @@ class CsB2RealDatabase(unittest.TestCase):
         st, body = self._admit("producer_b", self.ws_b, self.conn_a, self.home)
         self.assertEqual((st, body["error"]), (404, "resource_unavailable"))
         st, body = self._admit("producer_b", self.ws_a, self.conn_a, self.home)
-        self.assertEqual((st, body["error"]), (404, "resource_unavailable"))
+        self.assertEqual((st, body["error"]), (401, "assertion_missing"))  # CS-21: Marketing OS never signs for a non-member, so a stranger's gateway call is unsigned
         # B's package ref cannot be imported through A's connection (scope of the connected MOS workspace)
         st, body = self._admit("producer_a", self.ws_a, self.conn_a, self.physio)
         self.assertEqual((st, body["error"]), (403, "scope_mismatch"))

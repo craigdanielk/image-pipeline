@@ -312,6 +312,64 @@ class RealDb(unittest.TestCase):
         st, body = self.call("POST", self.refresh_url, "owner", header=self.sign(), app=app)
         self.assertEqual(st, 503)
 
+    # CS-21: Marketing OS is the authority for a workspace bound to it --------------------------------------
+    def _as_other(self, method, path, action, binding, body=None):
+        raw = json.dumps(body).encode() if body is not None else b""
+        h = header_for(user_id=self.users["other"], action=action, binding=binding, body=raw)
+        return self.call(method, path, "other", body=body, header=h)
+
+    def test_14_signed_member_admitted_on_bound_workspace_only(self):
+        funding = f"/api/v1/workspaces/{self.ws}/funding"
+        # "other" is a Marketing OS member but not in the Studio account that owns the bound workspace.
+        runs = f"/api/v1/workspaces/{self.ws}/runs"
+        self.assertEqual(self.call("GET", runs, "other")[0], 404)                    # native: still no access
+        st, body = self._as_other("GET", funding, "funding.read", self.mos)
+        self.assertEqual(st, 200, body)
+        # manage-level action (credential revoke) is admitted too: Marketing OS decided the role before signing
+        st, body = self._as_other("DELETE", f"/api/v1/workspaces/{self.ws}/provider-credentials/higgsfield",
+                                  "credential.revoke", self.mos)
+        self.assertEqual(st, 200, body)
+        # the grant names one workspace: signing for mos against ws2 is refused, and nothing leaks afterwards
+        st, body = self._as_other("GET", f"/api/v1/workspaces/{self.ws2}/funding", "funding.read", self.mos)
+        self.assertEqual((st, body), (403, {"error": "binding_inactive"}))
+        self.assertEqual(self.call("GET", f"/api/v1/workspaces/{self.ws2}/runs", "other")[0], 404)
+        self.assertEqual(self.call("GET", runs, "other")[0], 404)
+
+    def test_15_grant_requires_active_binding(self):
+        acct = self._acct()
+        ws = self.call("POST", f"/api/v1/accounts/{acct}/workspaces", "owner", body={"name": "G"},
+                       idem=str(uuid.uuid4()))[1]["workspace_id"]
+        mos = str(uuid.uuid4())
+        self.bind(ws, mos)
+        self.assertEqual(self._as_other("GET", f"/api/v1/workspaces/{ws}/funding", "funding.read", mos)[0], 200)
+        with self.pg.connect() as conn:
+            conn.cursor().execute("update public.cs_external_bindings set status='revoked', revoked_at=now() "
+                                  "where workspace_id=%s", (ws,))
+        st, body = self._as_other("GET", f"/api/v1/workspaces/{ws}/funding", "funding.read", mos)
+        self.assertEqual((st, body), (403, {"error": "binding_inactive"}))
+
+    def test_16_resolve_binding_for_any_signed_member(self):
+        url = f"/api/v1/bindings/marketing-os/{self.mos}"
+        st, body = self._as_other("GET", url, "connection.resolve", self.mos)
+        self.assertEqual(st, 200, body)
+        self.assertEqual(body["workspace_id"], self.ws)
+        self.assertEqual(body["connection_id"], self.cid)
+        self.assertEqual(self.call("GET", url, "other"), (401, {"error": "assertion_missing"}))
+        self.assertEqual(self._as_other("GET", url, "connection.resolve", self.mos2), (403, {"error": "binding_inactive"}))
+        unknown = str(uuid.uuid4())
+        st, body = self._as_other("GET", f"/api/v1/bindings/marketing-os/{unknown}", "connection.resolve", unknown)
+        self.assertEqual((st, body), (404, {"error": "binding_not_found"}))
+
+    def test_17_grant_setting_unavailable_to_database_clients(self):
+        # Only the API sets cs.mos_grant after verification; an authenticated database client cannot use it to
+        # reach the resolver or widen its own access.
+        api = psycopg2.connect(self.pg.dsn(user="cs_api"))
+        api.autocommit = True
+        cur = api.cursor()
+        cur.execute("select cs_private.cs_role_allows(%s, %s, 'read')", (self.users["other"], self.ws))
+        self.assertFalse(cur.fetchone()[0])
+        api.close()
+
 
 if __name__ == "__main__":
     unittest.main()
