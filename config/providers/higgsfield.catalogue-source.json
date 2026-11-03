@@ -1,0 +1,163 @@
+{
+  "schema_version": "cs-b3-catalogue-source-v1",
+  "provenance": {
+    "kind": "operator_snapshot",
+    "observed_at": "2026-11-03T16:45:00Z",
+    "note": "Models and params from `higgsfield model get` (CLI 1.1.26); prices are the CLI's own free cost quote at publish time x the credit price below. Credit price is the most conservative public figure (smallest top-up pack, 80 credits for USD 5) so caps never understate spend; plan credits are cheaper. Result origins observed on real job URLs."
+  },
+  "provider": "higgsfield",
+  "credit_price": {
+    "credit_price_micros": 62500,
+    "source_url": "https://higgsfield.ai/pricing",
+    "observed_at": "2026-11-03T16:45:00Z",
+    "expires_at": "2026-12-03T00:00:00Z"
+  },
+  "valid_until": "2026-12-03T00:00:00Z",
+  "credential_modes": [
+    "workspace"
+  ],
+  "probe_prompt": "Catalogue price probe for a generic square product image.",
+  "transport": {
+    "documentation_url": "https://www.npmjs.com/package/higgsfield",
+    "submit": {
+      "method": "POST",
+      "origin": "https://higgsfield.ai",
+      "path_template": "/cli/generate"
+    },
+    "status": {
+      "origin": "https://higgsfield.ai",
+      "success_values": [
+        "completed"
+      ],
+      "failure_values": [
+        "failed",
+        "nsfw",
+        "canceled"
+      ],
+      "cancel_supported": false,
+      "webhook_signature_algorithm": null,
+      "url_source": "provider_response",
+      "allowed_path_pattern": "^/.+$",
+      "request_id_binding": "provider_request_id"
+    },
+    "idempotency": {
+      "supported": false,
+      "header_name": null,
+      "retention_seconds": null,
+      "lookup_by_client_key": false,
+      "same_intent_replay": false,
+      "immutable_fields": []
+    },
+    "result_origins": [
+      "https://d2ol7oe51mr4n9.cloudfront.net",
+      "https://d8j0ntlcm91z4.cloudfront.net"
+    ]
+  },
+  "models": [
+    {
+      "entry_id": "hf-nano-banana-2-1-draft",
+      "model_id": "nano_banana_2_1",
+      "tier": "draft",
+      "operation": "image_generate",
+      "max_units": 4,
+      "max_units_source": "operator: one request per canvas; up to 4 variants",
+      "probe_parameters": {
+        "aspect_ratio": "1:1"
+      },
+      "request_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object"
+      },
+      "reference_roles": [
+        {
+          "role": "image",
+          "field": "image_references",
+          "mime_types": [
+            "image/png",
+            "image/jpeg",
+            "image/webp"
+          ],
+          "min_count": 0,
+          "max_count": 14
+        }
+      ],
+      "outputs": {
+        "mime_types": [
+          "image/png",
+          "image/webp",
+          "image/jpeg"
+        ],
+        "aspect_ratios": [
+          "1:1",
+          "4:5",
+          "9:16",
+          "16:9"
+        ],
+        "max_width_px": 4096,
+        "max_height_px": 4096,
+        "min_duration_ms": null,
+        "max_duration_ms": null
+      },
+      "controls": {
+        "negative_prompt": false,
+        "seed": false,
+        "mask": false,
+        "start_frame": false,
+        "end_frame": false
+      }
+    },
+    {
+      "entry_id": "hf-nano-banana-pro-final",
+      "model_id": "nano_banana_pro",
+      "tier": "final",
+      "operation": "image_generate",
+      "max_units": 4,
+      "max_units_source": "operator: one request per canvas; up to 4 variants",
+      "probe_parameters": {
+        "aspect_ratio": "1:1",
+        "resolution": "2k"
+      },
+      "request_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object"
+      },
+      "reference_roles": [
+        {
+          "role": "image",
+          "field": "image_references",
+          "mime_types": [
+            "image/png",
+            "image/jpeg",
+            "image/webp"
+          ],
+          "min_count": 0,
+          "max_count": 14
+        }
+      ],
+      "outputs": {
+        "mime_types": [
+          "image/png",
+          "image/webp",
+          "image/jpeg"
+        ],
+        "aspect_ratios": [
+          "1:1",
+          "4:5",
+          "9:16",
+          "16:9"
+        ],
+        "max_width_px": 4096,
+        "max_height_px": 4096,
+        "min_duration_ms": null,
+        "max_duration_ms": null
+      },
+      "controls": {
+        "negative_prompt": false,
+        "seed": false,
+        "mask": false,
+        "start_frame": false,
+        "end_frame": false
+      }
+    }
+  ]
+}
