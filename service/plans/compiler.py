@@ -49,15 +49,54 @@ def select_entry(catalogue: list[dict], request: dict, tier: str) -> dict:
     return sorted(cands, key=lambda e: (e["unit_cost_micros"], e["entry_id"]))[0]
 
 
-def _params(entry: dict, units: int) -> dict:
+_ASPECTS = {(1, 1): "1:1", (4, 5): "4:5", (9, 16): "9:16", (16, 9): "16:9"}
+
+
+def _aspect(fmt: dict) -> str | None:
+    w, h = fmt.get("width_px"), fmt.get("height_px")
+    if not (isinstance(w, int) and isinstance(h, int) and w > 0 and h > 0):
+        return None
+    a, b = w, h
+    while b:
+        a, b = b, a % b
+    g = a
+    return _ASPECTS.get((w // g, h // g))
+
+
+def _params(entry: dict, units: int, fmt: dict | None = None) -> dict:
     params = {"batch_size": units}
     quote_params = (entry.get("price_snapshot") or {}).get("quote_parameters") or {}
     if entry["surface"] == "marketing_studio":
         params["format_id"] = entry["model_id"]
         params["quality"] = quote_params.get("quality")
-    elif quote_params.get("quality"):
-        params["quality"] = quote_params["quality"]
+    else:
+        if quote_params.get("quality"):
+            params["quality"] = quote_params["quality"]
+        # The canvas shape and the priced resolution must reach the model; without them it renders its 1:1 default.
+        if quote_params.get("resolution"):
+            params["resolution"] = quote_params["resolution"]
+        aspect = _aspect(fmt or {})
+        if aspect:
+            params["aspect_ratio"] = aspect
     return params
+
+
+def _reference_bindings(entry: dict, references: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Request references (signed-off draft, product photos) become node inputs bound to the model's image field."""
+    roles = (entry.get("entry") or {}).get("reference_roles") or []
+    role = next((r for r in roles if r.get("role") == "image"), None)
+    if not references:
+        return [], []
+    if role is None:
+        if any(r.get("required") for r in references):
+            raise ServiceError(409, "catalogue_unavailable", "the selected model takes no reference images")
+        return [], []
+    usable = references[: int(role.get("max_count") or 0)]
+    if any(r.get("required") for r in references[len(usable):]):
+        raise ServiceError(409, "catalogue_unavailable", "more required reference images than the model accepts")
+    inputs = [{"port": "references", "source": {"kind": "asset", "asset": r["asset"]}} for r in usable]
+    bindings = [{"field": role["field"], "role": "image", "input_port": "references", "ordinal": i} for i in range(len(usable))]
+    return inputs, bindings
 
 
 def content_key(request: dict, treatment: dict, package: dict, entries: list[dict], tier: str) -> str:
@@ -95,13 +134,14 @@ def compile_plan(*, request: dict, treatment: dict, package: dict, catalogue: li
         nid = node_id_for(fmt["id"])
         cost = entry["unit_cost_micros"] * units
         e = entry["entry"]
+        ref_inputs, ref_bindings = _reference_bindings(entry, request.get("references") or [])
         nodes.append({
-            "id": nid, "kind": NODE_KIND, "implementation_version": NODE_IMPL, "dependencies": [], "inputs": [],
+            "id": nid, "kind": NODE_KIND, "implementation_version": NODE_IMPL, "dependencies": [], "inputs": ref_inputs,
             "provider_call": {
                 "provider": entry["provider"], "model_id": entry["model_id"], "catalogue_entry_id": entry["entry_id"],
                 "endpoint_key": entry["endpoint_key"], "adapter_version": e["adapter_version"],
                 "request_schema_sha256": e["request_schema_sha256"], "positive_prompt": prompt["positive"],
-                "negative_prompt": prompt.get("negative"), "parameters": _params(entry, units), "media_bindings": [],
+                "negative_prompt": prompt.get("negative"), "parameters": _params(entry, units, fmt), "media_bindings": ref_bindings,
                 "seed": None,
                 "retries": {"automatic_resubmits": 0, "transport_before_dispatch_max": 2, "same_intent_replay_max": 0}},
             "transform": None,
@@ -162,6 +202,7 @@ def compile_plan(*, request: dict, treatment: dict, package: dict, catalogue: li
         "canvases": canvases, "brand_elements": brand_elements(package),
         "text_layers": [{"id": c["id"], "role": c["role"], "text": c["text"], "language": c["language"],
                          "composed_by": "composition", "model_drawn": False} for c in request["exact_copy"]],
-        "references": {"count": len(request["references"]), "bound_to_provider_call": False},
+        "references": {"count": len(request["references"]),
+                       "bound_to_provider_call": any(n["provider_call"]["media_bindings"] for n in plan["program"]["nodes"])},
         "estimated_credits": None, "quote_status": "unquoted"}
     return plan, summary, ckey, entries

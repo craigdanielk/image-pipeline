@@ -143,5 +143,54 @@ class Goldens(unittest.TestCase):
         self.assertFalse(calls & {"uuid4", "now", "time", "urlopen", "run", "Popen"})
 
 
+class ReferencesAndCanvas(unittest.TestCase):
+    """CS-22: references reach the provider call; each canvas renders at its own shape and priced resolution."""
+    def gen_catalogue(self):
+        cat = []
+        for e in catalogue():
+            g = copy.deepcopy(e)
+            g["surface"] = "generate"
+            g["entry_id"] = e["entry_id"].replace("hf-ms", "hf-gen")
+            g["entry"]["reference_roles"] = [{"role": "image", "field": "image_references", "max_count": 14}]
+            g["price_snapshot"]["quote_parameters"] = {"aspect_ratio": "1:1", "resolution": "2k"}
+            cat.append(g)
+        return cat
+
+    def test_reference_bound_and_canvas_shape_set(self):
+        request, treatment, package = load("home-services-three-canvases")
+        ws = treatment.get("workspace_id") or request.get("workspace_id") or "00000000-0000-4000-8000-000000000001"
+        draft = {"authority": "creative-studio", "workspace_id": ws, "asset_id": "11111111-1111-4111-8111-111111111111",
+                 "asset_version_id": "22222222-2222-4222-8222-222222222222", "revision": 1, "sha256": "b" * 64,
+                 "mime_type": "image/png"}
+        request = dict(request, references=[{"id": "approved-draft", "role": "composition", "asset": draft,
+                                             "required": True, "strength": None}])
+        plan, summary, _, _ = compiler.compile_plan(request=request, treatment=treatment, package=package,
+                                                    catalogue=self.gen_catalogue(), tier="draft", revision=1)
+        nodes = plan["program"]["nodes"]
+        self.assertEqual([n["provider_call"]["parameters"]["aspect_ratio"] for n in nodes], ["1:1", "4:5", "9:16"])
+        self.assertTrue(all(n["provider_call"]["parameters"]["resolution"] == "2k" for n in nodes))
+        for n in nodes:
+            self.assertEqual(n["inputs"], [{"port": "references", "source": {"kind": "asset", "asset": draft}}])
+            self.assertEqual(n["provider_call"]["media_bindings"],
+                             [{"field": "image_references", "role": "image", "input_port": "references", "ordinal": 0}])
+        self.assertTrue(summary["references"]["bound_to_provider_call"])
+        validate("execution-plan-v1.schema.json", plan)
+
+    def test_required_reference_refused_when_model_takes_none(self):
+        request, treatment, package = load("home-services-square")
+        cat = self.gen_catalogue()
+        for e in cat:
+            e["entry"]["reference_roles"] = []
+        ref = {"authority": "creative-studio", "workspace_id": "00000000-0000-4000-8000-000000000001",
+               "asset_id": "11111111-1111-4111-8111-111111111111", "asset_version_id": "22222222-2222-4222-8222-222222222222",
+               "revision": 1, "sha256": "b" * 64, "mime_type": "image/png"}
+        request = dict(request, references=[{"id": "approved-draft", "role": "composition", "asset": ref, "required": True,
+                                             "strength": None}])
+        with self.assertRaises(ServiceError) as c:
+            compiler.compile_plan(request=request, treatment=treatment, package=package, catalogue=cat, tier="draft",
+                                  revision=1)
+        self.assertEqual(c.exception.code, "catalogue_unavailable")
+
+
 if __name__ == "__main__":
     unittest.main()
