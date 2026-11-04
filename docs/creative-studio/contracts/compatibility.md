@@ -90,3 +90,6 @@ existing intake → treatment → compile → quote → run → compose → expo
 - `mos-handoff-v1.target` may be the library target `{authority, workspace_id, library, library_item_key, policy}`;
   `mos-ingestion-receipt-v1` items may carry no MOS copy versions for it. MOS ingests through
   `mos_studio_receive_library_export`.
+- Campaign sources (`mos-campaign-sources-v1`) now carry `budget` from the owner's approved media per-run cap
+  (previously null, which intake refused as `budget_missing`). MOS omits `credential_binding_id`; intake sets it to
+  the requesting connection, the same rule as library briefs.

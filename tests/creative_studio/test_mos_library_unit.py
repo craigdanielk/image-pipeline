@@ -109,6 +109,21 @@ class LibraryIntake(unittest.TestCase):
         self.assertFalse(mos_intake.is_library_request(self.camp.visual_request()))
 
 
+class CampaignBudgetBinding(unittest.TestCase):
+    def test_campaign_budget_without_binding_is_funded_by_the_connection(self):
+        biz, camp = fx.home_services()
+        doc = build_package(biz.export()).document
+        pkg = {"document": doc, "ref": package_version_ref(doc), "source_artifact_id": biz.artifact_id}
+        src = camp.sources()
+        src["budget"] = {k: v for k, v in src["budget"].items() if k != "credential_binding_id"}
+        binding = fx.uid("connection", "campaign")
+        f = mos_intake.build_request_fields(camp.visual_request(), src, pkg, binding)
+        self.assertEqual(f["budget"]["credential_binding_id"], binding)
+        kept = mos_intake.build_request_fields(camp.visual_request(), camp.sources(), pkg, binding)
+        self.assertEqual(kept["budget"]["credential_binding_id"], camp.sources()["budget"]["credential_binding_id"],
+                         "an explicit MOS binding is kept")
+
+
 class LibraryExportAndHandoff(ExportAndHandoff):
     """Reuses the CS-B4 world: a library export is the same manifest without copy; its handoff has the library target."""
 

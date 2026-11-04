@@ -246,6 +246,9 @@ existing intake → treatment → compile → quote → run → compose → expo
 - `mos-handoff-v1.target` may be the library target `{authority, workspace_id, library, library_item_key, policy}`;
   `mos-ingestion-receipt-v1` items may carry no MOS copy versions for it. MOS ingests through
   `mos_studio_receive_library_export`.
+- Campaign sources (`mos-campaign-sources-v1`) now carry `budget` from the owner's approved media per-run cap
+  (previously null, which intake refused as `budget_missing`). MOS omits `credential_binding_id`; intake sets it to
+  the requesting connection, the same rule as library briefs.
 
 ## Packaged file: contracts/composition-v1.schema.json
 
@@ -1725,4 +1728,10 @@ Vercel plan/remaining quota was not exposed by the connected account metadata. A
 
 ```json
 {"schema_version":"creative-studio-package-amendment-v1","amends":"creative-studio-m1-package-v1","recorded_date":"2026-11-05","by":"MOS image library","reason":"additive: Marketing OS image-library briefs reuse intake/compose/export/handoff (request origin marketing-os-library with no exact copy, library handoff target, copy-free library exports and receipts)","files":[{"path":"contracts/creative-request-v1.schema.json","bytes":13458,"sha256":"ec4948905326431f4bd1e5a4a686263eb282ba3aec6e435442e11828704d4345","supersedes_sha256":"81fbd2fca9b90eb7ec8b6a7ae5c6bea7c798f2041ce4e2d5ed3b25d345371cc1"},{"path":"contracts/mos-handoff-v1.schema.json","bytes":4442,"sha256":"73a262324bdde5674e5df7eeca272cedde527e8dd67375cbc03d0483026ba840","supersedes_sha256":"9956b5c06564e3794c727978a3d9ff5d59c78f985e9f0e01fac130b53a72426f"},{"path":"contracts/mos-ingestion-receipt-v1.schema.json","bytes":3005,"sha256":"0726bfaca1143c011d07c46fc3ef6ec33ce71bcd03f4eb8be8c86d5da348e56b","supersedes_sha256":"67813f8f643912b8a86d2388c307d840793875eb1986fdcc66be7436343447e3"},{"path":"contracts/export-v2.schema.json","bytes":6398,"sha256":"83f41e63cc8249deff1c0a1072161a5f907ff6b6b12b80fdb54663b1f024c194","supersedes_sha256":"eaae000eafd218735374ec83232bf46aa0901a1abc426a01ed2405afbf3deba8"},{"path":"contracts/compatibility.md","bytes":15847,"sha256":"46581eec45ae8b9e7f6636fc2ea638cc4c1e93666fe45841b910c4a5cb94e17c","supersedes_sha256":"eedba60e583d55c99f5c6026fc1946e53b4d3d02e3f7b130794c3794074a426c"}]}
+```
+
+## Package amendment manifest — 2026-11-05 (MOS campaign budget binding)
+
+```json
+{"schema_version":"creative-studio-package-amendment-v1","amends":"creative-studio-m1-package-v1","recorded_date":"2026-11-05","by":"MOS image library","reason":"additive: Marketing OS image-library briefs reuse intake/compose/export/handoff (request origin marketing-os-library with no exact copy, library handoff target, copy-free library exports and receipts)","files":[{"path":"contracts/creative-request-v1.schema.json","bytes":13458,"sha256":"ec4948905326431f4bd1e5a4a686263eb282ba3aec6e435442e11828704d4345","supersedes_sha256":"ec4948905326431f4bd1e5a4a686263eb282ba3aec6e435442e11828704d4345"},{"path":"contracts/mos-handoff-v1.schema.json","bytes":4442,"sha256":"73a262324bdde5674e5df7eeca272cedde527e8dd67375cbc03d0483026ba840","supersedes_sha256":"73a262324bdde5674e5df7eeca272cedde527e8dd67375cbc03d0483026ba840"},{"path":"contracts/mos-ingestion-receipt-v1.schema.json","bytes":3005,"sha256":"0726bfaca1143c011d07c46fc3ef6ec33ce71bcd03f4eb8be8c86d5da348e56b","supersedes_sha256":"0726bfaca1143c011d07c46fc3ef6ec33ce71bcd03f4eb8be8c86d5da348e56b"},{"path":"contracts/export-v2.schema.json","bytes":6398,"sha256":"83f41e63cc8249deff1c0a1072161a5f907ff6b6b12b80fdb54663b1f024c194","supersedes_sha256":"83f41e63cc8249deff1c0a1072161a5f907ff6b6b12b80fdb54663b1f024c194"},{"path":"contracts/compatibility.md","bytes":16135,"sha256":"c78a57a0563ccc210e385195ac77d9c601398814bf40092921da4f5b835f89c5","supersedes_sha256":"46581eec45ae8b9e7f6636fc2ea638cc4c1e93666fe45841b910c4a5cb94e17c"}]}
 ```

@@ -93,7 +93,7 @@ def register(api_cls, route):
                 fields = mos_intake.build_library_request_fields(visual, sources, package, binding_id)
                 source_versions = [sources["library"]]
             else:
-                fields = mos_intake.build_request_fields(visual, sources, package)
+                fields = mos_intake.build_request_fields(visual, sources, package, binding_id)
                 source_versions = [sources["concept"], sources["content_pack"]["ref"]] + fields["origin"]["copy_versions"]
             try:
                 receipt = gw.eligibility(mos_workspace_id=mos_ws, user_id=actor.user_id, action="generate",

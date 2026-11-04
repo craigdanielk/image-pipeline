@@ -60,7 +60,8 @@ def _copy_entries(variant: dict, copy_ref: dict, locale: str, claims: dict) -> l
     return out
 
 
-def build_request_fields(visual_request: dict, sources: dict, brand_package: dict) -> dict:
+def build_request_fields(visual_request: dict, sources: dict, brand_package: dict,
+                         credential_binding_id: str | None = None) -> dict:
     """creative-request-v1 editable fields for one MOS visual job."""
     _require(visual_request.get("schema_version") == VISUAL_REQUEST_SCHEMA, "unsupported_schema_version",
              f"expected {VISUAL_REQUEST_SCHEMA}", "/visual_request/schema_version")
@@ -134,6 +135,9 @@ def build_request_fields(visual_request: dict, sources: dict, brand_package: dic
 
     budget = sources.get("budget")
     _require(isinstance(budget, dict), "budget_missing", "MOS exported no budget policy for this job", "/budget")
+    if credential_binding_id and not budget.get("credential_binding_id"):
+        # MOS states the ceiling (the owner's media per-run cap); the funding binding is this connection.
+        budget = {**budget, "credential_binding_id": credential_binding_id}
     selection = sources.get("provider_selection") or {
         "mode": "auto", "provider": None, "model_id": None, "quality": _QUALITY[visual_request["tier"]],
         "max_unit_cost_micros": budget["max_cost_micros"]}
