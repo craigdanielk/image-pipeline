@@ -175,3 +175,14 @@ class GatewaySourcesCall(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ObservedBalance(unittest.TestCase):
+    def test_balance_from_engine_charge_records(self):
+        from decimal import Decimal
+        from service.providers.higgsfield import observed_balance
+        self.assertEqual(observed_balance([{"credits": "1.5", "balance_before": "10", "balance_after": "8.5"}]), (Decimal("8.5"), "run_balance_after"))
+        self.assertEqual(observed_balance([{"credits": "1.5", "balance_before": "10"}, {"credits": "1.5", "balance_before": "10"}]),
+                         (Decimal("7.0"), "run_balance_before_less_charge"))
+        self.assertEqual(observed_balance([{"credits": None, "balance_before": "10"}]), (Decimal("10"), "run_balance_before"))
+        self.assertIsNone(observed_balance([{"credits": "1.5"}]))

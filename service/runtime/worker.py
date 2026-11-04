@@ -255,6 +255,7 @@ class ProviderRuntime:
                                               fingerprint=att["provider_account_fingerprint"])
             except CredentialError as exc:
                 return self._record_refused(item, att, higgsfield.error_doc(exc.code, str(exc)))
+            balance_seen = None      # the account balance observed right after the create (best effort)
             with materialise(plaintext) as cred_path:
                 credential = _hf.WorkspaceCredential(workspace_id=str(item["workspace_id"]),
                                                  credential_id=str(sealed_id(att)), credentials_path=cred_path,
@@ -263,6 +264,7 @@ class ProviderRuntime:
                     results = higgsfield.execute(att["catalogue_surface"], att["provider_call"], att["adapter_config"],
                                                  refs, credential, job_dir)
                     outcome = higgsfield.normalise(results)
+                    balance_seen = self._balance_after(credential, outcome.charges)
                 except Exception as exc:  # classified, recorded; never swallowed
                     kind, error = higgsfield.classify(exc)
                     log.warning("provider call ended: %s %s", kind, error["code"])
@@ -277,12 +279,29 @@ class ProviderRuntime:
                             return {"status": "needs_reconciliation", "run_state": cur.fetchone()["s"],
                                     "error": error["code"]}
         with self._tx() as cur:
+            # The account balance the engine observed around this create (Marketing OS shows and caps real credits).
+            if balance_seen is not None:
+                cur.execute("select public.cs_record_credit_balance(%s, %s, %s, %s, %s, %s)",
+                            (*lease, higgsfield.PROVIDER_ID, balance_seen[0], balance_seen[1]))
             cur.execute("""select public.cs_record_provider_outcome(%s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s::jsonb, %s)::text
                              as s""", (*lease, att["attempt_id"], outcome.outcome, json.dumps(outcome.jobs),
                                        json.dumps(outcome.charges), json.dumps(outcome.error), self.settings.release_id))
             run_state = cur.fetchone()["s"]
         return {"status": "provider_" + outcome.outcome, "run_state": run_state, "jobs": len(outcome.jobs),
                 "charges": [{k: c[k] for k in ("billing_reference", "certainty", "credits")} for c in outcome.charges]}
+
+    def _balance_after(self, credential, charges):
+        """The connected account's credit balance right after this create: the free `account status` check with the
+        same login (best effort; a failure never affects the run), else what the engine's charge records imply."""
+        probe = getattr(self, "balance_probe", None) or _hf.account_status
+        try:
+            credits = (probe(credential) or {}).get("credits")
+            if isinstance(credits, (int, float)) and not isinstance(credits, bool) and credits >= 0:
+                return str(credits), "run_balance_after"
+        except Exception:  # noqa: BLE001 - observation only; the paid result is already recorded below
+            log.info("balance check after the create was not available")
+        seen = higgsfield.observed_balance(charges)
+        return (str(seen[0]), seen[1]) if seen is not None else None
 
     def _record_refused(self, item, att, error) -> dict:
         return self._abandon(item, att["attempt_id"], "refused", error)

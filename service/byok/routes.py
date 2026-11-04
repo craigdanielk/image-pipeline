@@ -75,6 +75,17 @@ def _budget(cap) -> dict | None:
             "payer": "workspace" if cap["funding_source"] == "workspace" else "platform"}
 
 
+def _balance(row) -> dict:
+    """Latest observed Higgsfield credit balance of the connected account (never estimated) and the catalogue's
+    current USD price of one credit (for labelled estimates and for setting the spend policy from credit caps)."""
+    price = int(row["credit_price_micros"]) if row and row["credit_price_micros"] is not None else None
+    if not row or row["credits"] is None:
+        return {"known": False, "credit_price_micros": price}
+    return {"known": True, "credits": float(row["credits"]), "source": row["source"],
+            "observed_at": row["observed_at"].isoformat() if hasattr(row["observed_at"], "isoformat") else str(row["observed_at"]),
+            "credit_price_micros": price}
+
+
 def register(api_cls, route) -> None:
     @route("PUT", rf"/api/v1/workspaces/({_UUID})/provider-credentials/{PROVIDER}")
     def cs19_store_credential(self, req, workspace_id):
@@ -100,6 +111,8 @@ def register(api_cls, route) -> None:
                         (workspace_id, self.settings.environment_id, PROVIDER, fp, sealed.ciphertext, sealed.nonce,
                          sealed.key_version))
             version_id = cur.fetchone()["version_id"]
+            # The free check's balance is the first observed balance for this account.
+            cur.execute("select public.cs_note_credential_balance(%s, %s, %s)", (workspace_id, PROVIDER, account["credits"]))
         return 200, {"stored": True, "provider": PROVIDER, "version_id": str(version_id), "fingerprint_tail": fp[-4:],
                      "account": hf_login.masked_email(account["email"]), "credits": account["credits"]}
 
@@ -121,7 +134,10 @@ def register(api_cls, route) -> None:
             row = cur.fetchone()
             cur.execute("select * from public.cs_workspace_budget_state(%s)", (workspace_id,))
             cap = cur.fetchone()
+            cur.execute("select * from public.cs_workspace_credit_balance(%s, %s)", (workspace_id, PROVIDER))
+            bal = cur.fetchone()
         return 200, {"media_funding": row["media_funding"], "provider": PROVIDER, "budget": _budget(cap),
+                     "balance": _balance(bal),
                      "workspace_credential": row["workspace_credential"],
                      "fingerprint_tail": row["fingerprint_tail"],
                      "credential_since": row["credential_since"],

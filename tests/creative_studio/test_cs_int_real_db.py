@@ -36,6 +36,7 @@ EXPECTED_CS_CHAIN = [
     "20261105284100_cs_mos_image_library.sql",
     "20261105294100_cs_funding_budget_readback.sql",
     "20261105294200_cs_bucket_brand_file_types.sql",
+    "20261105294300_cs_credit_balance.sql",
 ]
 
 _CS_REL = "((n.nspname = 'public' and c.relname like 'cs\\_%%') or n.nspname = 'cs_private')"

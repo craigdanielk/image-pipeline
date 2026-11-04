@@ -165,8 +165,33 @@ def normalise(results: list) -> ProviderOutcome:
         charges.append({"billing_reference": ref, "certainty": certainty if certainty in (
             "provider_reported", "balance_delta", "estimated", "unknown") else "unknown",
             "credits": None if credits is None else str(credits), "provider_request_id": job_id,
-            "raw_sha256": digest(charge or {"absent": True}), "note": note[:2000]})
+            "raw_sha256": digest(charge or {"absent": True}), "note": note[:2000],
+            **{k: str(charge[k]) for k in ("balance_before", "balance_after") if charge.get(k) is not None}})
     outcome = "completed" if jobs and all(j["status"] == "completed" for j in jobs) else "failed"
     return ProviderOutcome(outcome=outcome, jobs=jobs, charges=charges,
                            error=None if outcome == "completed" else error_doc("generation_not_completed",
                                                                                "provider reported a non-completed job"))
+
+
+def observed_balance(charges: list[dict]):
+    """The account's credit balance after these charges, as the engine observed it: an explicit balance_after, else
+    the balance read before the create less the charged credits (when every charge is known), else that before
+    reading. None when nothing was read. Returns (credits: Decimal, source: str)."""
+    from decimal import Decimal, InvalidOperation
+
+    def dec(v):
+        try:
+            return Decimal(str(v)) if v is not None else None
+        except (InvalidOperation, ValueError):
+            return None
+    afters = [dec(c.get("balance_after")) for c in charges if dec(c.get("balance_after")) is not None]
+    if afters:
+        return min(afters), "run_balance_after"
+    befores = [dec(c.get("balance_before")) for c in charges if dec(c.get("balance_before")) is not None]
+    if not befores:
+        return None
+    before = max(befores)
+    spent = [dec(c.get("credits")) for c in charges]
+    if spent and all(x is not None for x in spent):
+        return max(before - sum(spent), Decimal(0)), "run_balance_before_less_charge"
+    return before, "run_balance_before"

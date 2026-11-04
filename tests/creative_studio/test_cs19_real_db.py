@@ -293,6 +293,31 @@ class Cs19RealDb(unittest.TestCase):
         self.assertTrue(all(l["paid_by"] == "workspace" for l in costs["ledger_lines"]))
         self.assertNotIn(SECRET_A, json.dumps(costs))
 
+    def test_23_credit_balance_is_observed_at_connect_and_after_each_run(self):
+        """Marketing OS shows real Higgsfield credits: the free check at connect, then the check right after each create."""
+        self.assertEqual(self.funding("owner_a", self.ws_a, "byok_only")[0], 200)
+        self.assertEqual(self.put_key("owner_a", self.ws_a, SECRET_A)[0], 200)
+        st, body = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/funding", tok=self.tok["owner_a"])
+        self.assertEqual(st, 200, body)
+        self.assertEqual((body["balance"]["known"], body["balance"]["credits"], body["balance"]["source"]),
+                         (True, 1149.25, "credential_check"))
+        self.assertIsInstance(body["balance"]["credit_price_micros"], int)
+        with mock.patch("service.runtime.worker._hf.account_status", lambda _cred: {"credits": 1146.75, "email": "x@example.test"}):
+            st, run, _ = self.one_run("producer_a", self.ws_a, "workspace")
+            self.assertEqual(st, 202, run)
+            self.drain()
+        st, body = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/funding", tok=self.tok["owner_a"])
+        self.assertEqual((body["balance"]["credits"], body["balance"]["source"]), (1146.75, "run_balance_after"))
+        for who in ("producer_a", "owner_b"):
+            st, _ = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/funding", tok=self.tok[who])
+            self.assertNotEqual(st, 200, f"{who} never reads the balance")
+        for role in ("cs_api", "cs_worker", "authenticated"):
+            with self.subTest(role=role), self.pg.connect() as conn:
+                cur = conn.cursor()
+                cur.execute(f"set role {role}")
+                with self.assertRaises(Exception):
+                    cur.execute("select * from public.cs_credit_balances")   # functions only, never the table
+
     def test_22_no_workspace_key_gives_plain_byok_required(self):
         self.assertEqual(self.funding("owner_a", self.ws_a, "byok_only")[0], 200)
         st, rev = call(self.app, "DELETE", f"/api/v1/workspaces/{self.ws_a}/provider-credentials/higgsfield",
