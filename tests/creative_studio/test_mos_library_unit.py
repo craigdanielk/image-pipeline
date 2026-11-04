@@ -186,3 +186,25 @@ class ObservedBalance(unittest.TestCase):
                          (Decimal("7.0"), "run_balance_before_less_charge"))
         self.assertEqual(observed_balance([{"credits": None, "balance_before": "10"}]), (Decimal("10"), "run_balance_before"))
         self.assertIsNone(observed_balance([{"credits": "1.5"}]))
+
+
+class TextFreeCompositionNeedsNoFontTests(unittest.TestCase):
+    """A library image (scene + logo, no copy) builds no text layer, so it must not need a font file at all:
+    brands whose only fonts are web formats (WOFF2) still get library images (2026-11-05)."""
+
+    def test_no_copy_builds_no_text_layers_without_fonts(self):
+        from service.postrun import layout
+        chosen, _ = layout.pick_copy([])
+        self.assertFalse(any(chosen[k] for k in ("headline", "body", "cta")) or chosen["disclaimers"])
+        layers = layout.build_layers(width=1080, height=1080, safe_rect=(60, 60, 960, 960),
+                                     scene={"asset_version_id": "s", "sha256": "0" * 64}, logo={"asset_version_id": "l", "sha256": "1" * 64},
+                                     logo_id="logo-primary", logo_px=(400, 100), clear_space_ratio=0.25,
+                                     fonts={}, weights={}, chosen=chosen, palette=[], step=1.0)
+        self.assertFalse([l for l in layers if l.get("type") == "text"])
+        self.assertTrue([l for l in layers if l.get("type") == "image"])
+
+    def test_runtime_loads_fonts_only_when_there_is_text(self):
+        import inspect
+        from service.postrun import runtime
+        src = inspect.getsource(runtime)
+        self.assertIn("self._fonts(ctx, source) if has_text else ({}, {})", src)
