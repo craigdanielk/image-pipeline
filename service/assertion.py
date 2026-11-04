@@ -16,6 +16,7 @@ import binascii
 import hashlib
 import hmac
 import json
+import uuid
 import time
 from dataclasses import dataclass
 
@@ -154,6 +155,21 @@ def verify(header: str, *, key: str, user_id: str, action: str, raw_body: bytes,
     if p["iat"] > now + skew:
         raise _refuse("assertion_invalid")
     return p
+
+
+# Marketing OS server-to-server callbacks (no user session exists when Creative Studio delivers a handoff from its
+# worker): for these immutable reads and the receipt only, a valid route-bound service assertion IS the authentication.
+SERVICE_ONLY_ACTIONS = frozenset({"handoff.read", "export.read", "export.download", "handoff.receipt"})
+
+
+def claimed_subject(header: str) -> str | None:
+    """The `sub` an assertion claims, read BEFORE verification only to pick the user to verify it against; `verify`
+    then checks the signature over that exact payload, so a forged sub cannot pass."""
+    try:
+        p = json.loads(_b64d(header.split(".")[0]).decode())
+        return str(uuid.UUID(str(p["sub"])))
+    except Exception:
+        return None
 
 
 def request_target(req) -> str:

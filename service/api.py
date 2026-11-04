@@ -18,7 +18,7 @@ from decimal import Decimal
 from urllib.parse import parse_qs
 
 from . import assertion as _assertion
-from .auth import TokenVerifier
+from .auth import Actor, TokenVerifier
 from .config import Settings
 from .db import actor_transaction
 from .errors import ServiceError
@@ -163,8 +163,22 @@ class CreativeStudioApi:
         policy = _assertion.POLICY.get(handler)
         if policy is None:
             return
-        if not req._environ.get(_assertion.HEADER_ENV_KEY) and not policy.required:
+        header = req._environ.get(_assertion.HEADER_ENV_KEY)
+        if not header and not policy.required:
             return                      # native Studio-UI call on a shared/read route
+        if header and not req.authorization and policy.action in _assertion.SERVICE_ONLY_ACTIONS:
+            # Server-to-server Marketing OS callback (handoff delivered by the worker: no user session exists). The
+            # assertion must verify for the user it names, be route-bound (pth), single-use and on an active binding.
+            sub = _assertion.claimed_subject(header)
+            if sub is None:
+                raise ServiceError(401, "authentication_required")
+            actor = Actor(user_id=sub, claims={"aud": self.settings.jwt_audience})
+            payload = self.assertion_guard.check(req, policy, actor=actor, workspace_id=_uuid(groups[0]))
+            if not payload or "pth" not in payload:
+                raise ServiceError(401, "authentication_required")
+            req._service_actor = actor
+            req._mos_grant = f"{actor.user_id}:{_uuid(groups[0])}"
+            return
         actor = self.verifier.verify(req.authorization)
         payload = self.assertion_guard.check(req, policy, actor=actor, workspace_id=_uuid(groups[0]))
         if payload is not None and not policy.binds and not policy.resolves:
@@ -173,7 +187,7 @@ class CreativeStudioApi:
             req._mos_grant = f"{actor.user_id}:{_uuid(groups[0])}"
 
     def _tx(self, req: Request):
-        actor = self.verifier.verify(req.authorization)
+        actor = getattr(req, "_service_actor", None) or self.verifier.verify(req.authorization)
         return actor, actor_transaction(self.settings.api_database_url, actor, getattr(req, "_mos_grant", None))
 
     @staticmethod

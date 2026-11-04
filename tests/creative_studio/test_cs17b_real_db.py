@@ -547,6 +547,56 @@ class CsPostRun(unittest.TestCase):
         self.assertEqual(call(self.raw_app, "POST", path, tok=self.tok["producer_a"], body=receipt)[1],
                          {"error": "assertion_missing"}, "gateway-only route")
 
+    def test_06b_server_callback_reads_with_a_route_bound_assertion_and_no_session(self):
+        """Marketing OS ingests a worker-delivered handoff with no user session: for handoff/export reads and the
+        receipt only, a verified, route-bound, single-use assertion is the authentication (2026-11-05)."""
+        import io, json as _json
+        from tests.creative_studio.assertion_support import header_for, KEY as _KEY
+        plan, rid = self.produce()
+        self.mos.mode = "pending"
+        try:
+            self.drain()
+        finally:
+            self.mos.mode = "ok"
+        href = self.status(rid)[1]["run"]["handoff"]
+        path = f"/api/v1/workspaces/{self.ws}/handoffs/marketing-os/{href['version_id']}"
+        binding = self.q("select external_workspace_id from public.cs_external_bindings where workspace_id = %s "
+                         "and status = 'active'", (self.ws,))[0][0]
+        user = self.users["producer_a"]
+
+        def raw_call(method, p, header, body=b""):
+            env = {"REQUEST_METHOD": method, "PATH_INFO": p, "QUERY_STRING": "", "wsgi.input": io.BytesIO(body),
+                   "CONTENT_LENGTH": str(len(body)), "SERVER_NAME": "t", "SERVER_PORT": "80", "wsgi.url_scheme": "http"}
+            if header:
+                env["HTTP_X_CS_SERVICE_ASSERTION"] = header
+            cap = {}
+            out = b"".join(self.raw_app(env, lambda st, h: cap.setdefault("s", int(st.split()[0]))))
+            return cap["s"], _json.loads(out)
+
+        def signed(action, method, p, body=b"", sub=user, pth=True, nonce=None):
+            pl = __import__("tests.creative_studio.assertion_support", fromlist=["payload_for"]).payload_for(
+                user_id=sub, action=action, binding=binding, body=body, nonce=nonce)
+            if pth:
+                pl["pth"] = f"{method} {p}"
+            return assertion.sign(_KEY, pl)
+
+        st, got = raw_call("GET", path, signed("handoff.read", "GET", path))
+        self.assertEqual((st, got["data"]["handoff"]["sha256"]), (200, href["sha256"]), got)
+        self.assertEqual(raw_call("GET", path, None)[0], 401, "no session and no assertion")
+        self.assertEqual(raw_call("GET", path, signed("handoff.read", "GET", path, pth=False))[0], 401, "route-bound only")
+        fixed = assertion.b64e(b"n" * 16)
+        h = signed("handoff.read", "GET", path, nonce=fixed)
+        self.assertEqual(raw_call("GET", path, h)[0], 200)
+        self.assertEqual(raw_call("GET", path, h)[0], 401, "single use")
+        # trust is Marketing OS's key (CS-21: MOS authorizes the member before signing): another key never admits
+        forged_payload = __import__("tests.creative_studio.assertion_support", fromlist=["payload_for"]).payload_for(
+            user_id=user, action="handoff.read", binding=binding, body=b"")
+        forged_payload["pth"] = f"GET {path}"
+        self.assertEqual(raw_call("GET", path, assertion.sign("x" * 48, forged_payload))[0], 401, "wrong key")
+        # any other gateway action still needs a real session
+        rpath = f"/api/v1/workspaces/{self.ws}/runs/{rid}"
+        self.assertEqual(raw_call("GET", rpath, signed("run.read", "GET", rpath))[0], 401)
+
     def test_07_undeliverable_without_credentials_stays_offered_not_delivered(self):
         plan, rid = self.produce()
         offline = PostRunRuntime(self.settings, self.store, gateway=None)
