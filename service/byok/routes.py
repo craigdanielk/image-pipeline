@@ -62,6 +62,19 @@ def _keyring(api) -> KeyRing:
         raise ServiceError(503, "credential_store_unavailable") from None
 
 
+def _budget(cap) -> dict | None:
+    """The workspace's current media cap in the shape Marketing OS reads (USD, not micros); configured false when unset."""
+    if not cap or not cap["configured"]:
+        return {"configured": False}
+    usd = lambda micros: round(int(micros or 0) / 1_000_000, 6)
+    return {"configured": True, "policy_id": str(cap["policy_id"]), "revision": cap["revision"],
+            "limit_usd": usd(cap["limit_micros"]), "per_run_limit_usd": usd(cap["per_run_limit_micros"]),
+            "used_and_reserved_usd": usd(cap["consumed_micros"]),
+            "remaining_usd": usd(max(0, int(cap["limit_micros"]) - int(cap["consumed_micros"] or 0))),
+            "window_seconds": cap["window_seconds"],
+            "payer": "workspace" if cap["funding_source"] == "workspace" else "platform"}
+
+
 def register(api_cls, route) -> None:
     @route("PUT", rf"/api/v1/workspaces/({_UUID})/provider-credentials/{PROVIDER}")
     def cs19_store_credential(self, req, workspace_id):
@@ -106,7 +119,9 @@ def register(api_cls, route) -> None:
         with tx as cur:
             cur.execute("select * from public.cs_workspace_funding_state(%s, %s)", (workspace_id, PROVIDER))
             row = cur.fetchone()
-        return 200, {"media_funding": row["media_funding"], "provider": PROVIDER,
+            cur.execute("select * from public.cs_workspace_budget_state(%s)", (workspace_id,))
+            cap = cur.fetchone()
+        return 200, {"media_funding": row["media_funding"], "provider": PROVIDER, "budget": _budget(cap),
                      "workspace_credential": row["workspace_credential"],
                      "fingerprint_tail": row["fingerprint_tail"],
                      "credential_since": row["credential_since"],

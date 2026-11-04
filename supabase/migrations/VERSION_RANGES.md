@@ -13,3 +13,4 @@ so two files with the same version collide at apply time.
   (the old version was already live as Marketing OS `mos_awaiting_user_and_spend_switch`).
 - CS-19: `20261031280100_cs_19_byok_funding.sql` (CS slot `…28xxxx`; Marketing OS ENG-19 uses `…27xxxx`, S3 uses `…29xxxx`).
 - MOS image library: `20261105284100_cs_mos_image_library.sql` (CS slot `…28xxxx`; Marketing OS used `20261105090000`–`20261105130000` that day).
+- Funding budget read-back: `20261105294100_cs_funding_budget_readback.sql` (CS slot `…29xxxx`).

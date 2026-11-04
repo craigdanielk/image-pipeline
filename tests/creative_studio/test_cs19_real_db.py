@@ -146,6 +146,34 @@ class Cs19RealDb(unittest.TestCase):
         self.pg.apply_file(MIGRATION)
         self.assertEqual(self.q("select count(*) n from cs_private.cs_workspace_funding")[0]["n"], before)
 
+    def test_04_funding_reads_back_the_media_cap(self):
+        """Marketing OS confirms a saved cap by reading it back from GET /funding (2026-11-05 fix: it was never returned)."""
+        ws = self.ws_a
+        st, body = call(self.app, "GET", f"/api/v1/workspaces/{ws}/funding", tok=self.tok["owner_a"])
+        self.assertEqual(st, 200, body)
+        self.assertIn("budget", body)
+        before = body["budget"]["configured"]
+        self.set_policy("owner_a", self.acct_a, ws, 10_000_000, 3_000_000)
+        st, body = call(self.app, "GET", f"/api/v1/workspaces/{ws}/funding", tok=self.tok["owner_a"])
+        self.assertEqual(st, 200, body)
+        cap = body["budget"]
+        self.assertTrue(cap["configured"], cap)
+        self.assertEqual((cap["limit_usd"], cap["per_run_limit_usd"], cap["payer"], cap["window_seconds"]), (10.0, 3.0, "workspace", 86400))
+        self.assertGreaterEqual(cap["remaining_usd"], 0)
+        self.assertLessEqual(cap["remaining_usd"], 10.0)
+        self.assertIsInstance(before, bool)
+        for who in ("reviewer_a", "producer_a"):
+            if who in self.tok:
+                st, body = call(self.app, "GET", f"/api/v1/workspaces/{ws}/funding", tok=self.tok[who])
+                self.assertEqual(st, 403, (who, body))
+        for role in ("anon", "authenticated"):
+            conn, cur = self._sql_as(role, self.users["owner_a"])
+            try:
+                self.assertSqlState("42501", lambda: cur.execute(f"select * from public.cs_workspace_budget_state('{ws}')"))
+                conn.rollback()
+            finally:
+                conn.close()
+
     # -- 02 credential forward / rotate / revoke ------------------------------------------------------
     def test_10_key_is_sealed_never_returned_or_logged_and_rotates(self):
         stream = io.StringIO()
