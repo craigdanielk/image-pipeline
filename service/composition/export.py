@@ -102,6 +102,8 @@ def check_format(fmt: dict, render: RenderResult) -> None:
                                ["/format/mime_type"])
 
 
+LIBRARY_CHANNEL = "library"   # internal image-library destination (Marketing OS LibraryPack), not a publication
+
 def _rights_check(record: dict, use: str, channel: str, at: datetime, role: str) -> dict:
     rights = record["rights"]
     rid = record["ref"]["asset_version_id"]
@@ -110,7 +112,7 @@ def _rights_check(record: dict, use: str, channel: str, at: datetime, role: str)
                                ["/rights"], [rid])
     if use not in rights["allowed_uses"]:
         raise CompositionError("rights_denied", f"{role} rights do not allow '{use}'", ["/rights/allowed_uses"], [rid])
-    if channel not in rights["channels"] and "*" not in rights["channels"]:
+    if channel is not None and channel not in rights["channels"] and "*" not in rights["channels"]:
         raise CompositionError("rights_denied", f"{role} rights do not cover channel {channel!r}",
                                ["/rights/channels"], [rid])
     if _parse_ts(rights["valid_from"]) > at or (rights["expires_at"] and _parse_ts(rights["expires_at"]) <= at):
@@ -179,7 +181,10 @@ def build_export(render: RenderResult, *, composition: dict, brand_package: dict
         if ref["asset_version_id"] in seen:
             continue
         seen.add(ref["asset_version_id"])
-        rights.append(_rights_check(record, "embed", fmt["channel"], at, role))
+        # An image-library export is stored for later use, not published: status, 'embed' use and validity still apply
+        # here; the channel is checked when a library image is placed on a channel (MOS placement gate / export).
+        scope = None if fmt["channel"] == LIBRARY_CHANNEL else fmt["channel"]
+        rights.append(_rights_check(record, "embed", scope, at, role))
         if role == "image" and ref["asset_version_id"] not in generated and record["origin"] == "provider":
             raise CompositionError("source_lineage_missing", "provider image has no source_output attempt lineage",
                                    ["/lineage/generated_sources"], [ref["asset_version_id"]])

@@ -153,6 +153,24 @@ class ExportAndHandoff(unittest.TestCase):
         records["scene"]["rights"]["expires_at"] = "2026-10-01T00:00:00Z"
         self.refuse("rights_denied", lambda: self.export(source_records=list(records.values())))
 
+    def test_library_export_checks_rights_but_not_publication_channel(self):
+        """An image-library export is stored, not published: a logo licensed for other channels is fine here, while
+        unknown status, a use other than embed, or expiry still refuse (the channel is checked at placement)."""
+        from service.composition.export import _rights_check, LIBRARY_CHANNEL
+        from datetime import datetime, timezone
+        at = datetime(2026, 11, 5, tzinfo=timezone.utc)
+        rec = copy.deepcopy(self.w.records["logo"])
+        rec["rights"]["channels"] = ["facebook", "instagram"]
+        rec["rights"]["expires_at"] = None
+        rec["rights"]["valid_from"] = "2026-01-01T00:00:00Z"
+        _rights_check(rec, "embed", None, at, "logo")                     # library: channel scope deferred
+        with self.assertRaises(Exception):
+            _rights_check(rec, "embed", "email", at, "logo")              # a publication channel still checked
+        rec["rights"]["status"] = "unknown"
+        with self.assertRaises(Exception):
+            _rights_check(rec, "embed", None, at, "logo")
+        self.assertEqual(LIBRARY_CHANNEL, "library")
+
     def test_provider_image_needs_attempt_lineage(self):
         self.refuse("source_lineage_missing", lambda: self.export(generated_sources=[]))
         self.refuse("source_lineage_missing", lambda: self.export(source_records=[self.w.records["logo"]]))
