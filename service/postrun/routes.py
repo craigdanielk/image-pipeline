@@ -14,6 +14,16 @@ from ..composition.handoff import verify_ingestion_receipt
 from ..errors import ServiceError
 
 
+
+def download_token(settings, req) -> str:
+    """Who signs the storage URL. A user call signs with the user's own session. A verified Marketing OS server
+    callback has no session: the download grant above was already created in SQL as the user the assertion names,
+    so the URL is signed by the runtime principal that writes these objects (Storage RLS admits it)."""
+    if getattr(req, "_service_actor", None) is not None and not req.bearer_token():
+        from ..storage import worker_token_provider
+        return worker_token_provider(settings)()
+    return req.bearer_token()
+
 def register(api_cls, route):
     from service.api import _uuid
 
@@ -32,7 +42,8 @@ def register(api_cls, route):
                         (workspace_id, ref["asset_id"], ref["asset_version_id"], ref["sha256"],
                          self.settings.download_grant_seconds))
             grant = cur.fetchone()
-        url = self.signer.sign_download(req.bearer_token(), grant["storage_key"], self.settings.signed_download_seconds)
+        url = self.signer.sign_download(download_token(self.settings, req), grant["storage_key"],
+                                        self.settings.signed_download_seconds)
         return 200, {"url": url, "download_url": url, "expires_in": self.settings.signed_download_seconds,
                      "sha256": grant["sha256"], "mime_type": grant["mime_type"], "size_bytes": grant["size_bytes"]}
 
