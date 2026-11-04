@@ -16,6 +16,7 @@ import urllib.request
 from datetime import datetime, timezone
 
 from service import assertion as _assertion
+from service import jcs as _jcs
 from service.brand.gateway import GatewayUnavailable
 
 ASSERTION_HEADER = "X-CS-Service-Assertion"
@@ -135,7 +136,9 @@ class HttpMarketingOsGateway:
         ``mos-library-sources-v1`` for an image-library brief (``source: library``). The GET form returns the concept
         browser's listing, which is not an intake source document."""
         url = f"{self.base_url}/api/creative-studio?action=sources&workspace_id={mos_workspace_id}"
-        body = json.dumps({"visual_request": visual_request}).encode()
+        # Canonical (RFC 8785) bytes: Marketing OS's runtime hands its handler a parsed body and re-serialises it to
+        # check the signed body hash, which only matches compact, key-sorted, ECMAScript-formatted JSON (403 before).
+        body = _jcs.canonical_bytes({"visual_request": visual_request})
         req = urllib.request.Request(url, method="POST", data=body, headers=self._signed_headers(
             method="POST", url=url, body=body, act="campaign.sources", user_id=user_id,
             mos_workspace_id=mos_workspace_id))
@@ -147,7 +150,7 @@ class HttpMarketingOsGateway:
 
     def eligibility(self, *, mos_workspace_id: str, user_id: str, action: str, source_versions: list) -> dict:
         url = f"{self.base_url}/api/creative-studio?action=eligibility&workspace_id={mos_workspace_id}"
-        body = json.dumps({"action": action, "source_versions": source_versions}).encode()
+        body = _jcs.canonical_bytes({"action": action, "source_versions": source_versions})
         req = urllib.request.Request(url, method="POST", data=body, headers=self._signed_headers(
             method="POST", url=url, body=body, act="generation.eligibility", user_id=user_id,
             mos_workspace_id=mos_workspace_id))

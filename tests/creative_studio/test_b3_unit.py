@@ -270,6 +270,32 @@ class HostedBrandImportTests(EntryTests):
         imp.assert_not_called()
 
 
+class MosCallbackBodyTests(unittest.TestCase):
+    """Marketing OS re-serialises a parsed body before checking the signed hash; only canonical JSON survives that."""
+    def test_sources_and_eligibility_send_canonical_json(self):
+        from service import jcs
+        from service.runtime.gateway import HttpMarketingOsGateway
+        sent = []
+
+        class Resp:
+            def __enter__(self): return self
+            def __exit__(self, *a): return False
+            def read(self, *a): return b"{}"
+
+        def opener(req, timeout=None):
+            sent.append(req.data)
+            return Resp()
+        gw = HttpMarketingOsGateway("https://mos.test", assertion_key="k" * 40, opener=opener)
+        visual = {"source": "library", "brief": "Hair \u2014 loss", "ratio": 1.0, "canvas": [1080, 1080]}
+        gw.campaign_sources(mos_workspace_id="00000000-0000-0000-0000-000000000001", visual_request=visual,
+                            user_id="00000000-0000-0000-0000-000000000002")
+        gw.eligibility(mos_workspace_id="00000000-0000-0000-0000-000000000001",
+                       user_id="00000000-0000-0000-0000-000000000002", action="generate", source_versions=[{"b": 2, "a": 1}])
+        self.assertEqual(sent[0], jcs.canonical_bytes({"visual_request": visual}))
+        self.assertEqual(sent[1], jcs.canonical_bytes({"action": "generate", "source_versions": [{"b": 2, "a": 1}]}))
+        self.assertNotIn(b", ", sent[0])
+
+
 class LeakageTests(unittest.TestCase):
     def test_no_acceptance_set_names_in_b3_files(self):
         self.assertTrue(len(B3_FILES) > 10)
