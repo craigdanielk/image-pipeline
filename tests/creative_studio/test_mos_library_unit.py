@@ -190,6 +190,7 @@ class TextFreeCompositionNeedsNoFontTests(unittest.TestCase):
                                      logo_id="logo-primary", logo_px=(400, 100), clear_space_ratio=0.25,
                                      fonts={}, weights={}, chosen=chosen, palette=[], step=1.0)
         self.assertFalse([l for l in layers if l.get("type") == "text"])
+        self.assertFalse([l for l in layers if l.get("id") == "scrim"], "no text, no legibility scrim")
         self.assertTrue([l for l in layers if l.get("type") == "image"])
 
     def test_runtime_loads_fonts_only_when_there_is_text(self):
