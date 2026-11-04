@@ -314,3 +314,16 @@ class LeakageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class ServiceCallbackDownloadTokenTests(unittest.TestCase):
+    """A verified MOS server callback (no session) gets its download URL signed by the runtime principal."""
+    def test_session_call_signs_as_user_and_service_callback_as_runtime(self):
+        from service.postrun import routes
+        user_req = SimpleNamespace(bearer_token=lambda: "user-jwt")
+        self.assertEqual(routes.download_token(SimpleNamespace(), user_req), "user-jwt")
+        svc_req = SimpleNamespace(bearer_token=lambda: "", _service_actor=object())
+        with mock.patch("service.storage.worker_token_provider", return_value=lambda: "runtime-jwt"):
+            self.assertEqual(routes.download_token(SimpleNamespace(), svc_req), "runtime-jwt")
+        anon_req = SimpleNamespace(bearer_token=lambda: "")
+        self.assertEqual(routes.download_token(SimpleNamespace(), anon_req), "", "no service actor: nothing granted")

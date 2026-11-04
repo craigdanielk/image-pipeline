@@ -136,11 +136,13 @@ def build_layers(*, width: int, height: int, safe_rect: tuple, scene: dict, logo
                       round(width * HEADLINE_SIZE_RATIO * step), fonts["heading"], weights["heading"], TEXT_FILL,
                       "left", "bottom"))
     text_top = y
-    scrim_top = max(0, min(round(height * SCRIM_START_RATIO), text_top - m))
-    add({"id": "scrim", "name": "Scrim", "type": "shape", "transform": _t(0, scrim_top, width, height - scrim_top),
-         "order": 0, "locked": False,
-         "content": {"shape": "rectangle", "fill": SCRIM_FILL, "stroke": None, "stroke_width_px": 0,
-                     "corner_radius_px": 0}})
+    if texts or cta_box is not None:
+        # The scrim exists only to keep text legible; a text-free image (library: scene + logo) gets none.
+        scrim_top = max(0, min(round(height * SCRIM_START_RATIO), text_top - m))
+        add({"id": "scrim", "name": "Scrim", "type": "shape", "transform": _t(0, scrim_top, width, height - scrim_top),
+             "order": 0, "locked": False,
+             "content": {"shape": "rectangle", "fill": SCRIM_FILL, "stroke": None, "stroke_width_px": 0,
+                         "corner_radius_px": 0}})
     # logo: top-left inside the safe zone, outside its own clear space
     lw = round(width * LOGO_WIDTH_RATIO)
     lh = max(1, round(lw * logo_px[1] / logo_px[0]))
