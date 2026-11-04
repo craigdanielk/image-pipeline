@@ -188,11 +188,14 @@ class PostRunRuntime:
                 logo_px = im.size
         except Exception:
             raise Blocked("logo_asset_missing", "the package logo is not a decodable raster image", [logo_spec["id"]])
-        fonts, weights = self._fonts(ctx, source)
         chosen, not_rendered = layout.pick_copy(request["exact_copy"])
         library = request["origin"].get("kind") == "marketing-os-library"   # image + logo layer, no campaign copy
-        if not library and not any(chosen[k] for k in ("headline", "body", "cta")) and not chosen["disclaimers"]:
+        has_text = any(chosen[k] for k in ("headline", "body", "cta")) or bool(chosen["disclaimers"])
+        if not library and not has_text:
             raise Blocked("exact_copy_missing", "the request has no headline, body, cta or disclaimer copy to compose")
+        # Fonts are needed only to set text. A text-free composition (image library: scene + logo) never loads them, so
+        # a brand whose fonts are web formats (WOFF2) can still get images; text compositions still require sfnt files.
+        fonts, weights = self._fonts(ctx, source) if has_text else ({}, {})
         board_id = fmt["id"]
         zone = layout.safe_zone_for(fmt["preset"], fmt["width_px"], fmt["height_px"])
         safe_rect = zone.rect(fmt["width_px"], fmt["height_px"])
