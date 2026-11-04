@@ -65,6 +65,8 @@ POLICY: dict[str, Policy] = {
     # run admission
     "cs_b3_admit_run": Policy("run.admit"),
     "cs_b3_cancel_run": Policy("run.cancel"),
+    # Retry finishing: re-queue a run's blocked FREE post-run stage (never the provider)
+    "cs_b3_retry_post_run": Policy("post_run.retry"),
     "cs_b3_run_costs": Policy("run.costs", required=False),
     # export / handoff (the native Studio UI also calls handoff create/read)
     "cs_b4_create_handoff": Policy("handoff.create", required=False),

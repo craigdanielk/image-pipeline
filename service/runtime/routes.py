@@ -4,6 +4,7 @@
   POST /api/v1/workspaces/{ws}/quotes                        quote a frozen plan or {plan_id} (no reservation)
   POST /api/v1/workspaces/{ws}/runs                          admit (Idempotency-Key) -> 202 + Location
   POST /api/v1/workspaces/{ws}/runs/{run}/cancel             request cancellation
+  POST /api/v1/workspaces/{ws}/runs/{run}/post-run/{canvas}/retry   retry finishing a blocked image (owner/manager; free)
   POST /api/v1/workspaces/{ws}/runs/{run}/nodes/{node}/draft-approvals   reviewer approves a draft output
   GET  /api/v1/workspaces/{ws}/runs/{run}/costs              cost totals + provider-receipt-v1 list (E10 export)
 """
@@ -84,6 +85,17 @@ def register(api_cls, route) -> None:
             cur.execute("select public.cs_request_cancel(%s, %s, %s)::text as state",
                         (workspace_id, run_id, reason if isinstance(reason, str) else None))
             return 202, {"run_id": run_id, "state": cur.fetchone()["state"]}
+
+    @route("POST", rf"/api/v1/workspaces/({_UUID})/runs/({_UUID})/post-run/({_SLUG})/retry")
+    def cs_b3_retry_post_run(self, req, workspace_id, run_id, canvas_node_id):
+        # Re-queues only the blocked compose/export/handoff stage of one canvas; the provider is never called again.
+        workspace_id, run_id = _uuid(workspace_id), _uuid(run_id)
+        _, tx = self._tx(req)
+        with tx as cur:
+            cur.execute("select * from public.cs_retry_post_run(%s, %s, %s)", (workspace_id, run_id, canvas_node_id))
+            row = cur.fetchone()
+        return (202 if row["retried"] else 200), {"run_id": str(row["run_id"]), "canvas_node_id": row["canvas_node_id"],
+                                                  "state": row["state"], "stage": row["stage"], "retried": row["retried"]}
 
     @route("POST", rf"/api/v1/workspaces/({_UUID})/runs/({_UUID})/nodes/({_SLUG})/draft-approvals")
     def cs_b3_approve_draft(self, req, workspace_id, run_id, node_id):

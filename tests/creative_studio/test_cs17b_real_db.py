@@ -612,6 +612,71 @@ class CsPostRun(unittest.TestCase):
         finally:
             conn.close()
 
+    def test_11_retry_finishing_requeues_only_the_blocked_stage_never_the_provider(self):
+        def retry(rid, who="owner_a", ws=None):
+            canvas = self.q("select canvas_node_id from public.cs_post_run_state where run_id = %s", (rid,))[0][0]
+            return call(self.app, "POST", f"/api/v1/workspaces/{ws or self.ws}/runs/{rid}/post-run/{canvas}/retry",
+                        tok=self.tok[who], body={})
+        # (a) compose_blocked (logo bytes unreadable) -> fixed -> owner retries -> composed, exported, delivered
+        plan, rid = self.produce()
+        logo_key = self.q("select av.storage_key from public.cs_source_asset_mirrors m join public.cs_asset_versions av "
+                          "on av.id = m.asset_version_id where av.mime_type = 'image/png' limit 1")[0][0]
+        self.store.corrupt = {logo_key}
+        try:
+            self.drain()
+        finally:
+            self.store.corrupt = set()
+        self.assertEqual(self.post_state(rid), ("compose_blocked", "logo_asset_missing"))
+        creates, reservations = self.fake.creates(), self.q("select count(*) from public.cs_budget_reservations")
+        self.assertEqual(retry(rid, who="producer_a")[0], 403, "owner/manager only")
+        self.assertEqual(retry(rid, who="viewer_a")[0], 403)
+        self.assertEqual(retry(rid, who="owner_b", ws=self.ws_b)[0], 404, "another workspace never sees the run")
+        st, out = retry(rid)
+        self.assertEqual((st, out["retried"], out["stage"], out["state"]), (202, True, "compose_image", "queued"), out)
+        st, again = retry(rid)
+        self.assertEqual((st, again["retried"]), (200, False), "idempotent while the retry is queued")
+        self.assertEqual(self.q("select count(*) from public.cs_work_items where run_id = %s and stage = 'compose_image' "
+                                "and state = 'queued'", (rid,)), [(1,)])
+        self.drain()
+        self.assertEqual(self.post_state(rid), ("handoff_delivered", None))
+        self.assertEqual(self.fake.creates(), creates, "retry never calls the provider")
+        self.assertEqual(self.q("select count(*) from public.cs_budget_reservations"), reservations, "and reserves nothing")
+        self.assertEqual(self.q("select state::text from public.cs_runs where id = %s", (rid,)), [("completed",)])
+        st, done = retry(rid)
+        self.assertEqual((st, done["retried"], done["state"]), (200, False, "handoff_delivered"), "nothing blocked: no-op")
+        self.assertEqual(self.q("select count(*) from public.cs_audit_events where action = 'post_run.retry' and "
+                                "affected_refs -> 0 ->> 'id' = %s and actor_id = %s", (rid, self.users["owner_a"])), [(1,)])
+        self.assertEqual(self.q("select count(*) from public.cs_run_events where run_id = %s and "
+                                "kind = 'post_run.retry_requested'", (rid,)), [(1,)])
+        # (b) handoff_failed (Marketing OS refused) -> retry re-delivers the SAME handoff, compose/export untouched
+        plan, rid2 = self.produce()
+        self.mos.mode = "refuse"
+        try:
+            self.drain()
+        finally:
+            self.mos.mode = "ok"
+        self.assertEqual(self.post_state(rid2), ("handoff_failed", "mos_refused_403"))
+        exports = self.q("select count(*) from public.cs_exports where run_id = %s", (rid2,))
+        st, out = retry(rid2)
+        self.assertEqual((st, out["stage"]), (202, "deliver_handoff"), out)
+        self.drain()
+        self.assertEqual(self.post_state(rid2), ("handoff_delivered", None))
+        self.assertEqual(self.q("select count(*) from public.cs_exports where run_id = %s", (rid2,)), exports)
+        self.assertEqual(self.q("select count(*) from public.cs_handoffs h join public.cs_post_run_state s on "
+                                "s.handoff_id = h.id where s.run_id = %s and h.state = 'received'", (rid2,)), [(1,)])
+        # locked down: no direct table access; only cs_api executes the RPC
+        for role in ("cs_api", "cs_worker"):
+            conn = psycopg2.connect(self.pg.dsn(user=role))
+            try:
+                with self.assertRaises(psycopg2.Error):
+                    conn.cursor().execute("select * from public.cs_post_run_retries")
+            finally:
+                conn.close()
+        self.assertEqual(self.q("select has_function_privilege('cs_api', 'public.cs_retry_post_run(uuid,uuid,text)', "
+                                "'execute'), has_function_privilege('cs_worker', 'public.cs_retry_post_run(uuid,uuid,text)', "
+                                "'execute'), has_function_privilege('anon', 'public.cs_retry_post_run(uuid,uuid,text)', "
+                                "'execute')"), [(True, False, False)])
+
 
 if __name__ == "__main__":
     unittest.main()
