@@ -36,55 +36,89 @@
       "$ref": "common.schema.json#/$defs/uuid"
     },
     "target": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "authority": {
-          "const": "marketing-os"
-        },
-        "workspace_id": {
-          "$ref": "common.schema.json#/$defs/uuid"
-        },
-        "concept": {
-          "$ref": "common.schema.json#/$defs/version_ref"
-        },
-        "placement": {
-          "anyOf": [
-            {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "authority": {
+              "const": "marketing-os"
+            },
+            "workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "concept": {
               "$ref": "common.schema.json#/$defs/version_ref"
             },
-            {
-              "type": "null"
+            "placement": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/version_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "copy_versions": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              },
+              "minItems": 1,
+              "maxItems": 30
+            },
+            "destination": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "claim_set": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
             }
+          },
+          "required": [
+            "authority",
+            "workspace_id",
+            "concept",
+            "placement",
+            "copy_versions",
+            "destination",
+            "claim_set",
+            "policy"
           ]
         },
-        "copy_versions": {
-          "type": "array",
-          "items": {
-            "$ref": "common.schema.json#/$defs/version_ref"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "$comment": "Image library handoff: MOS stores the images against its LibraryPack item (no campaign copy).",
+          "properties": {
+            "authority": {
+              "const": "marketing-os"
+            },
+            "workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "library": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "library_item_key": {
+              "type": "string",
+              "pattern": "^lib-[A-Za-z0-9_:.-]{1,200}$"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            }
           },
-          "minItems": 1,
-          "maxItems": 30
-        },
-        "destination": {
-          "$ref": "common.schema.json#/$defs/version_ref"
-        },
-        "claim_set": {
-          "$ref": "common.schema.json#/$defs/version_ref"
-        },
-        "policy": {
-          "$ref": "common.schema.json#/$defs/version_ref"
+          "required": [
+            "authority",
+            "workspace_id",
+            "library",
+            "library_item_key",
+            "policy"
+          ]
         }
-      },
-      "required": [
-        "authority",
-        "workspace_id",
-        "concept",
-        "placement",
-        "copy_versions",
-        "destination",
-        "claim_set",
-        "policy"
       ]
     },
     "exports": {

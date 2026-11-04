@@ -149,7 +149,7 @@ def _derived_rights(source_rights: list[dict], *, receipt_id: str, recorded_by: 
 def build_export(render: RenderResult, *, composition: dict, brand_package: dict, fmt: dict, store: ExportStore,
                  source_records: list[dict], generated_sources: list[dict], lineage: dict,
                  copy_sources: dict[str, dict | None], cost: dict, created_by: str,
-                 export_id: str | None = None, created_at: str | None = None) -> dict:
+                 export_id: str | None = None, created_at: str | None = None, copy_required: bool = True) -> dict:
     """lineage: request, treatment, recipe, plan, catalogue (VersionRefs) and compile_hash."""
     check_format(fmt, render)
     receipt = render.receipt
@@ -202,7 +202,7 @@ def build_export(render: RenderResult, *, composition: dict, brand_package: dict
                 "source_copy": source_copy}
         by_copy[entry["copy_id"]] = item
         copy.append(item)
-    if not copy:
+    if not copy and copy_required:   # image-library exports (copy_required=False) are images without campaign copy
         raise CompositionError("exact_copy_missing", "an export carries at least one exact copy entry",
                                ["/exact_copy"])
 

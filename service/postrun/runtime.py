@@ -190,7 +190,8 @@ class PostRunRuntime:
             raise Blocked("logo_asset_missing", "the package logo is not a decodable raster image", [logo_spec["id"]])
         fonts, weights = self._fonts(ctx, source)
         chosen, not_rendered = layout.pick_copy(request["exact_copy"])
-        if not any(chosen[k] for k in ("headline", "body", "cta")) and not chosen["disclaimers"]:
+        library = request["origin"].get("kind") == "marketing-os-library"   # image + logo layer, no campaign copy
+        if not library and not any(chosen[k] for k in ("headline", "body", "cta")) and not chosen["disclaimers"]:
             raise Blocked("exact_copy_missing", "the request has no headline, body, cta or disclaimer copy to compose")
         board_id = fmt["id"]
         zone = layout.safe_zone_for(fmt["preset"], fmt["width_px"], fmt["height_px"])
@@ -299,7 +300,8 @@ class PostRunRuntime:
             manifest = build_export(render, composition=comp, brand_package=ctx["package"], fmt=fmt, store=store,
                                     source_records=records, generated_sources=generated, lineage=lineage,
                                     copy_sources=copy_sources, cost=ctx["cost"], created_by=ctx["run"]["requested_by"],
-                                    created_at=_iso(state["composed_at"]))
+                                    created_at=_iso(state["composed_at"]),
+                                    copy_required=ctx["request"]["origin"].get("kind") != "marketing-os-library")
         except CompositionError as err:
             if err.retryable:
                 raise Retryable(err.code, err.message) from None
@@ -370,11 +372,13 @@ class PostRunRuntime:
             raise Blocked("export_unavailable", "no published export for this canvas")
         request = ctx["request"]
         origin = request["origin"]
-        if origin.get("kind") != "marketing-os":
+        if origin.get("kind") not in ("marketing-os", "marketing-os-library"):
             return self._finish(lease, "handoff_not_applicable", "standalone_request", {}, {}, None)
         if not ctx.get("binding"):
             raise Blocked("mos_connection_required", "no active verified Marketing OS connection for this workspace")
-        target = {k: origin[k] for k in ("concept", "placement", "copy_versions", "destination", "claim_set", "policy")}
+        keys = (("library", "library_item_key", "policy") if origin["kind"] == "marketing-os-library"
+                else ("concept", "placement", "copy_versions", "destination", "claim_set", "policy"))
+        target = {k: origin[k] for k in keys}
         target = {"authority": "marketing-os", "workspace_id": origin["mos_workspace_id"], **target}
         key = layout.u5("handoff", ctx["run"]["id"], ctx["work"]["canvas_node_id"])
         try:

@@ -597,6 +597,39 @@ class CsB2RealDatabase(unittest.TestCase):
         st, body = self._intake("producer_a", self.ws_a, self.conn_a, self.home_camp, canvas="16:9")
         self.assertEqual((st, body["error"]), (422, "unsupported_canvas"))
 
+    def test_08b_image_library_brief_to_frozen_treatment(self):
+        """MOS image library: a brief with no campaign concept or copy becomes a request (origin marketing-os-library,
+        no exact copy) and a treatment of the brief's own direction, through the same intake route."""
+        from tests.creative_studio.test_mos_library_unit import KEY, library_request, library_sources
+        self.gw.libraries[KEY] = library_sources(self.home, self.home_camp)
+        st, body = call(self.app, "POST", f"/api/v1/workspaces/{self.ws_a}/creative-requests/from-marketing-os",
+                        tok=self.tok["producer_a"], idem=str(uuid.uuid4()),
+                        body={"connection_id": self.conn_a, "visual_request": library_request(self.home)})
+        self.assertEqual(st, 201, body)
+        st, rq = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/creative-requests/{body['request']['id']}"
+                      f"/versions/{body['request']['version_id']}", tok=self.tok["viewer_a"])
+        req = rq["request"]
+        contracts.validate(req)
+        self.assertEqual((req["origin"]["kind"], req["origin"]["library_item_key"]), ("marketing-os-library", KEY))
+        self.assertEqual(req["exact_copy"], [])
+        self.assertEqual(req["budget"]["credential_binding_id"], self.conn_a)
+        self.assertEqual(req["origin"]["generation_eligibility"]["source_versions"],
+                         [self.gw.libraries[KEY]["library"]], "MOS checks the approved LibraryPack, not a concept")
+        st, acc = self._accept("producer_a", self.ws_a, body["treatment"])
+        self.assertEqual(st, 201, acc)
+        st, tr = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/treatments/{acc['treatment']['id']}"
+                      f"/versions/{acc['treatment']['version_id']}", tok=self.tok["viewer_a"])
+        self.assertEqual(tr["treatment"]["direction"]["summary"], self.home_camp.direction["summary"])
+        st, dr = call(self.app, "GET", f"/api/v1/workspaces/{self.ws_a}/authoring-drafts/{body['draft_id']}",
+                      tok=self.tok["viewer_a"])
+        self.assertIsNone(dr["draft"]["selections"]["concept"])
+        # an owner-photo brief is refused, never generated
+        self.gw.libraries[KEY] = {**self.gw.libraries[KEY], "item": {**self.gw.libraries[KEY]["item"], "production": "owner_photo"}}
+        st, body = call(self.app, "POST", f"/api/v1/workspaces/{self.ws_a}/creative-requests/from-marketing-os",
+                        tok=self.tok["producer_a"], idem=str(uuid.uuid4()),
+                        body={"connection_id": self.conn_a, "visual_request": library_request(self.home)})
+        self.assertEqual((st, body["error"]), (409 if st == 409 else st, "source_unavailable"))
+
     # -- 09 workspace isolation ------------------------------------------------------------
     def test_09_workspace_isolation(self):
         st, a = self._intake("producer_a", self.ws_a, self.conn_a, self.home_camp)

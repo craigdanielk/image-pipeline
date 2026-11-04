@@ -73,7 +73,8 @@ def build_handoff(exports: list[dict], *, target: dict, creative_request: dict, 
         if _ref_key(e["lineage"]["request"]) != _ref_key(creative_request):
             raise CompositionError("source_revision_changed", "export was made from another creative request "
                                    "version", [f"/exports/{i}/lineage/request"], [e["id"]])
-    allowed_copy = {_ref_key(r) for r in target["copy_versions"]}
+    # Library handoffs (target.library_item_key) carry no campaign copy: any copy layer is refused below.
+    allowed_copy = {_ref_key(r) for r in target.get("copy_versions") or []}
     for i, e in enumerate(exports):
         for j, c in enumerate(e["exact_copy"]):
             src = c["source_copy"]

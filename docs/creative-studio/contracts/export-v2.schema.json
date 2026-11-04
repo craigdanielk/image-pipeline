@@ -159,8 +159,9 @@
           "source_copy"
         ]
       },
-      "minItems": 1,
-      "maxItems": 50
+      "minItems": 0,
+      "maxItems": 50,
+      "$comment": "Empty only for a Marketing OS image-library export (request origin marketing-os-library has no exact copy); every other export carries at least one exact copy entry (enforced by the exporter)."
     },
     "cost": {
       "$ref": "common.schema.json#/$defs/cost"

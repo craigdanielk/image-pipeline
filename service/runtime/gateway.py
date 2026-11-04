@@ -131,10 +131,13 @@ class HttpMarketingOsGateway:
             raise GatewayUnavailable(f"failed to fetch asset: {exc}") from None
 
     def campaign_sources(self, *, mos_workspace_id: str, visual_request: dict, user_id: str | None = None) -> dict:
-        concept_id = visual_request.get("concept_id") or visual_request.get("placement_id") or ""
-        url = f"{self.base_url}/api/creative-studio?action=sources&workspace_id={mos_workspace_id}&concept_id={concept_id}"
-        req = urllib.request.Request(url, method="GET", headers=self._signed_headers(
-            method="GET", url=url, body=b"", act="campaign.sources", user_id=user_id,
+        """POST the visual request: MOS answers ``mos-campaign-sources-v1`` for a placement job and
+        ``mos-library-sources-v1`` for an image-library brief (``source: library``). The GET form returns the concept
+        browser's listing, which is not an intake source document."""
+        url = f"{self.base_url}/api/creative-studio?action=sources&workspace_id={mos_workspace_id}"
+        body = json.dumps({"visual_request": visual_request}).encode()
+        req = urllib.request.Request(url, method="POST", data=body, headers=self._signed_headers(
+            method="POST", url=url, body=body, act="campaign.sources", user_id=user_id,
             mos_workspace_id=mos_workspace_id))
         try:
             with self._open(req, timeout=20) as resp:

@@ -180,3 +180,85 @@ def build_treatment_fields(sources: dict, request_ref: dict, brand_package_ref: 
         "shots": [],
         "sources": [sources["concept"], sources["content_pack"]["ref"], brand_package_ref],
     }
+
+
+# -- Marketing OS image library (LibraryPack visual_library item) ------------------------------------------------
+LIBRARY_SOURCES_SCHEMA = "mos-library-sources-v1"
+
+
+def is_library_request(visual_request: dict) -> bool:
+    return isinstance(visual_request, dict) and visual_request.get("source") == "library"
+
+
+def build_library_request_fields(visual_request: dict, sources: dict, brand_package: dict, credential_binding_id: str) -> dict:
+    """creative-request-v1 fields for one approved image-library brief: no campaign concept, copy, claims or
+    destination (origin kind ``marketing-os-library``, exact_copy empty). MOS supplies the brief's direction, the
+    offer facts, the per-offer budget ceiling and the library approval; the funding binding is this connection."""
+    _require(visual_request.get("schema_version") == VISUAL_REQUEST_SCHEMA, "unsupported_schema_version",
+             f"expected {VISUAL_REQUEST_SCHEMA}", "/visual_request/schema_version")
+    _require(sources.get("schema_version") == LIBRARY_SOURCES_SCHEMA, "unsupported_schema_version",
+             f"expected {LIBRARY_SOURCES_SCHEMA}", "/sources/schema_version")
+    mos_ws = sources["workspace_id"]
+    _require(visual_request.get("workspace_id") == mos_ws, "scope_mismatch", "visual request is from another workspace",
+             "/visual_request/workspace_id")
+    item = sources.get("item") or {}
+    asked = (visual_request.get("library") or {}).get("item_key")
+    _require(item.get("key") == asked, "source_revision_changed", "library item differs from the request",
+             "/sources/item/key")
+    _require(item.get("production") == "generate", "source_unavailable",
+             "this library brief is for real photographs and is never generated", "/sources/item/production")
+    _require(sources["brand_kit"]["id"] == brand_package["source_artifact_id"], "approval_stale",
+             "the library pins a different BrandKit version than the imported package", "/sources/brand_kit")
+    _require(visual_request.get("media_kind") == "image" and visual_request.get("tier") == "draft", "unsupported_canvas",
+             "library briefs are draft still images", "/visual_request/media_kind")
+    canvas = visual_request.get("canvas")
+    _require(canvas in _IMAGE_PRESETS and canvas == item.get("canvas"), "unsupported_canvas",
+             f"canvas {canvas} has no v1 image preset or differs from the brief", "/visual_request/canvas")
+    preset, w, h = _IMAGE_PRESETS[canvas]
+    fmt = {"id": slug(f"{preset}-slot-{visual_request.get('slot')}"), "kind": "image", "preset": preset, "width_px": w,
+           "height_px": h, "mime_type": "image/png", "duration_frames": None, "frame_rate": None, "count": 1,
+           "channel": "library"}
+    budget = sources.get("budget")
+    _require(isinstance(budget, dict), "budget_missing", "MOS exported no library budget for this brief", "/budget")
+    budget = {**budget, "credential_binding_id": credential_binding_id}
+    selection = sources.get("provider_selection") or {
+        "mode": "auto", "provider": None, "model_id": None, "quality": _QUALITY["draft"],
+        "max_unit_cost_micros": budget["max_cost_micros"]}
+    forbidden = list(dict.fromkeys(brand_package["document"]["imagery"]["prohibited"]
+                                   + brand_package["document"]["voice"]["prohibited_terms"]
+                                   + list(sources.get("forbidden") or [])))[:100]
+    required = [r["instruction"] for r in brand_package["document"]["usage_rules"] if r["severity"] == "required"][:100]
+    return {
+        "origin": {"kind": "marketing-os-library", "mos_workspace_id": mos_ws, "library": sources["library"],
+                   "library_item_key": item["key"], "library_approval": sources["library_approval"],
+                   "policy": sources["policy"], "brand_rule_revision": None, "brand_rule_approval": None,
+                   "generation_eligibility": None},   # filled by the caller from MOS's eligibility API
+        "brand_package": brand_package["ref"],
+        "offering": sources["offering"],
+        "audiences": sources["audiences"],
+        "objective": sources["objective"],
+        "hook": sources["hook"],
+        "locale": sources["locale"],
+        "exact_copy": [],
+        "formats": [fmt],
+        "references": [],
+        "provider_selection": selection,
+        "budget": budget,
+        "constraints": {"forbidden": forbidden, "required": required, "exact_logo_layers": True, "exact_copy_layers": True},
+    }
+
+
+def build_library_treatment_fields(sources: dict, request_ref: dict, brand_package_ref: dict) -> dict:
+    """Draft treatment from the approved library brief's own direction (no model call)."""
+    direction = sources.get("concept_direction")
+    _require(isinstance(direction, dict), "source_unavailable", "library brief has no visual direction", "/concept_direction")
+    return {
+        "source_request": request_ref,
+        "authorship": {"kind": "human", "model_id": None, "prompt_template": None, "raw_response_sha256": None,
+                       "operation_id": None, "attempt_id": None},
+        "direction": {"summary": direction["summary"], "scene": direction["scene"], "style": direction["style"],
+                      "lighting": direction["lighting"], "camera": direction["camera"],
+                      "composition": direction["composition"], "negative": list(direction.get("negative") or [])},
+        "shots": [],
+        "sources": [sources["library"], brand_package_ref],
+    }

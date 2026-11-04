@@ -72,3 +72,21 @@ Paths are relative to `/Users/craigkunte/Developer/GitHub/services/marketing-os`
 No factual gap prevents authoring this architecture. The following are explicit CS-M2 work, not missing architecture decisions: Brand CI package/rights exporter and usable font files; current model endpoint catalogue and credential-mode admission; cs_* durable state and private assets; service-aware compiler lane; shared recipe revisions; image/video composition; MOS durable ingestion and exact review mapping. Source access, schema presence, captured files and the existing inline model list do not prove any of these are built or funded.
 
 Historical imports require provenance and rights review; they are not automatically publication-ready. Existing hashes retain algorithm labels. Existing CPOS/project/repository identities are untouched, and CPOS remains outside every product API above. CS-M1 closes only through the parent architecture reconciliation; this package makes no readiness/acceptance claim.
+
+## Marketing OS image library (2026-11-05, additive)
+
+Marketing OS prepares offer-level image briefs (LibraryPack `visual_library`) before any campaign exists. They reuse the
+existing intake → treatment → compile → quote → run → compose → export → handoff path; nothing is forked.
+
+- `mos-visual-request-v1` with `source: "library"` and `library: {artifact_id, version, item_key, offer_group, kind}`
+  (no concept, placement or copy refs; `concept_direction` comes from MOS's sources, not the request).
+- MOS answers the signed `campaign.sources` callback (now always `POST {visual_request}`) with
+  `mos-library-sources-v1`: library ref + approval, item, brief direction, BrandKit pin, offering, audiences, objective,
+  hook, locale, policy and the per-offer library budget. The funding binding is the requesting connection.
+- `creative-request-v1.origin` gains `kind: "marketing-os-library"` (library, library_item_key, library_approval,
+  policy, eligibility); `exact_copy` is empty. Eligibility is MOS's check of the approved LibraryPack.
+- Composition renders the image with the exact logo layer and no copy layers; `export-v2.exact_copy` may be empty only
+  for such requests (the exporter still refuses an empty copy list for every other request).
+- `mos-handoff-v1.target` may be the library target `{authority, workspace_id, library, library_item_key, policy}`;
+  `mos-ingestion-receipt-v1` items may carry no MOS copy versions for it. MOS ingests through
+  `mos_studio_receive_library_export`.

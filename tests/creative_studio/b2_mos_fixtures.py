@@ -360,6 +360,7 @@ class FakeMarketingOs:
 
     def __init__(self, *pairs):
         self.biz, self.campaigns = {}, {}
+        self.libraries: dict[str, dict] = {}     # image-library item key -> mos-library-sources-v1
         for pair in pairs:
             self.add(*pair)
         self.calls: list[tuple] = []
@@ -398,6 +399,10 @@ class FakeMarketingOs:
 
     def campaign_sources(self, *, mos_workspace_id, visual_request, user_id=None):
         self._check()
+        if visual_request.get("source") == "library":
+            key = visual_request["library"]["item_key"]
+            self.calls.append(("campaign_sources", key))
+            return copy.deepcopy(self.libraries[key])
         self.calls.append(("campaign_sources", visual_request["placement_id"]))
         return self.campaigns[visual_request["placement_id"]].sources()
 

@@ -102,7 +102,8 @@ class ExportAndHandoff(unittest.TestCase):
         self.assertEqual(schema_errors(h, "mos-handoff-v1.schema.json"), [])
 
     def test_16x9_is_a_v2_only_preset(self):
-        """The bump is real: export-v1 cannot express 16:9, and v2 differs from v1 only in format."""
+        """The bump is real: export-v1 cannot express 16:9, and v2 differs from v1 only in format (and in allowing an
+        empty exact_copy for Marketing OS image-library exports, which carry no campaign copy)."""
         e = self.export("landscape")
         self.assertNotEqual(schema_errors(dict(e, schema_version="cs-export-v1"), "export-v1.schema.json"), [])
         v1_square = dict(self.export("square"), schema_version="cs-export-v1")
@@ -111,7 +112,9 @@ class ExportAndHandoff(unittest.TestCase):
         v1 = json.loads((root / "export-v1.schema.json").read_text())
         v2 = json.loads((root / "export-v2.schema.json").read_text())
         self.assertEqual({k for k in v1["properties"] if v1["properties"][k] != v2["properties"][k]},
-                         {"schema_version", "format"})
+                         {"schema_version", "format", "exact_copy"})
+        self.assertEqual({k: v for k, v in v2["properties"]["exact_copy"].items() if k not in ("minItems", "$comment")},
+                         {k: v for k, v in v1["properties"]["exact_copy"].items() if k != "minItems"})
         common = json.loads((root / "common.schema.json").read_text())["$defs"]
         self.assertNotIn("landscape_1920x1080", common["format"]["properties"]["preset"]["enum"])   # request/plan v1
 

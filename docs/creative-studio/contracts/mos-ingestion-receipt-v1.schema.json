@@ -64,8 +64,9 @@
             "items": {
               "$ref": "common.schema.json#/$defs/version_ref"
             },
-            "minItems": 1,
-            "maxItems": 30
+            "minItems": 0,
+            "maxItems": 30,
+            "$comment": "Empty only for image-library handoffs (target.library_item_key), which carry no campaign copy."
           }
         },
         "required": [

@@ -135,6 +135,66 @@
             "brand_rule_approval",
             "generation_eligibility"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "$comment": "Marketing OS image library (LibraryPack visual_library item): an approved, offer-level image brief with no campaign concept, copy, claims or destination. exact_copy is empty; the treatment direction is the brief's own.",
+          "properties": {
+            "kind": {
+              "const": "marketing-os-library"
+            },
+            "mos_workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "library": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "library_item_key": {
+              "type": "string",
+              "pattern": "^lib-[A-Za-z0-9_:.-]{1,200}$"
+            },
+            "library_approval": {
+              "$ref": "common.schema.json#/$defs/approval"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "brand_rule_revision": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/version_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "brand_rule_approval": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/approval"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "generation_eligibility": {
+              "$ref": "common.schema.json#/$defs/eligibility_receipt"
+            }
+          },
+          "required": [
+            "kind",
+            "mos_workspace_id",
+            "library",
+            "library_item_key",
+            "library_approval",
+            "policy",
+            "brand_rule_revision",
+            "brand_rule_approval",
+            "generation_eligibility"
+          ]
         }
       ]
     },
@@ -344,8 +404,9 @@
           "claim_refs"
         ]
       },
-      "minItems": 1,
-      "maxItems": 50
+      "minItems": 0,
+      "maxItems": 50,
+      "$comment": "At least one entry for every origin except marketing-os-library (image-library briefs carry no campaign copy); see allOf."
     },
     "formats": {
       "type": "array",
@@ -430,5 +491,40 @@
     "provider_selection",
     "budget",
     "constraints"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "origin": {
+            "properties": {
+              "kind": {
+                "const": "marketing-os-library"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "origin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exact_copy": {
+            "maxItems": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "exact_copy": {
+            "minItems": 1
+          }
+        }
+      }
+    }
   ]
 }

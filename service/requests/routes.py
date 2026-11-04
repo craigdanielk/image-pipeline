@@ -82,17 +82,22 @@ def register(api_cls, route):
                 raise ServiceError(502, "upstream_unavailable") from None
             if sources.get("workspace_id") != mos_ws or visual.get("workspace_id") != mos_ws:
                 raise ServiceError(403, "scope_mismatch")
-            pins = sources["content_pack"]["content"]["pins"]["value"]["brand_kit"]
+            library = mos_intake.is_library_request(visual)
+            pins = sources["brand_kit"] if library else sources["content_pack"]["content"]["pins"]["value"]["brand_kit"]
             pkg_row = store.package_for_source(cur, workspace_id, binding_id, pins["id"])
             if pkg_row is None:
-                raise ServiceError(409, "source_unavailable", "the BrandKit this ContentPack pins is not imported")
+                raise ServiceError(409, "source_unavailable", "the BrandKit these sources pin is not imported")
             package = {"document": pkg_row["payload"], "ref": package_version_ref(pkg_row["payload"]),
                        "source_artifact_id": str(pkg_row["source_version_id"])}
-            fields = mos_intake.build_request_fields(visual, sources, package)
+            if library:   # image-library brief: no concept/copy; MOS checks the approved LibraryPack instead
+                fields = mos_intake.build_library_request_fields(visual, sources, package, binding_id)
+                source_versions = [sources["library"]]
+            else:
+                fields = mos_intake.build_request_fields(visual, sources, package)
+                source_versions = [sources["concept"], sources["content_pack"]["ref"]] + fields["origin"]["copy_versions"]
             try:
                 receipt = gw.eligibility(mos_workspace_id=mos_ws, user_id=actor.user_id, action="generate",
-                                         source_versions=[sources["concept"], sources["content_pack"]["ref"]]
-                                         + fields["origin"]["copy_versions"])
+                                         source_versions=source_versions)
             except GatewayUnavailable:
                 raise ServiceError(502, "upstream_unavailable") from None
             fields["origin"]["generation_eligibility"] = receipt
@@ -100,7 +105,8 @@ def register(api_cls, route):
             saved = store.save_request(cur, workspace_id, request, if_match=None, key=_derived(key, "request"),
                                        digest=digest)
             request_ref = documents.version_ref(request, "creative-request")
-            treatment = documents.new_treatment(mos_intake.build_treatment_fields(sources, request_ref, package["ref"]),
+            build_treatment = mos_intake.build_library_treatment_fields if library else mos_intake.build_treatment_fields
+            treatment = documents.new_treatment(build_treatment(sources, request_ref, package["ref"]),
                                                 workspace_id=workspace_id, actor_id=actor.user_id)
             store.save_treatment(cur, workspace_id, treatment, if_match=None, key=_derived(key, "treatment"),
                                  digest=digest)
@@ -111,7 +117,7 @@ def register(api_cls, route):
             draft = documents.revised_draft({**draft, "revision": 0}, {
                 "step": "direction",
                 "selections": {"brand_package": package["ref"], "offering": sources["offering"]["source"],
-                               "audiences": sources["audiences"], "concept": sources["concept"],
+                               "audiences": sources["audiences"], "concept": None if library else sources["concept"],
                                "request": request_ref, "treatment": treatment_ref}})
             store.save_draft(cur, workspace_id, draft, 0)
         return 201, {"request": request_ref, "request_semantic_sha256": documents.request_semantic(request),
