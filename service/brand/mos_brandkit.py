@@ -42,6 +42,13 @@ class PackageBuild:
     files: list[dict]           # export file records to mirror (ref, name, mime, size...)
 
 
+
+def font_family_key(value: str) -> str:
+    """First family of a CSS font stack, unquoted, whitespace-collapsed, lower-case."""
+    m = re.match(r"""^\s*(?:"([^"]+)"|'([^']+)'|([^,]+))""", value or "")
+    name = next((g for g in (m.groups() if m else ()) if g), "")
+    return re.sub(r"\s+", " ", name.strip()).lower()
+
 def slug(value: str, prefix: str = "x") -> str:
     s = re.sub(r"[^a-z0-9_-]+", "-", value.lower()).strip("-")
     if not s or not s[0].isalpha():
@@ -169,7 +176,10 @@ def build_package(export: dict) -> PackageBuild:
     typography, decisions, rules = [], [], []
     for item in font_values or []:
         family = item["family"]
-        font_files = [f["ref"] for f in files if f.get("kind") == "font" and f.get("font_family") == family]
+        # Match by the first family of a CSS font stack, quotes and case ignored (as MOS's fontFamilyKey does):
+        # the BrandKit says "Montserrat, system-ui, …" while the file is labelled "Montserrat" or '"DM Sans"'.
+        font_files = [f["ref"] for f in files if f.get("kind") == "font"
+                      and font_family_key(f.get("font_family") or "") == font_family_key(family)]
         fid = slug(f"{family}-{item.get('role', 'text')}", "font")
         if not font_files:
             decisions.append({"id": slug(f"font-missing-{fid}"),

@@ -107,6 +107,20 @@ class BrandAdapterTests(unittest.TestCase):
         self.assertEqual({l["role"] for l in a.document["logos"]}, {"primary", "monochrome"})
         self.assertTrue(all(l["allow_crop"] is False and l["allow_distort"] is False for l in a.document["logos"]))
 
+    def test_font_files_match_a_css_font_stack(self):
+        """Marketing OS BrandKits store the family as a CSS stack ("X, system-ui, …") and files as "X" or '"X"'."""
+        base = self.build()
+
+        def as_stack(b):
+            for item in b.content["fonts"]["value"]:
+                item["family"] = f"{item['family']}, system-ui, -apple-system, sans-serif"
+            for f in b.files:
+                if f["kind"] == "font":
+                    f["font_family"] = f'"{f["font_family"]}"'
+        stacked = self.build(as_stack)
+        self.assertEqual(len(stacked.document["typography"]), len(base.document["typography"]))
+        self.assertTrue(all(t["font_assets"] for t in stacked.document["typography"]))
+
     def test_typed_refusals(self):
         self.refused(lambda b: setattr(b, "status", "draft"), "brand_not_approved")
         self.refused(lambda b: setattr(b, "current", {"version_id": fx.uid("x"), "revision": 2, "status": "approved"}),
