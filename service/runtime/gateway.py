@@ -24,6 +24,17 @@ MOS_AUDIENCE = "marketing-os"
 ASSERTION_TTL_SECONDS = 60
 
 
+
+def _refusal_code(exc) -> str:
+    """Marketing OS's machine-readable refusal reason from an HTTP error body ({"error"|"code": ...}), sanitised."""
+    import re
+    try:
+        body = json.loads(exc.read(4096).decode() or "{}")
+    except Exception:
+        return f"marketing_os_refused_{exc.code}"
+    raw = body.get("code") or body.get("error") or f"marketing_os_refused_{exc.code}"
+    return re.sub(r"[^A-Za-z0-9_.:-]", "_", str(raw))[:80]
+
 class GatewayRefused(GatewayUnavailable):
     """Marketing OS answered with a definite 4xx: not retryable, never delivery."""
 
@@ -145,6 +156,11 @@ class HttpMarketingOsGateway:
         try:
             with self._open(req, timeout=20) as resp:
                 return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as exc:
+            if 400 <= exc.code < 500 and exc.code not in (408, 429):
+                # A definite Marketing OS refusal: keep its reason code (e.g. library_offer_cap_missing) for the caller.
+                raise GatewayRefused(exc.code, _refusal_code(exc)) from None
+            raise GatewayUnavailable(f"failed to fetch campaign sources: HTTP {exc.code}") from None
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             raise GatewayUnavailable(f"failed to fetch campaign sources: {exc}") from None
 

@@ -78,7 +78,10 @@ def register(api_cls, route):
                              "replayed": True}
             try:
                 sources = gw.campaign_sources(mos_workspace_id=mos_ws, visual_request=visual, user_id=actor.user_id)
-            except GatewayUnavailable:
+            except GatewayUnavailable as exc:
+                refused = getattr(exc, "refused_status", None)
+                if refused:                       # Marketing OS said no, and why: pass the reason through
+                    raise ServiceError(409, "source_refused", str(exc)) from None
                 raise ServiceError(502, "upstream_unavailable") from None
             if sources.get("workspace_id") != mos_ws or visual.get("workspace_id") != mos_ws:
                 raise ServiceError(403, "scope_mismatch")
