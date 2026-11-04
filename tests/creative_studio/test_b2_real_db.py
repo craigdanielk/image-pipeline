@@ -201,6 +201,13 @@ class CsB2RealDatabase(unittest.TestCase):
                     idem=str(uuid.uuid4()), body={"version": tref}, headers={"HTTP_IF_MATCH": f'"{tref["sha256"]}"'})
 
     # -- 01 schema hygiene ---------------------------------------------------------
+    def test_00_imports_are_signed_for_the_person_who_started_them(self):
+        """An import has no run; its MOS callbacks must still carry the operation's creator (unsigned calls are
+        refused by Marketing OS with 401, which kept every hosted import queued)."""
+        users = getattr(self.gw, "export_users", [])
+        self.assertTrue(users, "setup imported at least one brand package")
+        self.assertTrue(all(users), users)
+
     def test_01_migrations_and_hygiene(self):
         self.assertIn(B2_MIGRATION.name, self.applied)          # applied, in filename order (CS-INT)
         self.assertEqual(self.applied, sorted(self.applied))

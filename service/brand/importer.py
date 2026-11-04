@@ -74,11 +74,13 @@ def make_import_handler(settings: Settings, gateway: MarketingOsGateway, writer:
         lease = _lease(item)
         with worker_transaction(settings.worker_database_url) as cur:
             cur.execute("""select w.payload_ref, w.operation_id, b.external_workspace_id, b.authority::text as authority,
-                                  r.requested_by
+                                  coalesce(r.requested_by, o.created_by) as requested_by
                              from public.cs_work_items w
                              join public.cs_external_bindings b
                                on b.workspace_id = w.workspace_id and b.id = (w.payload_ref ->> 'binding_id')::uuid
                              left join public.cs_runs r on r.workspace_id = w.workspace_id and r.id = w.run_id
+                             -- an import is operation-owned (no run): its requester is whoever started the operation
+                             left join public.cs_operations o on o.workspace_id = w.workspace_id and o.id = w.operation_id
                             where w.id = %s""", (lease[0],))
             row = cur.fetchone()
         package_ref = row["payload_ref"]["package_ref"]

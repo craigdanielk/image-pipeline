@@ -389,6 +389,7 @@ class FakeMarketingOs:
     def export_brand_kit(self, *, mos_workspace_id, artifact_id, user_id=None):
         self._check()
         self.calls.append(("export_brand_kit", mos_workspace_id, artifact_id))
+        self.export_users = getattr(self, "export_users", []) + [user_id]   # who each export was signed for
         return self.biz[mos_workspace_id].export()
 
     def fetch_asset(self, *, mos_workspace_id, ref, purpose, max_bytes, user_id=None):
