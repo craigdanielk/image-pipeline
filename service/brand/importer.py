@@ -148,7 +148,9 @@ def _mirror(settings, gateway, writer, item, lease, mos_ws, f: dict, requester: 
         raise InputRefusal("asset_hash_mismatch", f"{f['name']}: exceeds size bound")
     digest = hashlib.sha256(data).hexdigest()
     if digest != ref["sha256"] or len(data) != f["size_bytes"]:
-        raise InputRefusal("asset_hash_mismatch", f"{f['name']}: received bytes differ from the declared version")
+        raise InputRefusal("asset_hash_mismatch", f"{f['name']}: received bytes differ from the declared version "
+                           f"(received {len(data)} bytes sha256 {digest[:12]}, declared {f['size_bytes']} bytes "
+                           f"sha256 {ref['sha256'][:12]}; starts {data[:16].hex()})")
     asset_id, version_id = str(uuid.uuid4()), str(uuid.uuid4())
     key = f"{settings.environment_id}/{ws}/{asset_id}/{version_id}/{digest}.{ext}"
     writer.put(key, data, ref["mime_type"])      # bytes durable before the version row exists
