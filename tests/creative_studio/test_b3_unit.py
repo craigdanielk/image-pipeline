@@ -238,6 +238,38 @@ class EntryTests(unittest.TestCase):
                          ("503", {"error": "worker_secret_unconfigured"}))
 
 
+class HostedBrandImportTests(EntryTests):
+    """The hosted worker claims import_brand_package first (it never did; imports stayed queued forever)."""
+    SETTINGS = SimpleNamespace(worker_secret="s", worker_database_url="x", mos_gateway_url="https://mos.test",
+                               mos_assertion_key="k", mos_service_token=None, environment_id="production")
+
+    def app(self, settings):
+        return make_runtime_wsgi(lambda: settings, store_factory=lambda s: object(), keyring_loader=lambda: None)
+
+    def test_due_import_is_executed_before_provider_work(self):
+        done = {"claimed": 1, "status": "finished", "work_item_id": "w1"}
+        with mock.patch("service.brand.importer.run_import_once", return_value=done) as imp, \
+             mock.patch("service.runtime.entry.ProviderRuntime") as runtime:
+            self.assertEqual(self.call(self.app(self.SETTINGS)), ("200", done))
+        imp.assert_called_once()
+        runtime.assert_not_called()
+
+    def test_no_import_due_falls_through_to_provider_runtime(self):
+        with mock.patch("service.brand.importer.run_import_once", return_value={"claimed": 0, "status": "idle"}), \
+             mock.patch("service.runtime.entry.ProviderRuntime") as runtime:
+            runtime.return_value.run_once.return_value = {"claimed": 0, "status": "idle", "reason": "no_due_work"}
+            self.assertEqual(self.call(self.app(self.SETTINGS))[1]["reason"], "no_due_work")
+        runtime.return_value.run_once.assert_called_once()
+
+    def test_without_a_mos_gateway_no_import_is_attempted(self):
+        settings = SimpleNamespace(**{**vars(self.SETTINGS), "mos_gateway_url": None})
+        with mock.patch("service.brand.importer.run_import_once") as imp, \
+             mock.patch("service.runtime.entry.ProviderRuntime") as runtime:
+            runtime.return_value.run_once.return_value = {"claimed": 0, "status": "idle"}
+            self.call(self.app(settings))
+        imp.assert_not_called()
+
+
 class LeakageTests(unittest.TestCase):
     def test_no_acceptance_set_names_in_b3_files(self):
         self.assertTrue(len(B3_FILES) > 10)

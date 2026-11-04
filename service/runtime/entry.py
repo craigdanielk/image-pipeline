@@ -33,6 +33,20 @@ def _postrun(settings, store):
     return PostRunRuntime(settings, store, gateway=gateway)
 
 
+def _brand_import(settings, store):
+    """CS-B2 ``import_brand_package`` on the hosted worker. Every media request starts by importing the client's
+    brand package; the hosted worker never claimed that stage, so imports stayed queued forever and no media could
+    be prepared. One POST still executes at most one work item: a due import goes first (free, a prerequisite)."""
+    if not (settings.mos_gateway_url and settings.mos_assertion_key):
+        return None
+    from ..brand.importer import run_import_once
+    from .gateway import HttpMarketingOsGateway
+    gateway = HttpMarketingOsGateway(settings.mos_gateway_url, settings.mos_service_token,
+                                     assertion_key=settings.mos_assertion_key)
+    result = run_import_once(settings, gateway, store)
+    return result if result.get("claimed", 1) else None
+
+
 def make_runtime_wsgi(settings_loader, store_factory=None, fetcher=None, keyring_loader=KeyRing.from_env):
     def app(environ, start_response):
         status, payload = 500, {"error": "internal_error"}
@@ -49,9 +63,13 @@ def make_runtime_wsgi(settings_loader, store_factory=None, fetcher=None, keyring
             if store_factory is None:
                 raise ServiceError(503, "object_store_unconfigured")
             store = store_factory(settings)
-            runtime = ProviderRuntime(settings, store, fetcher or HttpOutputFetcher(), keyring_loader(),
-                                      postrun=_postrun(settings, store))
-            status, payload = 200, runtime.run_once()
+            imported = _brand_import(settings, store)
+            if imported is not None:
+                status, payload = 200, imported
+            else:
+                runtime = ProviderRuntime(settings, store, fetcher or HttpOutputFetcher(), keyring_loader(),
+                                          postrun=_postrun(settings, store))
+                status, payload = 200, runtime.run_once()
         except ServiceError as err:
             status, payload = err.status, err.body()
         except CredentialError as err:
