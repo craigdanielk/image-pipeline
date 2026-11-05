@@ -1,0 +1,967 @@
+{
+ "expected": {
+  "format": {
+   "channel": "instagram,facebook",
+   "count": 1,
+   "duration_frames": null,
+   "frame_rate": null,
+   "height_px": 1080,
+   "id": "square_1080-slot-1",
+   "kind": "image",
+   "mime_type": "image/png",
+   "preset": "square_1080",
+   "width_px": 1080
+  },
+  "lane": "studio-offering",
+  "legacy_inputs": {
+   "creative_spec_scene": {
+    "campaign": {
+     "id": "4b5a1208-b586-4768-abaf-5db09f58add6",
+     "label": "Never wait all day for a technician",
+     "style": "Documentary photography, warm and honest"
+    },
+    "id": "cs-4b5a1208-r1",
+    "scene": {
+     "camera": "35mm, eye level, shallow depth of field",
+     "composition": "Subject on the left third, open sky on the right for overlays",
+     "description": "A technician arriving on time at a tidy family home. Front porch of a suburban home in the morning, technician with a tool bag greeting the homeowner at the door",
+     "lighting": "Soft morning daylight"
+    },
+    "schema_version": "creative-spec-v2"
+   },
+   "product_spec": null
+  },
+  "mapping_sha256": "42aa3cb42571c2aa57384cf610a50e7beeabfe4130a0c9def59ee2ae88f04f0c",
+  "mapping_version": "cs-b2-compile-mapping-v1",
+  "offering_kind": "service",
+  "provider_prompt": {
+   "input_assets": {
+    "input_images": [],
+    "references": []
+   },
+   "metadata": {
+    "composition": "Subject on the left third, open sky on the right for overlays",
+    "content_hash": "fe013458155488742a1b5f3ddf19d00a6044a0ee839a92fc2ecc68e57b0f8a2d",
+    "creative_spec_id": "cs-4b5a1208-r1",
+    "edit_spec_ids": [],
+    "execution_id": "cs-4b5a1208-square-1080-slot-1",
+    "placeholders_resolved": {}
+   },
+   "negative": "No uniform logos. No readable text on clothing. No stock-photo handshakes. No cheapest. No guaranteed.",
+   "positive": "A technician arriving on time at a tidy family home. Front porch of a suburban home in the morning, technician with a tool bag greeting the homeowner at the door. Lighting: Soft morning daylight. Camera: 35mm, eye level, shallow depth of field. Composition: Subject on the left third, open sky on the right for overlays. Offering: Annual maintenance plan \u2014 Two scheduled inspections a year with a fixed quote before any repair work starts. Value: Fixed quote before work starts. Value: Arrival windows you can plan around. Callout: Same-day callout in the service area. Visits: Two inspections a year. Imagery: Real people in real settings, natural light. Brand palette: primary #0B5FFF, accent #FFB000, background #F7F7F5. Leave clean, uncluttered space for the brand logo and exact body, cta, headline overlays; do not render any text, letters or logos in the image.",
+   "schema_version": "provider-prompt-v1"
+  },
+  "sources": {
+   "brand_package_sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819",
+   "request_semantic_sha256": "7661c80df886622f004a372173fe574bd6702a9dec60528c0acdc176054a296b",
+   "treatment_semantic_sha256": "7cfaf7d7b809a3d9aa6d96fc22ee024254c96824ac580e8000bf764bd095d363"
+  }
+ },
+ "package": {
+  "approval": {
+   "actor_id": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+   "actor_role": "owner",
+   "approved_at": "2026-10-30T16:00:00.000Z",
+   "authority": "marketing-os",
+   "decision": "approved",
+   "policy_revision": "mos-envelope-approval-v1",
+   "receipt_id": "2c33d7d1-d5a1-595c-a1ea-2078eab2fa9e",
+   "sha256": "b5c6573da55af02829bdfa470c3f1673141027ba4d452a87d3c92b4781c2ea36",
+   "subject": {
+    "authority": "marketing-os",
+    "id": "9b918fe6-d29b-5672-84fe-4f41920bffca",
+    "kind": "BrandKit",
+    "revision": 1,
+    "sha256": "9029a62675482f23ee713149406d09f1c4c2e309862c6e94ba3de4565c468465",
+    "version_id": "9b918fe6-d29b-5672-84fe-4f41920bffca",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+  },
+  "assets": [
+   {
+    "captured_at": "2026-10-30T12:00:00.000Z",
+    "duration_ms": null,
+    "height_px": 512,
+    "name": "logo-primary.png",
+    "origin": "upload",
+    "parent_assets": [],
+    "ref": {
+     "asset_id": "e00dd6ea-c7b7-5ddf-a030-53b6f18c265d",
+     "asset_version_id": "e00dd6ea-c7b7-5ddf-a030-53b6f18c265d",
+     "authority": "marketing-os",
+     "mime_type": "image/png",
+     "revision": 1,
+     "sha256": "3f4723511cc33bca54fbabfe352fd0e644443ab5373e157444561fc84cec5df2",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "rights": {
+     "allowed_uses": [
+      "reference",
+      "generate",
+      "edit",
+      "embed",
+      "redistribute"
+     ],
+     "attribution": null,
+     "basis": "owned",
+     "channels": [
+      "*"
+     ],
+     "evidence": [],
+     "expires_at": null,
+     "holder": "Brand owner",
+     "receipt_id": "24cfa2c0-1e70-5121-aaaa-44ca64ba5ca4",
+     "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+     "restrictions": [],
+     "revision": 1,
+     "sha256": "7bb2ee62f27c81f0d45bf47536d87ee2da61ffabdaf0f820532b5450660d0a07",
+     "status": "permitted",
+     "territories": [
+      "*"
+     ],
+     "valid_from": "2026-10-30T12:00:00.000Z"
+    },
+    "size_bytes": 188,
+    "source_url": "https://example-home-services.test/brand/logo-primary",
+    "width_px": 512
+   },
+   {
+    "captured_at": "2026-10-30T12:00:00.000Z",
+    "duration_ms": null,
+    "height_px": 512,
+    "name": "logo-mono.png",
+    "origin": "upload",
+    "parent_assets": [],
+    "ref": {
+     "asset_id": "b73ec039-85fb-5070-94a5-116bd21bba8e",
+     "asset_version_id": "b73ec039-85fb-5070-94a5-116bd21bba8e",
+     "authority": "marketing-os",
+     "mime_type": "image/png",
+     "revision": 1,
+     "sha256": "2a3062ca58adf26d8ba686d47c1fb2d310d41789430f04147bb60d84ad356ca3",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "rights": {
+     "allowed_uses": [
+      "reference",
+      "generate",
+      "edit",
+      "embed",
+      "redistribute"
+     ],
+     "attribution": null,
+     "basis": "owned",
+     "channels": [
+      "*"
+     ],
+     "evidence": [],
+     "expires_at": null,
+     "holder": "Brand owner",
+     "receipt_id": "e6e683bb-f8e6-5462-8871-dcc61271b15f",
+     "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+     "restrictions": [],
+     "revision": 1,
+     "sha256": "800441b60504fa26cac43a47c937228c4903a8a6f3c8799452a9068b2975fa5b",
+     "status": "permitted",
+     "territories": [
+      "*"
+     ],
+     "valid_from": "2026-10-30T12:00:00.000Z"
+    },
+    "size_bytes": 176,
+    "source_url": "https://example-home-services.test/brand/logo-mono",
+    "width_px": 512
+   },
+   {
+    "captured_at": "2026-10-30T12:00:00.000Z",
+    "duration_ms": null,
+    "height_px": null,
+    "name": "font-Example Sans.ttf",
+    "origin": "upload",
+    "parent_assets": [],
+    "ref": {
+     "asset_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+     "asset_version_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+     "authority": "marketing-os",
+     "mime_type": "font/ttf",
+     "revision": 1,
+     "sha256": "fcbea38312582a2e9d623936445070c4e9eb75b2f0af4cb8f96a510208df0354",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "rights": {
+     "allowed_uses": [
+      "reference",
+      "generate",
+      "edit",
+      "embed",
+      "redistribute"
+     ],
+     "attribution": null,
+     "basis": "licence",
+     "channels": [
+      "*"
+     ],
+     "evidence": [],
+     "expires_at": null,
+     "holder": "Open font licence (OFL-1.1)",
+     "receipt_id": "1c7cd5f9-fe10-5749-843b-b1522b2c20e7",
+     "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+     "restrictions": [],
+     "revision": 1,
+     "sha256": "27d336be5bb5dd721bae41387fdde0deef32e06a4eaefb655d62131403d3ef1d",
+     "status": "permitted",
+     "territories": [
+      "*"
+     ],
+     "valid_from": "2026-10-30T12:00:00.000Z"
+    },
+    "size_bytes": 204,
+    "source_url": null,
+    "width_px": null
+   },
+   {
+    "captured_at": "2026-10-30T12:00:00.000Z",
+    "duration_ms": null,
+    "height_px": null,
+    "name": "guide-pdf.pdf",
+    "origin": "upload",
+    "parent_assets": [],
+    "ref": {
+     "asset_id": "177f1e1d-b84a-5dbf-afc6-1010c733f286",
+     "asset_version_id": "177f1e1d-b84a-5dbf-afc6-1010c733f286",
+     "authority": "marketing-os",
+     "mime_type": "application/pdf",
+     "revision": 1,
+     "sha256": "389df4c70bc26ce5c2b956d948cfb5584a8a8d112141fbb549ff21b773410bd4",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "rights": {
+     "allowed_uses": [
+      "reference",
+      "generate",
+      "edit",
+      "embed",
+      "redistribute"
+     ],
+     "attribution": null,
+     "basis": "owned",
+     "channels": [
+      "*"
+     ],
+     "evidence": [],
+     "expires_at": null,
+     "holder": "Brand owner",
+     "receipt_id": "d40991fd-4524-58e8-bada-0abb4a367f5a",
+     "recorded_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+     "restrictions": [],
+     "revision": 1,
+     "sha256": "d24a96031c69dfecb2e8d5e82c87644af9022b127cf484282d5078fd4b6a1cd7",
+     "status": "permitted",
+     "territories": [
+      "*"
+     ],
+     "valid_from": "2026-10-30T12:00:00.000Z"
+    },
+    "size_bytes": 177,
+    "source_url": null,
+    "width_px": null
+   }
+  ],
+  "authority": "brand-ci-studio",
+  "brand_id": "7a2604c7-6867-54b3-b23a-5d7110ad6176",
+  "brand_name": "Example Home Services Co",
+  "created_at": "2026-10-30T16:00:00.000Z",
+  "created_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+  "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+  "imagery": {
+   "principles": [
+    "Real people in real settings, natural light"
+   ],
+   "prohibited": [
+    "stock-photo handshakes"
+   ],
+   "reference_assets": []
+  },
+  "logos": [
+   {
+    "allow_crop": false,
+    "allow_distort": false,
+    "allowed_backgrounds": [
+     "light",
+     "brand-primary"
+    ],
+    "asset": {
+     "asset_id": "e00dd6ea-c7b7-5ddf-a030-53b6f18c265d",
+     "asset_version_id": "e00dd6ea-c7b7-5ddf-a030-53b6f18c265d",
+     "authority": "marketing-os",
+     "mime_type": "image/png",
+     "revision": 1,
+     "sha256": "3f4723511cc33bca54fbabfe352fd0e644443ab5373e157444561fc84cec5df2",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "clear_space_ratio": 0.5,
+    "id": "logo-primary",
+    "min_width_px": 96,
+    "role": "primary"
+   },
+   {
+    "allow_crop": false,
+    "allow_distort": false,
+    "allowed_backgrounds": [
+     "light",
+     "brand-primary"
+    ],
+    "asset": {
+     "asset_id": "b73ec039-85fb-5070-94a5-116bd21bba8e",
+     "asset_version_id": "b73ec039-85fb-5070-94a5-116bd21bba8e",
+     "authority": "marketing-os",
+     "mime_type": "image/png",
+     "revision": 1,
+     "sha256": "2a3062ca58adf26d8ba686d47c1fb2d310d41789430f04147bb60d84ad356ca3",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "clear_space_ratio": 0.5,
+    "id": "logo-mono",
+    "min_width_px": 96,
+    "role": "monochrome"
+   }
+  ],
+  "palette": [
+   {
+    "hex": "#0B5FFF",
+    "role": "primary",
+    "token": "color-primary"
+   },
+   {
+    "hex": "#FFB000",
+    "role": "accent",
+    "token": "color-accent"
+   },
+   {
+    "hex": "#F7F7F5",
+    "role": "background",
+    "token": "color-background"
+   }
+  ],
+  "revision": 1,
+  "schema_version": "brand-package-v1",
+  "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819",
+  "source": {
+   "approval_receipt_id": "2c33d7d1-d5a1-595c-a1ea-2078eab2fa9e",
+   "approved_pdf": {
+    "asset_id": "177f1e1d-b84a-5dbf-afc6-1010c733f286",
+    "asset_version_id": "177f1e1d-b84a-5dbf-afc6-1010c733f286",
+    "authority": "marketing-os",
+    "mime_type": "application/pdf",
+    "revision": 1,
+    "sha256": "389df4c70bc26ce5c2b956d948cfb5584a8a8d112141fbb549ff21b773410bd4",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "bci_revision": 2,
+   "bci_version_id": "78146752-5e5a-5845-8623-3d8ac93597df",
+   "document_created_by": "599cc4f5-fe59-5052-88b7-bfd35ec77f26",
+   "document_digest": "fa8a0dff85e5d1bea9d3c59526c2ff6ed184718f0d721f140f87de27aaa5cc6c",
+   "document_digest_algorithm": "sha256-js-json-stringify-v1",
+   "document_jcs_sha256": "37949b0ec769bb1a72a2e7f048fb2e0c87259ce9675666687d40cef9a5c6cb70",
+   "guide_document": {
+    "authority": "marketing-os",
+    "id": "78146752-5e5a-5845-8623-3d8ac93597df",
+    "kind": "brand-guide-revision",
+    "revision": 2,
+    "sha256": "37949b0ec769bb1a72a2e7f048fb2e0c87259ce9675666687d40cef9a5c6cb70",
+    "version_id": "78146752-5e5a-5845-8623-3d8ac93597df",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   }
+  },
+  "typography": [
+   {
+    "fallback_family": null,
+    "family": "Example Sans",
+    "font_assets": [
+     {
+      "asset_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+      "asset_version_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+      "authority": "marketing-os",
+      "mime_type": "font/ttf",
+      "revision": 1,
+      "sha256": "fcbea38312582a2e9d623936445070c4e9eb75b2f0af4cb8f96a510208df0354",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "example-sans-heading",
+    "role": "heading",
+    "weights": [
+     400,
+     700
+    ]
+   },
+   {
+    "fallback_family": null,
+    "family": "Example Sans",
+    "font_assets": [
+     {
+      "asset_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+      "asset_version_id": "661e66ad-d7af-5c5b-a60f-345f3179714a",
+      "authority": "marketing-os",
+      "mime_type": "font/ttf",
+      "revision": 1,
+      "sha256": "fcbea38312582a2e9d623936445070c4e9eb75b2f0af4cb8f96a510208df0354",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "example-sans-body",
+    "role": "body",
+    "weights": [
+     400,
+     700
+    ]
+   }
+  ],
+  "unresolved_decisions": [
+   {
+    "affected_asset_ids": [],
+    "blocks_compile": false,
+    "description": "tagline was not owner-verified in the approved BrandKit and is excluded from provider payloads",
+    "id": "unverified-tagline"
+   },
+   {
+    "affected_asset_ids": [],
+    "blocks_compile": false,
+    "description": "brand_values was not owner-verified in the approved BrandKit and is excluded from provider payloads",
+    "id": "unverified-brand_values"
+   }
+  ],
+  "usage_rules": [
+   {
+    "id": "cl-guaranteed-cheapest",
+    "instruction": "Never claim: Owner-prohibited claim: cheapest in town",
+    "severity": "required",
+    "source_path": "/content/prohibited_claims/value/0"
+   }
+  ],
+  "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+  "voice": {
+   "preferred_terms": [
+    "plain words"
+   ],
+   "principles": [
+    "calm",
+    "direct",
+    "practical"
+   ],
+   "prohibited_terms": [
+    "cheapest",
+    "guaranteed"
+   ]
+  },
+  "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+ },
+ "request": {
+  "audiences": [
+   {
+    "authority": "marketing-os",
+    "id": "68907d39-e500-5f50-9a18-bbb1a0410c49",
+    "kind": "Avatar",
+    "revision": 1,
+    "sha256": "bcbaa9b83325403bcb2a05f0b1d56fe67ab8bc94e71606ddb0e0d370465a1bb4",
+    "version_id": "88a3a0f4-1da1-5038-bfa3-73883e73c008",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   }
+  ],
+  "brand_package": {
+   "authority": "brand-ci-studio",
+   "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+   "kind": "brand-package",
+   "revision": 1,
+   "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819",
+   "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+   "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+  },
+  "budget": {
+   "credential_binding_id": "5a7fd799-1397-5c2f-9fae-c0106b62a9a6",
+   "currency": "USD",
+   "expires_at": "2026-12-31T00:00:00.000Z",
+   "funding_source": "workspace",
+   "max_cost_micros": 62500,
+   "policy": {
+    "authority": "marketing-os",
+    "id": "564e6527-55c0-572c-8d74-c2e2a28c6447",
+    "kind": "BudgetPolicy",
+    "revision": 1,
+    "sha256": "a7c3e843be3f044bf451abc76991b0e11a62a97c19f06d8a31014468560f84f8",
+    "version_id": "b32fa115-844d-5169-b5c1-a36d44e9ae7f",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   }
+  },
+  "constraints": {
+   "exact_copy_layers": true,
+   "exact_logo_layers": true,
+   "forbidden": [
+    "stock-photo handshakes",
+    "cheapest",
+    "guaranteed"
+   ],
+   "required": [
+    "Never claim: Owner-prohibited claim: cheapest in town"
+   ]
+  },
+  "created_at": "2026-11-05T08:27:39.409Z",
+  "created_by": "2573f1a9-c686-5408-b1f5-0d7d4d4b1af0",
+  "exact_copy": [
+   {
+    "claim_refs": [
+     {
+      "authority": "marketing-os",
+      "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+      "kind": "Claim",
+      "revision": 1,
+      "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476",
+      "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "v1-headline",
+    "language": "en-GB",
+    "role": "headline",
+    "source_copy": {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "text": "Your arrival window, kept"
+   },
+   {
+    "claim_refs": [
+     {
+      "authority": "marketing-os",
+      "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+      "kind": "Claim",
+      "revision": 1,
+      "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476",
+      "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "v1-body-short",
+    "language": "en-GB",
+    "role": "body",
+    "source_copy": {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "text": "Two inspections a year, fixed quotes, no waiting around."
+   },
+   {
+    "claim_refs": [
+     {
+      "authority": "marketing-os",
+      "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+      "kind": "Claim",
+      "revision": 1,
+      "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476",
+      "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "v1-body-medium",
+    "language": "en-GB",
+    "role": "body",
+    "source_copy": {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "text": "Two inspections a year and a fixed quote before any work starts."
+   },
+   {
+    "claim_refs": [
+     {
+      "authority": "marketing-os",
+      "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+      "kind": "Claim",
+      "revision": 1,
+      "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476",
+      "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "v1-body-long",
+    "language": "en-GB",
+    "role": "body",
+    "source_copy": {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "text": "Two inspections a year, a fixed quote before any work starts, and arrival windows you can plan your day around."
+   },
+   {
+    "claim_refs": [
+     {
+      "authority": "marketing-os",
+      "id": "d77a739d-7f5b-5e81-a8cc-30a7c3bceb0d",
+      "kind": "Claim",
+      "revision": 1,
+      "sha256": "2b462822e09783ef336650b9232044496f1f6e45ed83eee0407dd652319ab476",
+      "version_id": "abd48540-506b-5cda-9850-1f790422eec8",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "id": "v1-cta",
+    "language": "en-GB",
+    "role": "cta",
+    "source_copy": {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "text": "See the plan"
+   }
+  ],
+  "formats": [
+   {
+    "channel": "instagram,facebook",
+    "count": 1,
+    "duration_frames": null,
+    "frame_rate": null,
+    "height_px": 1080,
+    "id": "square_1080-slot-1",
+    "kind": "image",
+    "mime_type": "image/png",
+    "preset": "square_1080",
+    "width_px": 1080
+   }
+  ],
+  "hook": "Never wait all day for a technician",
+  "id": "4b5a1208-b586-4768-abaf-5db09f58add6",
+  "locale": "en-GB",
+  "objective": "Plan sign-ups in the service area",
+  "offering": {
+   "approved_claims": [
+    {
+     "authority": "marketing-os",
+     "id": "501bf236-3ab6-549d-9ebf-28d95b211479",
+     "kind": "Claim",
+     "revision": 1,
+     "sha256": "f71bf2186f27effb0ed1d988bf9b73d3afbeea87591a2de122d9a7e380d065df",
+     "version_id": "787b2373-49c4-51e0-85df-9e44b5130037",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    }
+   ],
+   "kind": "service",
+   "name": "Annual maintenance plan",
+   "physical_product_spec": null,
+   "service_facts": [
+    {
+     "id": "visits",
+     "label": "Visits",
+     "source": {
+      "authority": "marketing-os",
+      "id": "3b574bf7-8226-5482-a60a-804d306b3524",
+      "kind": "Offer",
+      "revision": 1,
+      "sha256": "d0239536dad6d1c7b4546767e70e6cc1e75734af4f5d7c73a6587844893266d7",
+      "version_id": "195a6340-abde-52c8-a414-a5b94c86514c",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     },
+     "value": "Two inspections a year"
+    },
+    {
+     "id": "callout",
+     "label": "Callout",
+     "source": {
+      "authority": "marketing-os",
+      "id": "501bf236-3ab6-549d-9ebf-28d95b211479",
+      "kind": "Claim",
+      "revision": 1,
+      "sha256": "f71bf2186f27effb0ed1d988bf9b73d3afbeea87591a2de122d9a7e380d065df",
+      "version_id": "787b2373-49c4-51e0-85df-9e44b5130037",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     },
+     "value": "Same-day callout in the service area"
+    }
+   ],
+   "source": {
+    "authority": "marketing-os",
+    "id": "3b574bf7-8226-5482-a60a-804d306b3524",
+    "kind": "Offer",
+    "revision": 1,
+    "sha256": "d0239536dad6d1c7b4546767e70e6cc1e75734af4f5d7c73a6587844893266d7",
+    "version_id": "195a6340-abde-52c8-a414-a5b94c86514c",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "summary": "Two scheduled inspections a year with a fixed quote before any repair work starts.",
+   "value_propositions": [
+    "Fixed quote before work starts",
+    "Arrival windows you can plan around"
+   ]
+  },
+  "origin": {
+   "brand_rule_approval": null,
+   "brand_rule_revision": null,
+   "campaign_brief": {
+    "authority": "marketing-os",
+    "id": "dd2f30b9-7583-503f-9ab7-5fbdbb08ee3a",
+    "kind": "CampaignPlan",
+    "revision": 1,
+    "sha256": "6725c1441bab64a49194678bdcfaaa7a3c537163964a54a1e95e288f167b6f5e",
+    "version_id": "3fc207ce-f439-517d-a9e1-89ccc9c93965",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "claim_set": {
+    "authority": "marketing-os",
+    "id": "87f631e9-4e14-51d4-a6cc-188f797e6d0a",
+    "kind": "ClaimSet",
+    "revision": 1,
+    "sha256": "083b168773cd49acfd52a10ca53d6443f1aef517464026e1997fdb51528c1150",
+    "version_id": "a6d0ae4e-0ac7-52d3-ae6f-c3d086388154",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "concept": {
+    "authority": "marketing-os",
+    "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+    "kind": "Concept",
+    "revision": 1,
+    "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72",
+    "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "concept_approval": {
+    "actor_id": "1df9ce1f-c0b9-59ad-9064-7a743b134a01",
+    "actor_role": "reviewer",
+    "approved_at": "2026-10-30T16:00:00.000Z",
+    "authority": "marketing-os",
+    "decision": "approved",
+    "policy_revision": "mos-concept-approval-v1",
+    "receipt_id": "2a7dbc23-11cc-5271-9e32-0e42d9f34ec7",
+    "sha256": "58aa139f7cd2b69a63d24163ee2e8737ac6cec05ba9e67094e7fe4383159861b",
+    "subject": {
+     "authority": "marketing-os",
+     "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+     "kind": "Concept",
+     "revision": 1,
+     "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72",
+     "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "copy_versions": [
+    {
+     "authority": "marketing-os",
+     "id": "94969fa6-ddf3-5b11-ad6b-fa94be84ada6",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "b6fc9fe8f235a27c7e79306237849b606524cfd691ca0354408781c21a74c8a2",
+     "version_id": "d901b3ea-2eaf-5fc3-8475-5cf54c437686",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    {
+     "authority": "marketing-os",
+     "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+     "kind": "CopyVersion",
+     "revision": 1,
+     "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+     "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    }
+   ],
+   "destination": {
+    "authority": "marketing-os",
+    "id": "386b25b0-0fd3-55e7-80fc-8610aaaa4ce6",
+    "kind": "Destination",
+    "revision": 1,
+    "sha256": "779b5bc09f11f72e184e060fee25f44df519122a6e356e75c47a24d1075f0d0b",
+    "version_id": "1b47fa7c-ca22-586d-968b-920c335e2993",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "generation_eligibility": {
+    "action": "generate",
+    "actor_id": "0b58228e-1746-5a33-ba75-8d285820170b",
+    "approval_receipt_ids": [],
+    "authority": "marketing-os",
+    "checked_at": "2026-10-31T08:59:30Z",
+    "decision": "allowed",
+    "id": "995a77d5-a0eb-508e-b773-098891f97034",
+    "policy": {
+     "authority": "marketing-os",
+     "id": "da27a623-578d-5aac-8df4-2356e7abacd6",
+     "kind": "GenerationPolicy",
+     "revision": 1,
+     "sha256": "c8d809a503122e65301f715a59e69952b64d17ccd6c657aaf64b295ec47408bb",
+     "version_id": "d1b65e5f-f04f-57da-bdb7-5f56d07a61c8",
+     "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+    },
+    "reason_codes": [],
+    "sha256": "8466c021a6184a9994a9eca5d75f2f1cd43097c4cf5c83bab972570f92f508c5",
+    "source_versions": [
+     {
+      "authority": "marketing-os",
+      "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+      "kind": "Concept",
+      "revision": 1,
+      "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72",
+      "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     },
+     {
+      "authority": "marketing-os",
+      "id": "6b7be4ee-6f36-59ae-9828-36af052c2c4d",
+      "kind": "ContentPack",
+      "revision": 1,
+      "sha256": "626b236bbcc522dad8f517120161e51cc3edffd68914448db27310e21ebfd217",
+      "version_id": "f41542d9-dcab-5b8a-8e31-eb09e41fbe67",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     },
+     {
+      "authority": "marketing-os",
+      "id": "94969fa6-ddf3-5b11-ad6b-fa94be84ada6",
+      "kind": "CopyVersion",
+      "revision": 1,
+      "sha256": "b6fc9fe8f235a27c7e79306237849b606524cfd691ca0354408781c21a74c8a2",
+      "version_id": "d901b3ea-2eaf-5fc3-8475-5cf54c437686",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     },
+     {
+      "authority": "marketing-os",
+      "id": "c0a81f8a-b26f-5ea7-99f2-088e58202615",
+      "kind": "CopyVersion",
+      "revision": 1,
+      "sha256": "34d4856e6c392ee1c531776363fbebc20bf7546f62d3c0d4cc9fd11797afb7b7",
+      "version_id": "e14e24ac-452d-51f7-b106-be687662775f",
+      "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+     }
+    ],
+    "valid_until": "2026-10-31T09:00:30Z",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "kind": "marketing-os",
+   "mos_workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5",
+   "placement": {
+    "authority": "marketing-os",
+    "id": "6b7be4ee-6f36-59ae-9828-36af052c2c4d",
+    "kind": "ContentPack",
+    "revision": 1,
+    "sha256": "626b236bbcc522dad8f517120161e51cc3edffd68914448db27310e21ebfd217",
+    "version_id": "f41542d9-dcab-5b8a-8e31-eb09e41fbe67",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   "policy": {
+    "authority": "marketing-os",
+    "id": "12f8431a-b794-5ee4-84f3-8607d43aa603",
+    "kind": "GenerationPolicy",
+    "revision": 1,
+    "sha256": "45ae3a9de84d9b55e3451187369001edd9a54da50bf8fe57788ff44ff40d7c1b",
+    "version_id": "5887cd45-3215-515e-8d69-ada2c43718ce",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   }
+  },
+  "provider_selection": {
+   "max_unit_cost_micros": 62500,
+   "mode": "auto",
+   "model_id": null,
+   "provider": null,
+   "quality": "standard"
+  },
+  "references": [],
+  "revision": 1,
+  "schema_version": "cs-creative-request-v1",
+  "sha256": "e0df48155448ff9d92b76cbd09e13cc232e0fdd12e5e927f54a9a6d5e03d138c",
+  "version_id": "aeb997f5-71ac-46a8-b5a7-6d5d33e76e49",
+  "workspace_id": "6ae31c72-08fe-5290-a18a-87318f702277"
+ },
+ "treatment": {
+  "accepted_at": "2026-11-05T08:27:39.417Z",
+  "accepted_by": "2573f1a9-c686-5408-b1f5-0d7d4d4b1af0",
+  "authorship": {
+   "attempt_id": null,
+   "kind": "human",
+   "model_id": null,
+   "operation_id": null,
+   "prompt_template": null,
+   "raw_response_sha256": null
+  },
+  "created_at": "2026-11-05T08:27:39.417Z",
+  "created_by": "2573f1a9-c686-5408-b1f5-0d7d4d4b1af0",
+  "direction": {
+   "camera": "35mm, eye level, shallow depth of field",
+   "composition": "Subject on the left third, open sky on the right for overlays",
+   "lighting": "Soft morning daylight",
+   "negative": [
+    "uniform logos",
+    "readable text on clothing"
+   ],
+   "scene": "Front porch of a suburban home in the morning, technician with a tool bag greeting the homeowner at the door",
+   "style": "Documentary photography, warm and honest",
+   "summary": "A technician arriving on time at a tidy family home"
+  },
+  "id": "8b9f663b-770e-4aa5-97ed-df2c018ebf77",
+  "revision": 2,
+  "schema_version": "cs-treatment-v1",
+  "sha256": "7ca0abcdcd48dff1bd60333bc23ef9687f35a8c099419dea8864b9a596f46365",
+  "shots": [],
+  "source_request": {
+   "authority": "creative-studio",
+   "id": "4b5a1208-b586-4768-abaf-5db09f58add6",
+   "kind": "creative-request",
+   "revision": 1,
+   "sha256": "e0df48155448ff9d92b76cbd09e13cc232e0fdd12e5e927f54a9a6d5e03d138c",
+   "version_id": "aeb997f5-71ac-46a8-b5a7-6d5d33e76e49",
+   "workspace_id": "6ae31c72-08fe-5290-a18a-87318f702277"
+  },
+  "sources": [
+   {
+    "authority": "marketing-os",
+    "id": "7c8eb52c-68b0-5a89-be91-7e58fdbf3f60",
+    "kind": "Concept",
+    "revision": 1,
+    "sha256": "7222dbfe707fdd7221ca7388c1354386e18c7a29b750278888d461cb59a2df72",
+    "version_id": "98a2dccf-0a6e-5e07-8142-cda1d8143f98",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   {
+    "authority": "marketing-os",
+    "id": "6b7be4ee-6f36-59ae-9828-36af052c2c4d",
+    "kind": "ContentPack",
+    "revision": 1,
+    "sha256": "626b236bbcc522dad8f517120161e51cc3edffd68914448db27310e21ebfd217",
+    "version_id": "f41542d9-dcab-5b8a-8e31-eb09e41fbe67",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   },
+   {
+    "authority": "brand-ci-studio",
+    "id": "255867da-8192-57e8-a887-ca1db5a9a887",
+    "kind": "brand-package",
+    "revision": 1,
+    "sha256": "28ad0cf7ebd6c24d074ac3caabf170740cad6fcffefdfa4367c02339f01fe819",
+    "version_id": "17b2d6ed-3ef3-5d71-92ce-d2425029a336",
+    "workspace_id": "c4d2d0f7-5452-5807-84ee-2b0d2dd0d0f5"
+   }
+  ],
+  "status": "accepted",
+  "version_id": "b82e49c6-6693-43b2-a857-dd2306869d94",
+  "workspace_id": "6ae31c72-08fe-5290-a18a-87318f702277"
+ }
+}
