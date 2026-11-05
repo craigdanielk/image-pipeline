@@ -129,12 +129,20 @@ def register(api_cls, route):
             contracts.validate_def(package, "version_ref")
         except contracts.ContractViolation as exc:
             raise ServiceError(422, "invalid_package_ref", ",".join(exc.field_paths)) from None
-        _, tx = self._tx(req)
-        with tx as cur:
-            cur.execute("select * from public.cs_admit_brand_import(%s,%s,%s,%s,%s,%s,%s)",
-                        (workspace_id, binding, json.dumps(package), self.settings.environment_id,
-                         self.settings.release_id, key, digest))
-            row = cur.fetchone()
+        # Two identical imports can race (MOS prepares several posts at once); the loser hits a unique key. Retrying
+        # once reads the winner's committed row and returns it as a replay.
+        for attempt in (1, 2):
+            try:
+                _, tx = self._tx(req)
+                with tx as cur:
+                    cur.execute("select * from public.cs_admit_brand_import(%s,%s,%s,%s,%s,%s,%s)",
+                                (workspace_id, binding, json.dumps(package), self.settings.environment_id,
+                                 self.settings.release_id, key, digest))
+                    row = cur.fetchone()
+                break
+            except Exception as exc:  # noqa: BLE001 - only a unique-key race is retried; anything else re-raises
+                if attempt == 2 or (getattr(exc, "sqlstate", None) or getattr(exc, "pgcode", None)) != "23505":
+                    raise
         return (200 if row["replayed"] else 202), {
             "operation_id": row["operation_id"], "state": row["state"], "replayed": row["replayed"],
             "location": f"/api/v1/workspaces/{workspace_id}/operations/{row['operation_id']}"}
