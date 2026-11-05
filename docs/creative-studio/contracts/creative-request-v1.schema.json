@@ -430,6 +430,34 @@
     "budget": {
       "$ref": "common.schema.json#/$defs/budget"
     },
+    "shot_spec": {
+      "$comment": "Optional structured shot from the creative catalogue (mos-shot-spec-v1). When present the compiler builds a short photographic prompt from it instead of prose direction.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "catalogue_version", "format_id", "shot_id", "canvas", "slots", "client"],
+      "properties": {
+        "schema_version": {"const": "mos-shot-spec-v1"},
+        "catalogue_version": {"type": "string", "minLength": 1, "maxLength": 40},
+        "format_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "shot_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "canvas": {"type": "string", "minLength": 1, "maxLength": 16},
+        "slots": {"type": "object", "additionalProperties": {"type": "string", "maxLength": 400}, "maxProperties": 20},
+        "client": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scene_palette", "style_line", "people_policy", "restrictions"],
+          "properties": {
+            "scene_palette": {"type": "array", "maxItems": 6, "items": {"type": "object", "additionalProperties": false,
+              "required": ["hex", "object"], "properties": {"hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+              "object": {"type": "string", "minLength": 1, "maxLength": 80}}}},
+            "style_line": {"type": "string", "maxLength": 300},
+            "people_policy": {"type": "string", "maxLength": 40},
+            "restrictions": {"type": "array", "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 300}}
+          }
+        },
+        "references": {"type": "array", "maxItems": 20, "items": {"$ref": "common.schema.json#/$defs/sha256"}}
+      }
+    },
     "constraints": {
       "type": "object",
       "additionalProperties": false,

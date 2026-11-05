@@ -345,6 +345,29 @@ class CreativeRequestV1ExactCopyItem(TypedDict):
     claim_refs: List[VersionRef]
 
 
+class CreativeRequestV1ShotSpecClientScenePaletteItem(TypedDict):
+    hex: str
+    object: str
+
+
+class CreativeRequestV1ShotSpecClient(TypedDict):
+    scene_palette: List[CreativeRequestV1ShotSpecClientScenePaletteItem]
+    style_line: str
+    people_policy: str
+    restrictions: List[str]
+
+
+class CreativeRequestV1ShotSpec(TypedDict):
+    schema_version: Literal['mos-shot-spec-v1']
+    catalogue_version: str
+    format_id: str
+    shot_id: str
+    canvas: str
+    slots: Dict[str, Any]
+    client: CreativeRequestV1ShotSpecClient
+    references: NotRequired[List[Sha256]]
+
+
 class CreativeRequestV1Constraints(TypedDict):
     forbidden: List[str]
     required: List[str]
@@ -373,6 +396,7 @@ class CreativeRequestV1(TypedDict):
     references: List[ReferenceInput]
     provider_selection: ProviderSelection
     budget: Budget
+    shot_spec: NotRequired[CreativeRequestV1ShotSpec]
     constraints: CreativeRequestV1Constraints
 
 

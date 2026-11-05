@@ -56,7 +56,7 @@ def _by_id(items: list[dict]) -> list[dict]:
 def request_projection(request: dict) -> dict:
     origin = dict(request["origin"])
     origin.pop("generation_eligibility", None)   # admission observation, not creative content
-    return {
+    projection = {
         "schema_version": request["schema_version"],
         "origin": origin,
         "brand_package": request["brand_package"],
@@ -71,6 +71,9 @@ def request_projection(request: dict) -> dict:
         "provider_selection": request["provider_selection"],
         "constraints": request["constraints"],
     }
+    if "shot_spec" in request:   # absent for legacy requests, so their hashes do not change
+        projection["shot_spec"] = request["shot_spec"]
+    return projection
 
 
 def treatment_projection(treatment: dict) -> dict:

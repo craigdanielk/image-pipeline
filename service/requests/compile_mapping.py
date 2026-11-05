@@ -21,6 +21,8 @@ import sys
 from pathlib import Path
 
 from ..brand.errors import InputRefusal
+from ..catalogue import CatalogueError, get_format, get_shot, load_catalogue
+from ..catalogue.creative import shot_prompt
 from .canonical import jcs_sha256, request_semantic_sha256, treatment_semantic_sha256
 
 _CORE = Path(__file__).resolve().parents[2] / "core"
@@ -87,6 +89,26 @@ def _overlay_block(request: dict) -> str:
             + " overlays; do not render any text, letters or logos in the image")
 
 
+def _shot_texts(request: dict) -> tuple[str, str | None, dict]:
+    """Positive/negative prompt and id metadata from the request's catalogue shot_spec (no prose direction)."""
+    spec = request["shot_spec"]
+    try:
+        cat = load_catalogue()
+        if spec["catalogue_version"] != cat["version"]:
+            raise InputRefusal("source_revision_changed",
+                               f"shot_spec was written for catalogue {spec['catalogue_version']}, this is {cat['version']}",
+                               ["/shot_spec/catalogue_version"])
+        fmt = get_format(cat, spec["format_id"])
+        shot = get_shot(cat, spec["shot_id"])
+        if shot["id"] not in fmt["shots_allowed"]:
+            raise CatalogueError("shot_not_allowed", f"format {fmt['id']} does not allow shot {shot['id']}")
+        out = shot_prompt(shot, spec["slots"], spec["client"], spec["canvas"], fmt=fmt)
+    except CatalogueError as exc:
+        raise InputRefusal("invalid_contract", f"shot_spec refused ({exc.code}): {exc.message}", ["/shot_spec"]) from None
+    return out["positive"], out["negative"] or None, {
+        "shot_id": shot["id"], "format_id": fmt["id"], "catalogue_version": cat["version"]}
+
+
 def compile_inputs(request: dict, treatment: dict, package: dict, product_spec: dict | None = None) -> dict:
     _check_lineage(request, treatment, package)
     compile_validator, prompt_compiler_v2, spec_validator = _core()
@@ -99,6 +121,11 @@ def compile_inputs(request: dict, treatment: dict, package: dict, product_spec: 
     sources = {"request_semantic_sha256": request_semantic_sha256(request),
                "treatment_semantic_sha256": treatment_semantic_sha256(treatment),
                "brand_package_sha256": package["sha256"]}
+
+    shot_spec = request.get("shot_spec")
+    if shot_spec is not None and offering["physical_product_spec"] is not None:
+        raise InputRefusal("invalid_contract", "shot_spec compiles generated scenes, not ProductSpec geometry",
+                           ["/shot_spec"])
 
     if kind in SERVICE_KINDS and offering["physical_product_spec"] is not None:
         raise InputRefusal("offering_geometry_forbidden", "services carry no ProductSpec",
@@ -128,15 +155,20 @@ def compile_inputs(request: dict, treatment: dict, package: dict, product_spec: 
     else:
         # service / service_group / digital / hybrid / physical without a ProductSpec
         creative = _creative_spec(request, treatment, None)
-        sections = prompt_compiler_v2._scene_block(creative) + _service_block(offering) + _brand_block(package)
-        sections.append(_overlay_block(request))
-        positive = " ".join(s.strip().rstrip(".") + "." for s in sections if s.strip())
+        shot_meta: dict = {}
+        if shot_spec is not None:
+            positive, negative, shot_meta = _shot_texts(request)
+        else:
+            sections = prompt_compiler_v2._scene_block(creative) + _service_block(offering) + _brand_block(package)
+            sections.append(_overlay_block(request))
+            positive = " ".join(s.strip().rstrip(".") + "." for s in sections if s.strip())
+            negative = " ".join(f"No {n.rstrip('.')}." for n in negatives) or None
         prompt = {
             "schema_version": spec_validator.PROVIDER_SCHEMA,
             "positive": positive,
-            "negative": " ".join(f"No {n.rstrip('.')}." for n in negatives) or None,
+            "negative": negative,
             "metadata": {"execution_id": execution_id, "creative_spec_id": creative["id"], "edit_spec_ids": [],
-                         "placeholders_resolved": {}, "composition": treatment["direction"]["composition"]},
+                         "placeholders_resolved": {}, "composition": treatment["direction"]["composition"], **shot_meta},
             "input_assets": {"references": [r["asset"]["asset_version_id"] for r in request["references"]],
                              "input_images": []},
         }

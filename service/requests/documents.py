@@ -15,6 +15,7 @@ from .canonical import artifact_preimage, artifact_sha256, canonical_text, reque
 
 REQUEST_EDITABLE = ("origin", "brand_package", "offering", "audiences", "objective", "hook", "locale", "exact_copy",
                     "formats", "references", "provider_selection", "budget", "constraints")
+REQUEST_OPTIONAL = ("shot_spec",)   # catalogue shot (mos-shot-spec-v1); absent on legacy prose-direction requests
 TREATMENT_EDITABLE = ("source_request", "authorship", "direction", "shots", "sources")
 
 
@@ -36,14 +37,14 @@ def canonical_for_db(doc: dict) -> str:
 
 def new_request(fields: dict, *, workspace_id: str, actor_id: str, object_id: str | None = None,
                 revision: int = 1) -> dict:
-    unknown = set(fields) - set(REQUEST_EDITABLE)
+    unknown = set(fields) - set(REQUEST_EDITABLE) - set(REQUEST_OPTIONAL)
     if unknown:
         raise contracts.ContractViolation("cs-creative-request-v1", [(f"/{k}", "not an editable field")
                                                                      for k in sorted(unknown)])
     doc = {"schema_version": "cs-creative-request-v1", "id": object_id or str(uuid.uuid4()),
            "version_id": str(uuid.uuid4()), "revision": revision, "workspace_id": workspace_id,
            "created_at": now_utc(), "created_by": actor_id, "sha256": "0" * 64}
-    doc.update({k: fields[k] for k in REQUEST_EDITABLE if k in fields})
+    doc.update({k: fields[k] for k in REQUEST_EDITABLE + REQUEST_OPTIONAL if k in fields})
     return _finish(doc)
 
 

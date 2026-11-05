@@ -18,6 +18,7 @@ from ..brand.errors import InputRefusal
 from ..brand.mos_brandkit import slug
 
 VISUAL_REQUEST_SCHEMA = "mos-visual-request-v1"
+SHOT_SPEC_SCHEMA = "mos-shot-spec-v1"
 SOURCES_SCHEMA = "mos-campaign-sources-v1"
 
 # ENG-04c device canvases -> contract export presets (common.schema.json#/$defs/format).
@@ -31,6 +32,16 @@ _QUALITY = {"draft": "standard", "final": "high"}
 def _require(cond, code: str, message: str, path: str):
     if not cond:
         raise InputRefusal(code, message, [path])
+
+
+def _with_shot_spec(fields: dict, visual_request: dict) -> dict:
+    """Carry MOS's structured catalogue shot into the request; absent means the legacy prose-direction path."""
+    spec = visual_request.get("shot_spec")
+    if spec is None:
+        return fields
+    _require(isinstance(spec, dict) and spec.get("schema_version") == SHOT_SPEC_SCHEMA, "unsupported_schema_version",
+             f"expected {SHOT_SPEC_SCHEMA}", "/visual_request/shot_spec/schema_version")
+    return {**fields, "shot_spec": spec}
 
 
 def _copy_entries(variant: dict, copy_ref: dict, locale: str, claims: dict) -> list[dict]:
@@ -146,7 +157,7 @@ def build_request_fields(visual_request: dict, sources: dict, brand_package: dic
                                    + brand_package["document"]["voice"]["prohibited_terms"]))[:100]
     required = [r["instruction"] for r in brand_package["document"]["usage_rules"]
                 if r["severity"] == "required"][:100]
-    return {
+    fields = {
         "origin": {"kind": "marketing-os", "mos_workspace_id": mos_ws,
                    "campaign_brief": sources["campaign_brief"], "concept": sources["concept"],
                    "concept_approval": sources["concept_approval"], "placement": sources["content_pack"]["ref"],
@@ -168,6 +179,7 @@ def build_request_fields(visual_request: dict, sources: dict, brand_package: dic
         "constraints": {"forbidden": forbidden, "required": required, "exact_logo_layers": True,
                         "exact_copy_layers": True},
     }
+    return _with_shot_spec(fields, visual_request)
 
 
 def build_treatment_fields(sources: dict, request_ref: dict, brand_package_ref: dict) -> dict:
@@ -232,7 +244,7 @@ def build_library_request_fields(visual_request: dict, sources: dict, brand_pack
                                    + brand_package["document"]["voice"]["prohibited_terms"]
                                    + list(sources.get("forbidden") or [])))[:100]
     required = [r["instruction"] for r in brand_package["document"]["usage_rules"] if r["severity"] == "required"][:100]
-    return {
+    fields = {
         "origin": {"kind": "marketing-os-library", "mos_workspace_id": mos_ws, "library": sources["library"],
                    "library_item_key": item["key"], "library_approval": sources["library_approval"],
                    "policy": sources["policy"], "brand_rule_revision": None, "brand_rule_approval": None,
@@ -250,6 +262,7 @@ def build_library_request_fields(visual_request: dict, sources: dict, brand_pack
         "budget": budget,
         "constraints": {"forbidden": forbidden, "required": required, "exact_logo_layers": True, "exact_copy_layers": True},
     }
+    return _with_shot_spec(fields, visual_request)
 
 
 def build_library_treatment_fields(sources: dict, request_ref: dict, brand_package_ref: dict) -> dict:

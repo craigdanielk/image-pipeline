@@ -116,3 +116,91 @@ def get_format(cat: dict, format_id: str) -> dict:
 
 def get_shot(cat: dict, shot_id: str) -> dict:
     return _by_id(cat["shots"], shot_id, "unknown_shot")
+
+
+# -- shot compilation ----------------------------------------------------------------------------------------
+POSITIVE_MAX = 1200
+NEGATIVE_MAX = 400
+LOGO_CORNER = "Leave one clean corner for a small logo"
+_TEXT_SPACE = {
+    "top_left": "Upper-left third is plain and empty for a headline",
+    "top": "Upper third is plain and empty for a headline",
+    "bottom": "Lower third is plain and empty for a headline",
+    "left": "Left third is plain and empty for a headline",
+}
+
+
+def _check_slots(shot: dict, slots: dict) -> None:
+    declared = {s["key"]: s for s in shot["slots"]}
+    for key in sorted(set(slots) - set(declared)):
+        raise CatalogueError("slot_invalid", f"slot {key!r} is not a slot of shot {shot['id']}")
+    for key, spec in declared.items():
+        value = slots.get(key)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            if spec["required"]:
+                raise CatalogueError("slot_invalid", f"required slot {key!r} is missing")
+            continue
+        if not isinstance(value, str):
+            raise CatalogueError("slot_invalid", f"slot {key!r} must be text")
+        n = len(value.strip())
+        if not spec["min_chars"] <= n <= spec["max_chars"]:
+            raise CatalogueError("slot_invalid", f"slot {key!r} is {n} chars; allowed {spec['min_chars']}-{spec['max_chars']}")
+        if "enum" in spec and value.strip() not in spec["enum"]:
+            raise CatalogueError("slot_invalid", f"slot {key!r} must be one of {spec['enum']}")
+
+
+def _text_space(shot: dict, fmt: dict | None) -> str:
+    # "none" means no text at all, and a logo-only layout carries no headline, so neither asks for headline space.
+    if shot["text_zone"] == "none" or (fmt is not None and fmt["layout"] == "logo_only"):
+        return LOGO_CORNER
+    return _TEXT_SPACE[shot["text_zone"]]
+
+
+def _palette_line(client: dict) -> str:
+    cues = [f"{c['object']} in {c['hex']}" for c in client.get("scene_palette") or []]
+    return "Colour cues: " + ", ".join(cues) if cues else ""
+
+
+def _compact_restriction(text: str) -> str:
+    text = text.strip().rstrip(".")
+    return re.sub(r"^(no|avoid)\s+", "", text, flags=re.IGNORECASE)
+
+
+def _negative(shot: dict, client: dict) -> str:
+    """Client restrictions first (they are legal/brand limits and must never be dropped), then the shot's own."""
+    phrases: list[str] = []
+    seen: set[str] = set()
+    restrictions = [_compact_restriction(r) for r in client.get("restrictions") or []]
+    for phrase in restrictions + [n.strip() for n in shot["negative"]]:
+        if phrase and phrase.lower() not in seen:
+            seen.add(phrase.lower())
+            phrases.append(phrase)
+    fixed = [p for p in phrases if p.lower() in {r.lower() for r in restrictions}]
+    if len(", ".join(fixed)) > NEGATIVE_MAX:
+        raise CatalogueError("prompt_too_long", f"client restrictions alone exceed {NEGATIVE_MAX} chars")
+    kept: list[str] = []
+    for phrase in phrases:
+        trial = kept + [phrase]
+        if len(", ".join(trial)) <= NEGATIVE_MAX:
+            kept = trial
+        elif phrase.lower() in {r.lower() for r in restrictions}:
+            raise CatalogueError("prompt_too_long", f"client restrictions exceed {NEGATIVE_MAX} chars")
+    return ", ".join(kept)
+
+
+def shot_prompt(shot: dict, slots: dict, client: dict, canvas: str, *, fmt: dict | None = None) -> dict:
+    """Compile a short photographic prompt: {"positive", "negative"}. Never truncates the positive prompt."""
+    if shot["people"] == "owner_photo_only":
+        raise CatalogueError("shot_not_generatable", f"shot {shot['id']} is an owner photograph and is never generated")
+    if fmt is not None and canvas not in fmt["canvases"]:
+        raise CatalogueError("canvas_invalid", f"canvas {canvas!r} is not allowed for format {fmt['id']}: {fmt['canvases']}")
+    _check_slots(shot, slots)
+    values = {**shot["craft"], **{k: v.strip() for k, v in slots.items()},
+              "scene_palette": _palette_line(client), "text_space": _text_space(shot, fmt)}
+    body = _PLACEHOLDER.sub(lambda m: values.get(m.group(1), ""), shot["prompt_template"])
+    body = re.sub(r"\s+", " ", re.sub(r"(\.\s*)+\.", ".", body)).strip()
+    style = (client.get("style_line") or "").strip()
+    positive = f"{style.rstrip('.')}. {body}" if style else body
+    if len(positive) > POSITIVE_MAX:
+        raise CatalogueError("prompt_too_long", f"positive prompt is {len(positive)} chars; limit {POSITIVE_MAX}")
+    return {"positive": positive, "negative": _negative(shot, client)}
