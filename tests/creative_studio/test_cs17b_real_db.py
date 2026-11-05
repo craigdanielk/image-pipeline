@@ -464,14 +464,14 @@ class CsPostRun(unittest.TestCase):
             self.drain()
         finally:
             self.store.corrupt = set()
-        self.assertEqual(self.post_state(rid2)[0], "compose_blocked")
-        self.assertIn(self.post_state(rid2)[1], ("font_format_unsupported", "font_asset_missing"))
+        # an unusable brand font no longer withholds the picture: it is delivered text-free (picture + logo)
+        self.assertNotEqual(self.post_state(rid2)[0], "compose_blocked", self.post_state(rid2))
         # (c) copy that cannot fit the layout (no truncation, no auto-shrink beyond the fixed ladder)
         plan, rid3 = self.produce()
         with mock.patch.object(layout, "LADDER", (1.0,)), mock.patch.object(layout, "HEADLINE_SIZE_RATIO", 0.6):
             self.drain()
         self.assertEqual(self.post_state(rid3), ("compose_blocked", "text_overflow"))
-        for r in (rid, rid2, rid3):
+        for r in (rid, rid3):
             self.assertEqual(self.q("select state::text from public.cs_runs where id = %s", (r,)), [("completed",)])
             self.assertEqual(self.q("select count(*) from public.cs_handoffs h join public.cs_post_run_state s on "
                                     "s.handoff_id = h.id where s.run_id = %s", (r,)), [(0,)])

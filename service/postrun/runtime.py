@@ -216,7 +216,18 @@ class PostRunRuntime:
             raise Blocked("exact_copy_missing", "the request has no headline, body, cta or disclaimer copy to compose")
         # Fonts are needed only to set text. A text-free composition (image library: scene + logo) never loads them, so
         # a brand whose fonts are web formats (WOFF2) can still get images; text compositions still require sfnt files.
-        fonts, weights = self._fonts(ctx, source) if has_text else ({}, {})
+        text_skipped = None
+        try:
+            fonts, weights = self._fonts(ctx, source) if has_text else ({}, {})
+        except Blocked as err:
+            if not err.code.startswith("font_"):
+                raise
+            # The brand's fonts can't set text (e.g. a CSS font stack, not a font file): deliver the picture + logo
+            # and leave the wording to the post itself, instead of withholding the picture (2026-11-05, Regenic).
+            text_skipped = {"code": err.code, "message": err.message}
+            chosen = {"headline": None, "body": None, "cta": None, "disclaimers": []}
+            not_rendered = sorted(c["id"] for c in request["exact_copy"])
+            text_zone, fonts, weights = "none", {}, {}
         board_id = fmt["id"]
         zone = layout.safe_zone_for(fmt["preset"], fmt["width_px"], fmt["height_px"])
         safe_rect = zone.rect(fmt["width_px"], fmt["height_px"])
@@ -251,7 +262,7 @@ class PostRunRuntime:
             saved = dict(cur.fetchone())
         detail = {"layout_version": layout.LAYOUT_VERSION, "type_scale_step": step, "copy_not_rendered": not_rendered,
                   "render_sha256": render.sha256, "renderer_version": render.renderer_version,
-                  "model_drawn_text": False}
+                  "model_drawn_text": False, "text_skipped": text_skipped}
         return self._finish(lease, "composed", None, detail,
                             {"composition_version_id": str(saved["version_id"]), "render_sha256": render.sha256},
                             "publish_export")
