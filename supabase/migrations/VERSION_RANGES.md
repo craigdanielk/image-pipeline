@@ -18,3 +18,4 @@ so two files with the same version collide at apply time.
 - Credit balance read-back: `20261105294300_cs_credit_balance.sql` (CS slot `…29xxxx`).
 - Retry finishing (blocked post-run stage re-queue): `20261105294400_cs_retry_post_run.sql` (CS slot `…29xxxx`).
 - Re-finish a delivered library image: `20261105294500_cs_refinish_delivered.sql` (CS slot `…29xxxx`).
+- Admission queues a plan's drafts (active_run_limit 40): `20261105300000_cs_active_run_limit_queues_batches.sql` (CS slot `…30xxxx`).

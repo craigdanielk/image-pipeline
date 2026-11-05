@@ -430,6 +430,32 @@ class CsB3RealDatabase(unittest.TestCase):
             "provider_call": att["provider_call"]}))
         self.__class__.draft_run = run["run_id"]
 
+    def test_03a_calls_on_one_provider_account_never_overlap(self):
+        """The charge is the account balance change around a call, so two calls on one account must not overlap:
+        a busy account reschedules before the dispatch marker (no provider call, nothing double counted)."""
+        from service.runtime import worker as worker_mod
+        node = provider_node("n1", self.low, prompt="Generic square promo, meter lock")
+        st, run, _ = self.admit("producer_a", self.ws_a, [node])
+        self.assertEqual(st, 202, run)
+        creates = self.fake.creates()
+        holder = psycopg2.connect(self.pg.dsn())
+        try:
+            hc = holder.cursor()
+            hc.execute("begin")
+            hc.execute("select distinct provider_account_fingerprint as f from cs_private.cs_credentials")
+            for (fp,) in hc.fetchall():
+                hc.execute("select pg_advisory_xact_lock(hashtextextended(%s, 0))", ("cs_hf_meter:" + fp,))
+            with mock.patch.object(worker_mod, "METER_LOCK_WAIT_SECONDS", 1), self._patched():
+                out = self.runtime.run_once()
+            self.assertEqual((out["status"], out.get("failure_code")), ("retry_wait", "provider_account_busy"), out)
+            self.assertEqual(self.fake.creates(), creates, "no provider call while the account is busy")
+        finally:
+            holder.rollback(); holder.close()
+        self.q("update public.cs_work_items set due_at = now() where run_id = %s", (run["run_id"],))
+        steps = self.drain()
+        self.assertIn("provider_completed", [s.get("status") for s in steps])
+        self.assertEqual(self.fake.creates(), creates + 1)
+
     # -- 03b CS-INT2: the kick can never start paid provider work on its own ---------------------------
     def test_03b_kick_runs_free_work_but_paid_stage_needs_admission_and_the_spend_switch(self):
         from tests.creative_studio.test_cs12_real_db import CRON_STUB, NET_STUB, VAULT_STUB

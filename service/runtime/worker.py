@@ -17,6 +17,7 @@ not retried. Worker death: see cs_recover_expired_leases.
 """
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
@@ -30,6 +31,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Protocol
 from urllib.parse import urlparse
+
+import psycopg2
+import psycopg2.errors
 
 from ..config import Settings
 from ..db import worker_transaction
@@ -48,7 +52,9 @@ POST_STAGES = ("compose_image", "publish_export", "deliver_handoff")      # CS-1
 MAX_OBJECT_BYTES = 45_000_000            # database-contract per-stage media bound (cs_asset_versions check)
 # Backoff (seconds) by retryable error class, indexed by the item's attempt_count.
 # Engineering timing, not money; attempts are bounded by cs_work_items.max_attempts (<=3).
+METER_LOCK_WAIT_SECONDS = 150      # worker maxDuration 300 s; one draft image call takes ~60-70 s
 BACKOFF_SECONDS = {
+    "provider_account_busy": (20, 60, 180),
     "reference_unavailable": (15, 60, 240),
     "credential_unavailable": (60, 300, 900),
     "output_unavailable": (15, 60, 240),
@@ -181,6 +187,27 @@ class ProviderRuntime:
                         (*self._lease(item), attempt_id, outcome, json.dumps(error), self.settings.release_id))
             return {"status": f"attempt_{outcome}", "run_state": cur.fetchone()["run_state"], "error": error["code"]}
 
+    @contextlib.contextmanager
+    def _account_meter_lock(self, att):
+        """Hold a per-Higgsfield-account lock from before the dispatch marker until the post-call balance is read.
+
+        The charge is measured as the account balance change around the call; overlapping calls on one account
+        each saw the others' spend (2026-11-05: 1.5-credit images settled at 4.5 and opened billing exceptions).
+        Taken before the dispatch marker, so a busy account reschedules without any provider call.
+        """
+        key = "cs_hf_meter:" + str(att.get("provider_account_fingerprint") or att.get("credential_id") or "")
+        conn_cm = self._tx()
+        cur = conn_cm.__enter__()
+        try:
+            cur.execute("set local lock_timeout = %s", (f"{METER_LOCK_WAIT_SECONDS}s",))
+            try:
+                cur.execute("select pg_advisory_xact_lock(hashtextextended(%s, 0))", (key,))
+            except psycopg2.errors.LockNotAvailable:
+                raise Retryable("provider_account_busy", "another call on this Higgsfield account is running") from None
+            yield
+        finally:
+            conn_cm.__exit__(None, None, None)
+
     # -- provider_submit -----------------------------------------------------------
     def provider_submit(self, item) -> dict:
         lease = self._lease(item)
@@ -223,61 +250,62 @@ class ProviderRuntime:
             if sealed is None:
                 return self._abandon(item, att["attempt_id"], "refused", higgsfield.error_doc(
                     "higgsfield_reconnect_required", RECONNECT_MESSAGE))
-            envelope = self._envelope(item, att, refs)
-            sealed_envelope = self.keyring.seal_envelope(envelope)          # encrypted at rest
-            header = {k: envelope[k] for k in ("schema_version", "workspace_id", "attempt_id", "idempotency_key")}
-            try:
-                with self._tx() as cur:
-                    cur.execute("select public.cs_mark_dispatching(%s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)",
-                                (*lease, att["attempt_id"], json.dumps(header), sealed_envelope.ciphertext,
-                                 sealed_envelope.nonce, sealed_envelope.key_version, envelope["sha256"],
-                                 envelope["dispatch_sha256"], digest(envelope["body"])))
-            except ServiceError as err:
-                if err.code == "run_cancel_requested":
-                    return self._abandon(item, att["attempt_id"], "cancelled",
-                                         higgsfield.error_doc("run_cancelled", "cancel requested before dispatch"))
-                if err.code == "authorization_revoked":
-                    return self._abandon(item, att["attempt_id"], "authorization_blocked",
-                                         higgsfield.error_doc("authorization_revoked",
-                                                              "requester can no longer produce in this workspace"))
-                if err.code == "credential_revoked":
-                    return self._abandon(item, att["attempt_id"], "refused",
-                                         higgsfield.error_doc("credential_revoked", "credential revoked before dispatch"))
-                if err.code == "byok_required":
-                    return self._abandon(item, att["attempt_id"], "refused",
-                                         higgsfield.error_doc("byok_required", BYOK_MESSAGE))
-                if err.code == "attempt_already_dispatched":
-                    return {"status": "duplicate_dispatch_refused"}
-                raise
-            # ---- dispatch marker is durable: exactly one provider call from here ----
-            try:
-                plaintext = self.keyring.open(sealed, provider=higgsfield.PROVIDER_ID,
-                                              fingerprint=att["provider_account_fingerprint"])
-            except CredentialError as exc:
-                return self._record_refused(item, att, higgsfield.error_doc(exc.code, str(exc)))
-            balance_seen = None      # the account balance observed right after the create (best effort)
-            with materialise(plaintext) as cred_path:
-                credential = _hf.WorkspaceCredential(workspace_id=str(item["workspace_id"]),
-                                                 credential_id=str(sealed_id(att)), credentials_path=cred_path,
-                                                 provider_workspace_id=_billed_workspace(plaintext))
+            with self._account_meter_lock(att):      # one metered call per Higgsfield account at a time
+                envelope = self._envelope(item, att, refs)
+                sealed_envelope = self.keyring.seal_envelope(envelope)          # encrypted at rest
+                header = {k: envelope[k] for k in ("schema_version", "workspace_id", "attempt_id", "idempotency_key")}
                 try:
-                    results = higgsfield.execute(att["catalogue_surface"], att["provider_call"], att["adapter_config"],
-                                                 refs, credential, job_dir)
-                    outcome = higgsfield.normalise(results)
-                    balance_seen = self._balance_after(credential, outcome.charges)
-                except Exception as exc:  # classified, recorded; never swallowed
-                    kind, error = higgsfield.classify(exc)
-                    log.warning("provider call ended: %s %s", kind, error["code"])
-                    if kind == "refused":
-                        return self._record_refused(item, att, error)
-                    if kind == "failed":
-                        outcome = higgsfield.ProviderOutcome(outcome="failed", error=error)
-                    else:
-                        with self._tx() as cur:
-                            cur.execute("select public.cs_record_dispatch_uncertain(%s, %s, %s, %s, %s::jsonb, %s)::text as s",
-                                        (*lease, att["attempt_id"], json.dumps(error), self.settings.release_id))
-                            return {"status": "needs_reconciliation", "run_state": cur.fetchone()["s"],
-                                    "error": error["code"]}
+                    with self._tx() as cur:
+                        cur.execute("select public.cs_mark_dispatching(%s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s, %s, %s)",
+                                    (*lease, att["attempt_id"], json.dumps(header), sealed_envelope.ciphertext,
+                                     sealed_envelope.nonce, sealed_envelope.key_version, envelope["sha256"],
+                                     envelope["dispatch_sha256"], digest(envelope["body"])))
+                except ServiceError as err:
+                    if err.code == "run_cancel_requested":
+                        return self._abandon(item, att["attempt_id"], "cancelled",
+                                             higgsfield.error_doc("run_cancelled", "cancel requested before dispatch"))
+                    if err.code == "authorization_revoked":
+                        return self._abandon(item, att["attempt_id"], "authorization_blocked",
+                                             higgsfield.error_doc("authorization_revoked",
+                                                                  "requester can no longer produce in this workspace"))
+                    if err.code == "credential_revoked":
+                        return self._abandon(item, att["attempt_id"], "refused",
+                                             higgsfield.error_doc("credential_revoked", "credential revoked before dispatch"))
+                    if err.code == "byok_required":
+                        return self._abandon(item, att["attempt_id"], "refused",
+                                             higgsfield.error_doc("byok_required", BYOK_MESSAGE))
+                    if err.code == "attempt_already_dispatched":
+                        return {"status": "duplicate_dispatch_refused"}
+                    raise
+                # ---- dispatch marker is durable: exactly one provider call from here ----
+                try:
+                    plaintext = self.keyring.open(sealed, provider=higgsfield.PROVIDER_ID,
+                                                  fingerprint=att["provider_account_fingerprint"])
+                except CredentialError as exc:
+                    return self._record_refused(item, att, higgsfield.error_doc(exc.code, str(exc)))
+                balance_seen = None      # the account balance observed right after the create (best effort)
+                with materialise(plaintext) as cred_path:
+                    credential = _hf.WorkspaceCredential(workspace_id=str(item["workspace_id"]),
+                                                     credential_id=str(sealed_id(att)), credentials_path=cred_path,
+                                                     provider_workspace_id=_billed_workspace(plaintext))
+                    try:
+                        results = higgsfield.execute(att["catalogue_surface"], att["provider_call"], att["adapter_config"],
+                                                     refs, credential, job_dir)
+                        outcome = higgsfield.normalise(results)
+                        balance_seen = self._balance_after(credential, outcome.charges)
+                    except Exception as exc:  # classified, recorded; never swallowed
+                        kind, error = higgsfield.classify(exc)
+                        log.warning("provider call ended: %s %s", kind, error["code"])
+                        if kind == "refused":
+                            return self._record_refused(item, att, error)
+                        if kind == "failed":
+                            outcome = higgsfield.ProviderOutcome(outcome="failed", error=error)
+                        else:
+                            with self._tx() as cur:
+                                cur.execute("select public.cs_record_dispatch_uncertain(%s, %s, %s, %s, %s::jsonb, %s)::text as s",
+                                            (*lease, att["attempt_id"], json.dumps(error), self.settings.release_id))
+                                return {"status": "needs_reconciliation", "run_state": cur.fetchone()["s"],
+                                        "error": error["code"]}
         with self._tx() as cur:
             # The account balance the engine observed around this create (Marketing OS shows and caps real credits).
             if balance_seen is not None:
