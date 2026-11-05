@@ -60,6 +60,11 @@ class Blocked(Exception):
         self.code, self.message, self.related = code, message or code, related or []
 
 
+def _refinish(ctx) -> int:
+    """How many times the owner re-finished this canvas (0 = the first finish keeps its original identities)."""
+    return int((ctx.get("state") or {}).get("refinish") or 0)
+
+
 def _iso(value) -> str:
     """Whole-second UTC timestamp (identical across retries of the same stage)."""
     if isinstance(value, str):
@@ -209,7 +214,7 @@ class PostRunRuntime:
                 workspace_id=ctx["plan"]["workspace_id"], run_id=ctx["run"]["id"], canvas=ctx["work"]["canvas_node_id"],
                 created_at=ctx["plan"]["created_at"], created_by=ctx["run"]["requested_by"],
                 recipe=ctx["plan"]["sources"]["recipe"], artboard_id=board_id, width=fmt["width_px"],
-                height=fmt["height_px"], layers=layers)
+                height=fmt["height_px"], layers=layers, refinish=_refinish(ctx))
             doc["sha256"] = artifact_sha256(doc)
             try:
                 validate_composition(doc)
@@ -383,7 +388,8 @@ class PostRunRuntime:
                 else ("concept", "placement", "copy_versions", "destination", "claim_set", "policy"))
         target = {k: origin[k] for k in keys}
         target = {"authority": "marketing-os", "workspace_id": origin["mos_workspace_id"], **target}
-        key = layout.u5("handoff", ctx["run"]["id"], ctx["work"]["canvas_node_id"])
+        key = layout.u5("handoff", ctx["run"]["id"], ctx["work"]["canvas_node_id"]) if not _refinish(ctx) else \
+            layout.u5("handoff", ctx["run"]["id"], ctx["work"]["canvas_node_id"], "refinish", str(_refinish(ctx)))
         try:
             doc = build_handoff([export], target=target, creative_request=export["lineage"]["request"],
                                 idempotency_key=key, created_by=ctx["run"]["requested_by"],

@@ -112,7 +112,7 @@ class FakeMos:
                                                 "version_id": str(uuid.uuid4()), "revision": 1, "sha256": "a" * 64},
                           "stored_bytes_sha256": self.export_of(e["version_id"])["file"]["ref"]["sha256"],
                           "mos_rights_receipt_ids": [str(uuid.uuid4())],
-                          "mos_copy_versions": handoff["target"]["copy_versions"]})
+                          "mos_copy_versions": handoff["target"].get("copy_versions", [])})
         doc = {"schema_version": "cs-mos-ingestion-receipt-v1", "id": str(uuid.uuid4()), "workspace_id": self.mos_ws,
                "created_at": "2026-10-31T12:00:00Z", "created_by": handoff["created_by"], "sha256": "",
                "handoff_id": handoff["id"], "handoff_sha256": handoff["sha256"],
@@ -726,6 +726,54 @@ class CsPostRun(unittest.TestCase):
                                 "'execute'), has_function_privilege('cs_worker', 'public.cs_retry_post_run(uuid,uuid,text)', "
                                 "'execute'), has_function_privilege('anon', 'public.cs_retry_post_run(uuid,uuid,text)', "
                                 "'execute')"), [(True, False, False)])
+
+    def test_12_refinish_a_delivered_library_image_recomposes_and_hands_back_anew_for_free(self):
+        # test_01 re-applies the CS-17b file, which restores its cs_post_finish; re-apply the retry migration (idempotent)
+        # so this test runs on the deployed chain order.
+        self.pg.apply_file(MIGRATIONS_DIR / "20261105294400_cs_retry_post_run.sql")
+        self.pg.apply_file(MIGRATIONS_DIR / "20261105294400_cs_retry_post_run.sql")
+        plan, rid = self.produce()
+        self.drain()
+        self.assertEqual(self.post_state(rid), ("handoff_delivered", None))
+        canvas = self.q("select canvas_node_id from public.cs_post_run_state where run_id = %s", (rid,))[0][0]
+        path = f"/api/v1/workspaces/{self.ws}/runs/{rid}/post-run/{canvas}/retry"
+        # a delivered CAMPAIGN image is not re-finished: no-op
+        st, out = call(self.app, "POST", path, tok=self.tok["owner_a"], body={})
+        self.assertEqual((st, out["retried"], out["state"]), (200, False, "handoff_delivered"))
+        # the same run as an image-library request (scene + logo, library target); fixture rewrite past the
+        # immutability trigger (superuser, replica mode) so this suite need not build a library intake
+        self.q("""set session_replication_role = replica; update public.cs_creative_request_versions q
+                     set origin_kind = 'marketing-os-library', payload = jsonb_set(q.payload || '{"exact_copy": []}'::jsonb, '{origin}', (q.payload -> 'origin') - 'concept' - 'placement'
+                         - 'copy_versions' - 'destination' - 'claim_set'
+                         || jsonb_build_object('kind', 'marketing-os-library', 'library_item_key', 'lib-fixture-1x1',
+                                               'library', q.payload -> 'origin' -> 'concept'))
+                    from public.cs_execution_plans pl join public.cs_runs r on r.plan_version_id::text = pl.payload ->> 'version_id'
+                   where r.id = %s and q.workspace_id = pl.workspace_id and q.version_id = pl.request_version_id;
+                  set session_replication_role = origin""", (rid,))
+        before = self.q("select composition_version_id, export_version_id, handoff_id from public.cs_post_run_state "
+                        "where run_id = %s", (rid,))[0]
+        creates, reservations = self.fake.creates(), self.q("select count(*) from public.cs_budget_reservations")
+        delivered = len(self.mos.requests)
+        self.assertEqual(call(self.app, "POST", path, tok=self.tok["producer_a"], body={})[0], 403)
+        st, out = call(self.app, "POST", path, tok=self.tok["owner_a"], body={})
+        self.assertEqual((st, out["retried"], out["stage"], out["state"]), (202, True, "compose_image", "queued"), out)
+        self.assertEqual(call(self.app, "POST", path, tok=self.tok["owner_a"], body={})[1]["retried"], False, "queued: no-op")
+        self.drain()
+        self.assertEqual(self.post_state(rid), ("handoff_delivered", None))
+        after = self.q("select composition_version_id, export_version_id, handoff_id, refinish from public.cs_post_run_state "
+                       "where run_id = %s", (rid,))[0]
+        self.assertEqual(after[3], 1)
+        for old, new in zip(before, after[:3]):
+            self.assertNotEqual(old, new, "new composition, export and handoff identities")
+        self.assertEqual(self.q("select revision from public.cs_composition_versions where version_id = %s", (after[0],)), [(2,)])
+        self.assertEqual(self.q("select count(*) from public.cs_handoffs h where h.id in (%s, %s) and h.state = 'received'",
+                                (before[2], after[2])), [(2,)], "the first hand-back is kept; the new one is received")
+        self.assertEqual(len(self.mos.requests) - delivered, 1, "handed back once")
+        self.assertEqual(self.fake.creates(), creates, "re-finish never calls the provider")
+        self.assertEqual(self.q("select count(*) from public.cs_budget_reservations"), reservations, "and reserves nothing")
+        self.assertEqual(self.q("select state::text from public.cs_runs where id = %s", (rid,)), [("completed",)])
+        self.assertEqual(self.q("select count(*) from public.cs_post_run_retries where run_id = %s and "
+                                "from_state = 'handoff_delivered'", (rid,)), [(1,)])
 
 
 if __name__ == "__main__":

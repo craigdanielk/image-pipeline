@@ -163,9 +163,12 @@ def build_layers(*, width: int, height: int, safe_rect: tuple, scene: dict, logo
 
 
 def composition_doc(*, workspace_id: str, run_id: str, canvas: str, created_at: str, created_by: str, recipe: dict,
-                    artboard_id: str, width: int, height: int, layers: list[dict]) -> dict:
+                    artboard_id: str, width: int, height: int, layers: list[dict], refinish: int = 0) -> dict:
+    # A re-finish (cs_retry_post_run on a delivered library image) is the next revision of the same composition.
+    version = u5("composition-v", run_id, canvas, LAYOUT_VERSION) if not refinish else \
+        u5("composition-v", run_id, canvas, LAYOUT_VERSION, "refinish", str(refinish))
     return {"schema_version": "cs-composition-v1", "id": u5("composition", run_id, canvas),
-            "version_id": u5("composition-v", run_id, canvas, LAYOUT_VERSION), "revision": 1,
+            "version_id": version, "revision": 1 + refinish,
             "workspace_id": workspace_id, "created_at": created_at, "created_by": created_by, "sha256": "",
             "kind": "image", "basis_recipe": recipe, "basis_run": None,
             "artboards": [{"id": artboard_id, "width": width, "height": height, "color_space": "srgb",
