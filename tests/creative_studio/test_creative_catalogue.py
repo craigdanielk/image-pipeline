@@ -1,6 +1,7 @@
 """Creative catalogue v1: ad formats x shot archetypes x layouts (client-agnostic, no database, no network)."""
 from __future__ import annotations
 
+import copy
 import json
 import os
 import re
@@ -10,7 +11,7 @@ import jsonschema
 import pytest
 import yaml
 
-from service.catalogue import CatalogueError, get_format, get_shot, load_catalogue
+from service.catalogue import CatalogueError, get_format, get_shot, load_catalogue, validate_catalogue
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA = json.loads((ROOT / "schemas" / "creative-catalogue-v1.schema.json").read_text())
@@ -28,6 +29,96 @@ def cat() -> dict:
 
 def test_catalogue_validates_against_schema(cat):
     jsonschema.validate(cat, SCHEMA)
+
+
+def test_schema_version_and_semver(cat):
+    assert cat["schema_version"] == 1
+    assert cat["version"] == "1.0.0"
+    bad = copy.deepcopy(cat)
+    bad["version"] = "1.0"
+    with pytest.raises(jsonschema.ValidationError):
+        jsonschema.validate(bad, SCHEMA)
+
+
+def _has_text_layers(fmt: dict) -> bool:
+    layers = fmt["text_layers"]
+    return layers["headline_max"] + layers["body_max"] + layers["cta_max"] > 0 or layers["disclaimer"]
+
+
+def test_text_formats_never_allow_text_free_shots(cat):
+    zones = {s["id"]: s["text_zone"] for s in cat["shots"]}
+    for fmt in cat["formats"]:
+        if _has_text_layers(fmt):
+            assert all(zones[s] != "none" for s in fmt["shots_allowed"]), fmt["id"]
+    assert "environment_scene" not in get_format(cat, "landscape_banner")["shots_allowed"]
+
+
+def test_craft_light_is_setting_neutral(cat):
+    for shot in cat["shots"]:
+        light = shot["craft"]["light"].lower()
+        for word in ("window", "afternoon", "morning", "evening", "sunset", "indoor", "outdoor"):
+            assert word not in light, (shot["id"], word)
+
+
+def test_environment_scene_is_architectural(cat):
+    shot = get_shot(cat, "environment_scene")
+    assert shot["prompt_template"].startswith("Architectural photograph.")
+    assert "interior" not in shot["prompt_template"].lower()
+
+
+def test_outcome_confidence_is_natural_portrait(cat):
+    shot = get_shot(cat, "outcome_confidence")
+    assert shot["prompt_template"].startswith("Natural portrait photograph.")
+    assert "candid" not in json.dumps(shot).lower()
+
+
+def _refusal(cat: dict, mutate) -> str:
+    bad = copy.deepcopy(cat)
+    mutate(bad)
+    with pytest.raises(CatalogueError) as exc:
+        validate_catalogue(bad)
+    return exc.value.code
+
+
+def test_loader_refuses_text_format_with_text_free_shot(cat):
+    code = _refusal(cat, lambda c: get_format(c, "feed_single_image")["shots_allowed"].append("environment_scene"))
+    assert code == "text_zone_conflict"
+
+
+def test_loader_refuses_undeclared_placeholder(cat):
+    def mutate(c):
+        get_shot(c, "lifestyle_moment")["prompt_template"] += " {mood}."
+    assert _refusal(cat, mutate) == "undeclared_placeholder"
+
+
+def test_loader_refuses_duplicate_slot_key(cat):
+    def mutate(c):
+        shot = get_shot(c, "hands_detail")
+        shot["slots"].append(copy.deepcopy(shot["slots"][0]))
+    assert _refusal(cat, mutate) == "duplicate_slot"
+
+
+def test_loader_refuses_unused_slot(cat):
+    def mutate(c):
+        get_shot(c, "flat_lay")["slots"].append({"key": "mood", "required": False, "min_chars": 1, "max_chars": 20})
+    assert _refusal(cat, mutate) == "undeclared_placeholder"
+
+
+def test_loader_refuses_slot_shadowing_craft_key(cat):
+    def mutate(c):
+        shot = get_shot(c, "flat_lay")
+        shot["slots"].append({"key": "light", "required": True, "min_chars": 1, "max_chars": 20})
+    assert _refusal(cat, mutate) == "reserved_slot_key"
+
+
+def test_loader_refuses_inverted_slot_bounds(cat):
+    def mutate(c):
+        get_shot(c, "product_hero")["slots"][0].update(min_chars=50, max_chars=10)
+    assert _refusal(cat, mutate) == "invalid_slot_bounds"
+
+
+def test_loader_accepts_the_shipped_catalogue(cat):
+    validate_catalogue(copy.deepcopy(cat))
 
 
 def test_ids_unique_and_cross_refs_resolve(cat):

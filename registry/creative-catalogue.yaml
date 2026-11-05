@@ -1,4 +1,5 @@
 # Creative catalogue v1 — client-agnostic ad formats x shot archetypes x text layouts.
+# Text zone "none" means no text: a format with text layers may only allow shots whose text_zone is not none.
 # Validated by schemas/creative-catalogue-v1.schema.json; loaded by service/catalogue/creative.py.
 #
 # Template placeholders are either a declared slot, a craft key ({lens} {aperture} {light} {angle} {finish},
@@ -6,7 +7,8 @@
 # {text_space} from the shot's text_zone). Text is never rendered by the model; it is composited later into
 # the shot's text_zone, so every generated template ends "No text, no logos".
 # Industry restrictions (e.g. regulated claims) come from the client pack, never from this file.
-schema_version: creative-catalogue-v1
+schema_version: 1
+version: '1.0.0'
 
 formats:
   - id: feed_single_image
@@ -46,7 +48,7 @@ formats:
     channel_formats:
       - google_ads.performance_max_asset
     canvases: ["16:9"]
-    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, product_hero, flat_lay, environment_scene]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, product_hero, flat_lay]
     layout: stack_left
     text_layers: {headline_max: 30, body_max: 90, cta_max: 15, disclaimer: true}
 
@@ -70,7 +72,7 @@ shots:
     craft:
       lens: 35mm lens
       aperture: f/2.8
-      light: Soft natural window light from the side
+      light: Soft natural directional light from one side
       angle: eye-level medium shot
       finish: natural skin texture, true-to-life colour, fine film grain
     text_zone: top_left
@@ -89,17 +91,17 @@ shots:
     craft:
       lens: 85mm lens
       aperture: f/2
-      light: Warm late-afternoon light with soft fill
+      light: Warm soft directional light with gentle fill
       angle: chest-up portrait from slightly below eye level
       finish: sharp eyes, natural skin texture, fine film grain
     text_zone: left
-    prompt_template: "Candid portrait photograph. {subject} {action}, {expression}, in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    prompt_template: "Natural portrait photograph. {subject} {action}, {expression}, in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
     slots:
       - {key: subject, required: true, min_chars: 12, max_chars: 90}
       - {key: action, required: true, min_chars: 6, max_chars: 80}
       - {key: expression, required: true, min_chars: 4, max_chars: 60}
       - {key: setting, required: true, min_chars: 6, max_chars: 90}
-    negative: [before-and-after split, exaggerated grin, plastic skin, looking at camera with fixed stare, text or watermark]
+    negative: [before-and-after split, exaggerated grin, plastic skin, stiff studio pose, text or watermark]
 
   - id: delivery_moment
     label: Delivery moment
@@ -108,7 +110,7 @@ shots:
     craft:
       lens: 35mm lens
       aperture: f/4
-      light: Bright even daylight
+      light: Bright even natural light
       angle: over-the-shoulder medium-wide shot
       finish: true-to-life colour, clean detail, documentary feel
     text_zone: top
@@ -162,7 +164,7 @@ shots:
     craft:
       lens: 50mm lens
       aperture: f/8
-      light: Even diffused daylight from above
+      light: Even diffused light from above
       angle: straight top-down
       finish: soft clean shadows, accurate colour, crisp detail
     text_zone: bottom
@@ -179,11 +181,11 @@ shots:
     craft:
       lens: 24mm tilt-shift lens
       aperture: f/8
-      light: Soft morning light through windows
+      light: Soft natural daylight
       angle: eye-level wide shot with straight verticals
       finish: clean lines, natural colour, calm composition
     text_zone: none
-    prompt_template: "Interior photograph. {setting}, {details}, empty of people. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. No text, no logos, no signage."
+    prompt_template: "Architectural photograph. {setting}, {details}, empty of people. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. No text, no logos, no signage."
     slots:
       - {key: setting, required: true, min_chars: 6, max_chars: 90}
       - {key: details, required: true, min_chars: 6, max_chars: 90}
