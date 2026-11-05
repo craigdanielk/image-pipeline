@@ -77,6 +77,11 @@ def _text_zone(request) -> str:
         raise Blocked("invalid_contract", f"shot {spec.get('shot_id')!r}: {exc}") from None
 
 
+def _has_text_layer(comp) -> bool:
+    """False for a picture composed text-free (e.g. the brand font could not set text): nothing to carry as copy."""
+    return any(l.get("type") == "text" for b in (comp or {}).get("artboards", []) for l in b.get("layers", []))
+
+
 def _iso(value) -> str:
     """Whole-second UTC timestamp (identical across retries of the same stage)."""
     if isinstance(value, str):
@@ -338,7 +343,7 @@ class PostRunRuntime:
                                     copy_sources=copy_sources, cost=ctx["cost"], created_by=ctx["run"]["requested_by"],
                                     created_at=_iso(state["composed_at"]),
                                     copy_required=ctx["request"]["origin"].get("kind") != "marketing-os-library"
-                                    and _text_zone(ctx["request"]) != "none")
+                                    and _text_zone(ctx["request"]) != "none" and _has_text_layer(comp))
         except CompositionError as err:
             if err.retryable:
                 raise Retryable(err.code, err.message) from None

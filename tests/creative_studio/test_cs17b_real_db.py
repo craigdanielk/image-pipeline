@@ -481,7 +481,7 @@ class CsPostRun(unittest.TestCase):
             self.assertTrue(body["run"]["post_run"][0]["state"] == "compose_blocked" and body["run"]["post_run"][0]["reason"])
             self.assertIsNone(body["run"]["handoff"])
             self.assertEqual(body["run"]["actual_cost"]["certainty"], "settled", "the provider cost is still reported")
-        self.assertEqual(len(self.mos.requests), calls, "blocked canvases are never sent")
+        self.assertEqual(len(self.mos.requests), calls + 1, "only the text-free font case is sent; blocked canvases never")
 
     def test_05_gateway_failure_retries_with_backoff_then_handoff_failed_never_delivered(self):
         plan, rid = self.produce()
