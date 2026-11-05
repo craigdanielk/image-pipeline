@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 
 from PIL import Image
 
-from ..catalogue.creative import get_shot, load_catalogue
+from ..catalogue.creative import CatalogueError, get_shot, load_catalogue
 from ..composition import fontinfo
 from ..composition.assets import same_ref
 from ..composition.canonical import artifact_sha256
@@ -71,7 +71,10 @@ def _text_zone(request) -> str:
     spec = request.get("shot_spec")
     if not spec:
         return "bottom"
-    return get_shot(load_catalogue(), spec["shot_id"])["text_zone"]
+    try:
+        return get_shot(load_catalogue(), spec["shot_id"])["text_zone"]
+    except CatalogueError as exc:   # a catalogue update dropped the shot: block this canvas, never crash compose
+        raise Blocked("invalid_contract", f"shot {spec.get('shot_id')!r}: {exc}") from None
 
 
 def _iso(value) -> str:
