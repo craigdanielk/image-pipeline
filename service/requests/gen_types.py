@@ -64,6 +64,9 @@ class _Gen:
             return f"List[{self.type_of(node.get('items', {}), hint + 'Item')}]"
         if t == "object" or "properties" in node:
             if "properties" not in node:
+                extra = node.get("additionalProperties")
+                if isinstance(extra, dict) and extra:
+                    return f"Dict[str, {self.type_of(extra, hint + 'Value')}]"
                 return "Dict[str, Any]"
             return self.object_class(hint, node)
         return "Any"

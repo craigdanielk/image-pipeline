@@ -601,7 +601,7 @@ class CsB2RealDatabase(unittest.TestCase):
                          {self.physio_camp.pack["selected_copy"]["value"]["copy_version_id"]})
         self.assertTrue(any("Individual results vary." in r for r in req["constraints"]["required"]))
         # unsupported device canvas is a typed refusal, never approximated
-        st, body = self._intake("producer_a", self.ws_a, self.conn_a, self.home_camp, canvas="16:9")
+        st, body = self._intake("producer_a", self.ws_a, self.conn_a, self.home_camp, canvas="3:2")
         self.assertEqual((st, body["error"]), (422, "unsupported_canvas"))
 
     def test_08b_image_library_brief_to_frozen_treatment(self):

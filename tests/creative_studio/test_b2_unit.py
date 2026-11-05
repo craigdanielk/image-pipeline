@@ -148,9 +148,10 @@ class IntakeAndMappingTests(unittest.TestCase):
 
     def test_canvas_presets_and_refusals(self):
         _, camp, pkg = self.ctx()
-        for canvas, preset in (("1:1", "square_1080"), ("4:5", "portrait_1080x1350"), ("9:16", "story_1080x1920")):
+        for canvas, preset in (("1:1", "square_1080"), ("4:5", "portrait_1080x1350"), ("9:16", "story_1080x1920"),
+                              ("16:9", "landscape_1920x1080")):
             self.assertEqual(self.fields(camp, pkg, canvas=canvas)["formats"][0]["preset"], preset)
-        for canvas in ("16:9", "3:2"):
+        for canvas in ("3:2",):
             with self.assertRaises(InputRefusal) as ctx:
                 self.fields(camp, pkg, canvas=canvas)
             self.assertEqual(ctx.exception.code, "unsupported_canvas")

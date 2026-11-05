@@ -363,7 +363,7 @@ class CreativeRequestV1ShotSpec(TypedDict):
     format_id: str
     shot_id: str
     canvas: str
-    slots: Dict[str, Any]
+    slots: Dict[str, str]
     client: CreativeRequestV1ShotSpecClient
     references: NotRequired[List[Sha256]]
 
@@ -392,7 +392,7 @@ class CreativeRequestV1(TypedDict):
     hook: str
     locale: str
     exact_copy: List[CreativeRequestV1ExactCopyItem]
-    formats: List[Format]
+    formats: List[ExportFormatV2]
     references: List[ReferenceInput]
     provider_selection: ProviderSelection
     budget: Budget

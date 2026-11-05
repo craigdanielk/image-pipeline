@@ -58,7 +58,7 @@ class LegacyCompileTests(unittest.TestCase):
 class ShotPromptTests(unittest.TestCase):
     def prompt(self, shot_id="lifestyle_moment", slots=None, canvas="4:5", fmt="feed_single_image", client=None):
         return shot_prompt(get_shot(CAT, shot_id), REGENIC_SLOTS if slots is None else slots,
-                           client or REGENIC_CLIENT, canvas, fmt=_fmt(fmt) if fmt else None)
+                           client or REGENIC_CLIENT, canvas, fmt=_fmt(fmt))
 
     def test_regenic_lifestyle_prompt_is_short_and_concrete(self):
         p = self.prompt()
@@ -87,7 +87,7 @@ class ShotPromptTests(unittest.TestCase):
             if shot["text_zone"] == "none" and shot["people"] != "owner_photo_only" and "{text_space}" in shot["prompt_template"]:
                 slots = {s["key"]: "x" * s["min_chars"] for s in shot["slots"]}
                 self.assertIn("Leave one clean corner for a small logo",
-                              shot_prompt(shot, slots, REGENIC_CLIENT, "1:1")["positive"])
+                              shot_prompt(shot, slots, REGENIC_CLIENT, "1:1", fmt=_fmt())["positive"])
         self.assertIn(zones["left"], self.prompt("outcome_confidence")["positive"])
 
     def test_refusals(self):
@@ -110,7 +110,7 @@ class ShotPromptTests(unittest.TestCase):
         shot = copy.deepcopy(get_shot(CAT, "lifestyle_moment"))
         shot["slots"][3]["enum"] = ["calm", "joyful"]
         with self.assertRaises(CatalogueError) as ctx:
-            shot_prompt(shot, REGENIC_SLOTS, REGENIC_CLIENT, "4:5")
+            shot_prompt(shot, REGENIC_SLOTS, REGENIC_CLIENT, "4:5", fmt=_fmt())
         self.assertEqual(ctx.exception.code, "slot_invalid")
         self.assertIn("expression", ctx.exception.message)
 
@@ -128,16 +128,22 @@ class ShotPromptTests(unittest.TestCase):
         many = {**REGENIC_CLIENT, "restrictions": REGENIC_CLIENT["restrictions"][:1]}
         shot = copy.deepcopy(get_shot(CAT, "lifestyle_moment"))
         shot["negative"] = [f"unwanted thing number {i}" for i in range(60)]
-        n = shot_prompt(shot, REGENIC_SLOTS, many, "4:5")["negative"]
+        n = shot_prompt(shot, REGENIC_SLOTS, many, "4:5", fmt=_fmt())["negative"]
         self.assertLessEqual(len(n), 400)
         self.assertIn("before-and-after comparisons", n)
         self.assertFalse(n.endswith(("number 1", "numb")) and n.split(", ")[-1] not in shot["negative"])
 
 
 class CompileShotSpecTests(unittest.TestCase):
-    def chain(self, spec):
+    SIZES = {"4:5": ("portrait_1080x1350", 1080, 1350), "1:1": ("square_1080", 1080, 1080),
+             "16:9": ("landscape_1920x1080", 1920, 1080)}
+
+    def chain(self, spec, canvas="4:5"):
+        """Legacy fixture request with its export format set to `canvas` and `spec` attached."""
         fx = json.loads(LEGACY.read_text())
-        req = {**fx["request"], "shot_spec": spec}
+        preset, w, h = self.SIZES[canvas]
+        req = {**fx["request"], "formats": [{**fx["request"]["formats"][0], "preset": preset, "width_px": w, "height_px": h}],
+               "shot_spec": spec}
         return req, fx["treatment"], fx["package"]
 
     def test_compile_inputs_uses_shot_spec_without_brand_prose(self):
@@ -160,6 +166,32 @@ class CompileShotSpecTests(unittest.TestCase):
             req, tr, pkg = self.chain(spec)
             with self.assertRaises(InputRefusal):
                 compile_mapping.compile_inputs(req, tr, pkg)
+
+    def test_canvas_must_match_export_format(self):
+        req, tr, pkg = self.chain(_spec(canvas="4:5"), canvas="1:1")
+        with self.assertRaises(InputRefusal) as ctx:
+            compile_mapping.compile_inputs(req, tr, pkg)
+        self.assertEqual(ctx.exception.code, "invalid_contract")
+        self.assertIn("/shot_spec/canvas", ctx.exception.field_paths)
+        req, tr, pkg = self.chain(_spec(format_id="landscape_banner", canvas="16:9"), canvas="16:9")
+        out = compile_mapping.compile_inputs(req, tr, pkg)
+        self.assertEqual(out["provider_prompt"]["metadata"]["format_id"], "landscape_banner")
+
+    def test_shot_spec_refused_on_product_spec_offering(self):
+        req, tr, pkg = self.chain(_spec())
+        req["offering"] = {**req["offering"], "kind": "physical_product",
+                           "physical_product_spec": {"id": "00000000-0000-4000-8000-000000000001"}}
+        with self.assertRaises(InputRefusal) as ctx:
+            compile_mapping.compile_inputs(req, tr, pkg)
+        self.assertEqual(ctx.exception.code, "invalid_contract")
+        self.assertEqual(ctx.exception.field_paths, ["/shot_spec"])
+
+    def test_owner_photo_shot_is_not_generatable(self):
+        spec = _spec(shot_id="founder_team", slots={"subject": "The founder, a woman in her fifties", "setting": "her clinic reception"})
+        req, tr, pkg = self.chain(spec)
+        with self.assertRaises(InputRefusal) as ctx:
+            compile_mapping.compile_inputs(req, tr, pkg)
+        self.assertIn("shot_not_generatable", ctx.exception.message)
 
     def test_shot_spec_changes_semantic_hash_and_validates(self):
         from service.requests.canonical import request_semantic_sha256
@@ -221,6 +253,28 @@ class MosIntakeShotSpecTests(unittest.TestCase):
         out = compile_mapping.compile_inputs(req, acc, self.pkg["document"])
         self.assertIn("Leave one clean corner for a small logo", out["provider_prompt"]["positive"])
         self.assertEqual(out["provider_prompt"]["metadata"]["format_id"], "library_plate")
+
+    def test_16_9_visual_request_builds(self):
+        from service.composition.export import IMAGE_PRESETS
+        from service.requests import documents
+        f = mos_intake.build_request_fields(self.camp.visual_request(canvas="16:9"), self.camp.sources(), self.pkg)
+        fmt = f["formats"][0]
+        self.assertEqual((fmt["preset"], fmt["width_px"], fmt["height_px"]), ("landscape_1920x1080", 1920, 1080))
+        self.assertEqual(IMAGE_PRESETS[fmt["preset"]], (1920, 1080), "same size the compositor exports")
+        from tests.creative_studio import b2_contract_fixtures
+        f["origin"]["generation_eligibility"] = b2_contract_fixtures._eligibility(self.camp, self.camp.sources(), f)
+        req = documents.new_request(f, workspace_id=self.fx.uid("studio-ws", "wide"), actor_id=self.fx.uid("user", "wide"))
+        self.assertEqual(req["formats"][0]["preset"], "landscape_1920x1080", "request schema accepts the preset")
+
+    def test_request_revision_keeps_shot_spec(self):
+        """routes.b2_revise_request rebuilds the document with new_request from the posted fields; shot_spec survives."""
+        from service.requests import documents
+        spec = _spec()
+        fx = json.loads(LEGACY.read_text())
+        fields = {k: fx["request"][k] for k in documents.REQUEST_EDITABLE}
+        rev = documents.new_request({**fields, "shot_spec": spec}, workspace_id=fx["request"]["workspace_id"],
+                                    actor_id=fx["request"]["created_by"], object_id=fx["request"]["id"], revision=2)
+        self.assertEqual(rev["shot_spec"], spec)
 
 
 if __name__ == "__main__":

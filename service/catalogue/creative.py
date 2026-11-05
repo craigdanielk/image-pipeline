@@ -149,9 +149,9 @@ def _check_slots(shot: dict, slots: dict) -> None:
             raise CatalogueError("slot_invalid", f"slot {key!r} must be one of {spec['enum']}")
 
 
-def _text_space(shot: dict, fmt: dict | None) -> str:
+def _text_space(shot: dict, fmt: dict) -> str:
     # "none" means no text at all, and a logo-only layout carries no headline, so neither asks for headline space.
-    if shot["text_zone"] == "none" or (fmt is not None and fmt["layout"] == "logo_only"):
+    if shot["text_zone"] == "none" or fmt["layout"] == "logo_only":
         return LOGO_CORNER
     return _TEXT_SPACE[shot["text_zone"]]
 
@@ -167,32 +167,31 @@ def _compact_restriction(text: str) -> str:
 
 
 def _negative(shot: dict, client: dict) -> str:
-    """Client restrictions first (they are legal/brand limits and must never be dropped), then the shot's own."""
+    """Client restrictions first (they are legal/brand limits and must never be dropped), then the shot's own.
+
+    Restrictions that alone overflow the cap are refused; shot negatives fill what is left, whole phrases only."""
+    restrictions = [_compact_restriction(r) for r in client.get("restrictions") or []]
     phrases: list[str] = []
     seen: set[str] = set()
-    restrictions = [_compact_restriction(r) for r in client.get("restrictions") or []]
     for phrase in restrictions + [n.strip() for n in shot["negative"]]:
         if phrase and phrase.lower() not in seen:
             seen.add(phrase.lower())
             phrases.append(phrase)
-    fixed = [p for p in phrases if p.lower() in {r.lower() for r in restrictions}]
+    fixed = phrases[:len({r.lower() for r in restrictions if r})]   # restrictions lead the deduped list
     if len(", ".join(fixed)) > NEGATIVE_MAX:
         raise CatalogueError("prompt_too_long", f"client restrictions alone exceed {NEGATIVE_MAX} chars")
     kept: list[str] = []
     for phrase in phrases:
-        trial = kept + [phrase]
-        if len(", ".join(trial)) <= NEGATIVE_MAX:
-            kept = trial
-        elif phrase.lower() in {r.lower() for r in restrictions}:
-            raise CatalogueError("prompt_too_long", f"client restrictions exceed {NEGATIVE_MAX} chars")
+        if len(", ".join(kept + [phrase])) <= NEGATIVE_MAX:
+            kept.append(phrase)
     return ", ".join(kept)
 
 
-def shot_prompt(shot: dict, slots: dict, client: dict, canvas: str, *, fmt: dict | None = None) -> dict:
+def shot_prompt(shot: dict, slots: dict, client: dict, canvas: str, *, fmt: dict) -> dict:
     """Compile a short photographic prompt: {"positive", "negative"}. Never truncates the positive prompt."""
     if shot["people"] == "owner_photo_only":
         raise CatalogueError("shot_not_generatable", f"shot {shot['id']} is an owner photograph and is never generated")
-    if fmt is not None and canvas not in fmt["canvases"]:
+    if canvas not in fmt["canvases"]:
         raise CatalogueError("canvas_invalid", f"canvas {canvas!r} is not allowed for format {fmt['id']}: {fmt['canvases']}")
     _check_slots(shot, slots)
     values = {**shot["craft"], **{k: v.strip() for k, v in slots.items()},

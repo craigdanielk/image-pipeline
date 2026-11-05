@@ -16,6 +16,7 @@ for them. Compilation never calls a model and never rewrites the treatment.
 """
 from __future__ import annotations
 
+import math
 import re
 import sys
 from pathlib import Path
@@ -92,6 +93,12 @@ def _overlay_block(request: dict) -> str:
 def _shot_texts(request: dict) -> tuple[str, str | None, dict]:
     """Positive/negative prompt and id metadata from the request's catalogue shot_spec (no prose direction)."""
     spec = request["shot_spec"]
+    out_fmt = request["formats"][0]
+    ratio = math.gcd(out_fmt["width_px"], out_fmt["height_px"])
+    exported = f"{out_fmt['width_px'] // ratio}:{out_fmt['height_px'] // ratio}"
+    if spec["canvas"] != exported:
+        raise InputRefusal("invalid_contract", f"shot_spec canvas {spec['canvas']} differs from the export format {exported}",
+                           ["/shot_spec/canvas"])
     try:
         cat = load_catalogue()
         if spec["catalogue_version"] != cat["version"]:
@@ -117,7 +124,6 @@ def compile_inputs(request: dict, treatment: dict, package: dict, product_spec: 
     fmt = request["formats"][0]
     # legacy ids are lowercase [a-z0-9-] slugs
     execution_id = re.sub(r"[^a-z0-9-]+", "-", f"cs-{request['id'][:8]}-{fmt['id']}")[:63].rstrip("-")
-    negatives = list(dict.fromkeys(treatment["direction"]["negative"] + request["constraints"]["forbidden"]))
     sources = {"request_semantic_sha256": request_semantic_sha256(request),
                "treatment_semantic_sha256": treatment_semantic_sha256(treatment),
                "brand_package_sha256": package["sha256"]}
@@ -157,11 +163,14 @@ def compile_inputs(request: dict, treatment: dict, package: dict, product_spec: 
         creative = _creative_spec(request, treatment, None)
         shot_meta: dict = {}
         if shot_spec is not None:
+            # MOS sends client restrictions inside shot_spec, so treatment.direction.negative and
+            # constraints.forbidden are intentionally not used on this path.
             positive, negative, shot_meta = _shot_texts(request)
         else:
             sections = prompt_compiler_v2._scene_block(creative) + _service_block(offering) + _brand_block(package)
             sections.append(_overlay_block(request))
             positive = " ".join(s.strip().rstrip(".") + "." for s in sections if s.strip())
+            negatives = list(dict.fromkeys(treatment["direction"]["negative"] + request["constraints"]["forbidden"]))
             negative = " ".join(f"No {n.rstrip('.')}." for n in negatives) or None
         prompt = {
             "schema_version": spec_validator.PROVIDER_SCHEMA,

@@ -24,7 +24,8 @@ SOURCES_SCHEMA = "mos-campaign-sources-v1"
 # ENG-04c device canvases -> contract export presets (common.schema.json#/$defs/format).
 # 16:9 has no v1 preset and is refused rather than approximated.
 _IMAGE_PRESETS = {"1:1": ("square_1080", 1080, 1080), "4:5": ("portrait_1080x1350", 1080, 1350),
-                  "9:16": ("story_1080x1920", 1080, 1920)}
+                  "9:16": ("story_1080x1920", 1080, 1920),
+                  "16:9": ("landscape_1920x1080", 1920, 1080)}   # same preset as the cs-export-v2 compositor
 _VIDEO_PRESETS = {"9:16": ("video_story_1080x1920_30fps", 1080, 1920)}
 _QUALITY = {"draft": "standard", "final": "high"}
 

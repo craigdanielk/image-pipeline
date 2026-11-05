@@ -411,7 +411,8 @@
     "formats": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/format"
+        "$comment": "export_format_v2 is the request format plus the 16:9 landscape preset; both share one shape.",
+        "$ref": "common.schema.json#/$defs/export_format_v2"
       },
       "minItems": 1,
       "maxItems": 20
