@@ -34,6 +34,9 @@ LOGO_WIDTH_RATIO = 0.2
 CTA_WIDTH_RATIO = 0.5
 LADDER = (1.0, 0.85, 0.7, 0.55)
 LINE_HEIGHT = 1.15
+TEXT_ZONES = ("bottom", "top", "top_left", "left", "none")
+TOP_LEFT_WIDTH_RATIO = 0.6       # top_left text column: left 60% of the canvas width
+LEFT_WIDTH_RATIO = 0.55          # left text column: left 55% of the canvas width
 
 # marketing-os registry/channel-specs.yaml@9a9caa07 meta_ads image 9:16 safe_zone (same citation as the B4 fixtures).
 STORY_SAFE = dict(top_pct=14, right_pct=0, bottom_pct=14, left_pct=0,
@@ -92,10 +95,17 @@ def _text(lid, name, order, box, copy, font, size, weight, fill, align, valign):
 
 def build_layers(*, width: int, height: int, safe_rect: tuple, scene: dict, logo: dict, logo_id: str,
                  logo_px: tuple[int, int], clear_space_ratio: float, fonts: dict, weights: dict, chosen: dict,
-                 palette: list[dict], step: float) -> list[dict]:
-    """fonts/weights: {'heading': ref, 'body': ref}. step: scale applied to the text sizes."""
+                 palette: list[dict], step: float, text_zone: str = "bottom") -> list[dict]:
+    """fonts/weights: {'heading': ref, 'body': ref}. step: scale applied to the text sizes.
+    text_zone: where the shot left empty space for text (catalogue text_zone). "bottom" is the original layout."""
+    if text_zone not in TEXT_ZONES:
+        raise ValueError(f"unknown text_zone {text_zone!r}")
     x0, y0, x1, y1 = safe_rect
     m = round(width * MARGIN_RATIO)
+    if text_zone != "bottom":
+        return _build_zoned(text_zone, width=width, height=height, safe_rect=safe_rect, scene=scene, logo=logo,
+                            logo_id=logo_id, logo_px=logo_px, clear_space_ratio=clear_space_ratio, fonts=fonts,
+                            weights=weights, chosen=chosen, palette=palette, step=step)
     left, cw = x0 + m, (x1 - x0) - 2 * m
     gap = round(height * GAP_RATIO)
     layers: list[dict] = []
@@ -144,11 +154,98 @@ def build_layers(*, width: int, height: int, safe_rect: tuple, scene: dict, logo
              "content": {"shape": "rectangle", "fill": SCRIM_FILL, "stroke": None, "stroke_width_px": 0,
                          "corner_radius_px": 0}})
     # logo: top-left inside the safe zone, outside its own clear space
+    if logo is not None:             # no logo file: compose without a logo layer
+        lw = round(width * LOGO_WIDTH_RATIO)
+        lh = max(1, round(lw * logo_px[1] / logo_px[0]))
+        pad = max(m, int(clear_space_ratio * min(lw, lh)) + 1)
+        add({"id": "logo", "name": "Logo", "type": "logo", "transform": _t(x0 + pad, y0 + pad, lw, lh), "order": 0,
+             "locked": False, "content": {"asset": logo, "brand_logo_id": logo_id, "fit": "contain"}})
+    for lid, name, box, copy, size, font, weight, fill, align, valign in sorted(texts, key=lambda t: t[2][1]):
+        add(_text(lid, name, 0, box, copy, font, size, weight, fill, align, valign))
+    if cta_box is not None:
+        bg, fg = cta_colors(palette)
+        add({"id": "cta-bg", "name": "CTA button", "type": "shape", "transform": _t(*cta_box), "order": 0,
+             "locked": False,
+             "content": {"shape": "rectangle", "fill": bg, "stroke": None, "stroke_width_px": 0,
+                         "corner_radius_px": cta_box[3] // 2}})
+        add(_text("cta", "CTA", 0, cta_box, chosen["cta"], fonts["heading"], round(cta_box[3] * 0.42 * min(step, 1.0)),
+                  weights["heading"], fg, "center", "center"))
+    return layers
+
+
+def _overlaps(a: tuple, b: tuple) -> bool:
+    return a[0] < b[0] + b[2] and b[0] < a[0] + a[2] and a[1] < b[1] + b[3] and b[1] < a[1] + a[3]
+
+
+def _build_zoned(zone, *, width, height, safe_rect, scene, logo, logo_id, logo_px, clear_space_ratio, fonts, weights,
+                 chosen, palette, step) -> list[dict]:
+    """top / top_left / left / none: stack headline, body, CTA, disclaimers downward inside the safe rect, scrim only
+    behind that block, logo kept clear of the block."""
+    x0, y0, x1, y1 = safe_rect
+    m = round(width * MARGIN_RATIO)
+    gap = round(height * GAP_RATIO)
+    left = x0 + m
+    full_w = (x1 - x0) - 2 * m
+    col_w = {"top": full_w, "top_left": min(full_w, round(width * TOP_LEFT_WIDTH_RATIO) - m),
+             "left": min(full_w, round(width * LEFT_WIDTH_RATIO) - m), "none": full_w}[zone]
+    layers: list[dict] = []
+
+    def add(layer):
+        layer["order"] = len(layers)
+        layers.append(layer)
+
+    add({"id": "scene", "name": "Generated scene", "type": "image", "transform": _t(0, 0, width, height), "order": 0,
+         "locked": True, "content": {"asset": scene, "fit": "cover", "crop": None}})
+    texts, cta_box, block = [], None, None
+    has_copy = zone != "none" and (any(chosen[k] for k in ("headline", "body", "cta")) or bool(chosen["disclaimers"]))
+    if has_copy:
+        hh, bh = round(height * HEADLINE_BOX_RATIO), round(height * BODY_BOX_RATIO)
+        ch, dh = round(height * CTA_BOX_RATIO), round(height * DISCLAIMER_BOX_RATIO)
+        parts = []                                   # (kind, height, gap after)
+        if chosen["headline"]:
+            parts.append(("headline", hh, gap))
+        if chosen["body"]:
+            parts.append(("body", bh, gap))
+        if chosen["cta"]:
+            parts.append(("cta", ch, gap))
+        for i in range(1, len(chosen["disclaimers"]) + 1):
+            parts.append(("disclaimer-%d" % i, dh, gap // 2))
+        total = sum(h for _, h, _ in parts) + sum(g for _, _, g in parts[:-1])
+        y = y0 + m if zone != "left" else y0 + max(m, ((y1 - y0) - total) // 2)
+        top = y
+        for kind, h, g in parts:
+            if kind == "headline":
+                texts.append((kind, "Headline", (left, y, col_w, h), chosen["headline"],
+                              round(width * HEADLINE_SIZE_RATIO * step), fonts["heading"], weights["heading"],
+                              TEXT_FILL, "left", "top"))
+            elif kind == "body":
+                texts.append((kind, "Body", (left, y, col_w, h), chosen["body"], round(width * BODY_SIZE_RATIO * step),
+                              fonts["body"], weights["body"], TEXT_FILL, "left", "top"))
+            elif kind == "cta":
+                cta_box = (left, y, min(col_w, round(width * CTA_WIDTH_RATIO)), h)
+            else:
+                i = int(kind.rsplit("-", 1)[1])
+                texts.append((kind, f"Disclaimer {i}", (left, y, col_w, h), chosen["disclaimers"][i - 1],
+                              round(width * DISCLAIMER_SIZE_RATIO), fonts["body"], weights["body"], TEXT_FILL,
+                              "left", "top"))
+            y += h + g
+        block = (left, top, col_w, total)
+        sx0, sy0 = max(0, left - m), max(0, top - m)
+        sx1, sy1 = min(width, left + col_w + m), min(height, top + total + m)
+        add({"id": "scrim", "name": "Scrim", "type": "shape", "transform": _t(sx0, sy0, sx1 - sx0, sy1 - sy0),
+             "order": 0, "locked": False,
+             "content": {"shape": "rectangle", "fill": SCRIM_FILL, "stroke": None, "stroke_width_px": 0,
+                         "corner_radius_px": 0}})
+        block = (sx0, sy0, sx1 - sx0, sy1 - sy0)
+    # logo: top-left by default; if it would touch the text block (scrim included) use the opposite / other bottom corner
     lw = round(width * LOGO_WIDTH_RATIO)
-    lh = max(1, round(lw * logo_px[1] / logo_px[0]))
+    lh = max(1, round(lw * logo_px[1] / logo_px[0])) if logo_px else 1
     pad = max(m, int(clear_space_ratio * min(lw, lh)) + 1)
-    add({"id": "logo", "name": "Logo", "type": "logo", "transform": _t(x0 + pad, y0 + pad, lw, lh), "order": 0,
-         "locked": False, "content": {"asset": logo, "brand_logo_id": logo_id, "fit": "contain"}})
+    candidates = [(x0 + pad, y0 + pad), (x1 - pad - lw, y1 - pad - lh), (x0 + pad, y1 - pad - lh)]
+    pos = next((c for c in candidates if block is None or not _overlaps((c[0], c[1], lw, lh), block)), candidates[1])
+    if logo is not None:             # no logo file: compose without a logo layer (never invent or refuse here)
+        add({"id": "logo", "name": "Logo", "type": "logo", "transform": _t(pos[0], pos[1], lw, lh), "order": 0,
+             "locked": False, "content": {"asset": logo, "brand_logo_id": logo_id, "fit": "contain"}})
     for lid, name, box, copy, size, font, weight, fill, align, valign in sorted(texts, key=lambda t: t[2][1]):
         add(_text(lid, name, 0, box, copy, font, size, weight, fill, align, valign))
     if cta_box is not None:

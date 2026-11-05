@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 
 from PIL import Image
 
+from ..catalogue.creative import get_shot, load_catalogue
 from ..composition import fontinfo
 from ..composition.assets import same_ref
 from ..composition.canonical import artifact_sha256
@@ -63,6 +64,14 @@ class Blocked(Exception):
 def _refinish(ctx) -> int:
     """How many times the owner re-finished this canvas (0 = the first finish keeps its original identities)."""
     return int((ctx.get("state") or {}).get("refinish") or 0)
+
+
+def _text_zone(request) -> str:
+    """The shot's text_zone (catalogue) for a request carrying a shot_spec; legacy requests keep the bottom stack."""
+    spec = request.get("shot_spec")
+    if not spec:
+        return "bottom"
+    return get_shot(load_catalogue(), spec["shot_id"])["text_zone"]
 
 
 def _iso(value) -> str:
@@ -194,9 +203,13 @@ class PostRunRuntime:
         except Exception:
             raise Blocked("logo_asset_missing", "the package logo is not a decodable raster image", [logo_spec["id"]])
         chosen, not_rendered = layout.pick_copy(request["exact_copy"])
+        text_zone = _text_zone(request)
+        if text_zone == "none":          # the shot reserved no text space: lay out no text and record all copy as unrendered
+            chosen = {"headline": None, "body": None, "cta": None, "disclaimers": []}
+            not_rendered = sorted(c["id"] for c in request["exact_copy"])
         library = request["origin"].get("kind") == "marketing-os-library"   # image + logo layer, no campaign copy
         has_text = any(chosen[k] for k in ("headline", "body", "cta")) or bool(chosen["disclaimers"])
-        if not library and not has_text:
+        if not library and not has_text and text_zone != "none":
             raise Blocked("exact_copy_missing", "the request has no headline, body, cta or disclaimer copy to compose")
         # Fonts are needed only to set text. A text-free composition (image library: scene + logo) never loads them, so
         # a brand whose fonts are web formats (WOFF2) can still get images; text compositions still require sfnt files.
@@ -209,7 +222,8 @@ class PostRunRuntime:
             layers = layout.build_layers(
                 width=fmt["width_px"], height=fmt["height_px"], safe_rect=safe_rect, scene=scene, logo=logo_m["ref"],
                 logo_id=logo_spec["id"], logo_px=logo_px, clear_space_ratio=logo_spec["clear_space_ratio"],
-                fonts=fonts, weights=weights, chosen=chosen, palette=package["palette"], step=step)
+                fonts=fonts, weights=weights, chosen=chosen, palette=package["palette"], step=step,
+                text_zone=text_zone)
             doc = layout.composition_doc(
                 workspace_id=ctx["plan"]["workspace_id"], run_id=ctx["run"]["id"], canvas=ctx["work"]["canvas_node_id"],
                 created_at=ctx["plan"]["created_at"], created_by=ctx["run"]["requested_by"],
@@ -309,7 +323,8 @@ class PostRunRuntime:
                                     source_records=records, generated_sources=generated, lineage=lineage,
                                     copy_sources=copy_sources, cost=ctx["cost"], created_by=ctx["run"]["requested_by"],
                                     created_at=_iso(state["composed_at"]),
-                                    copy_required=ctx["request"]["origin"].get("kind") != "marketing-os-library")
+                                    copy_required=ctx["request"]["origin"].get("kind") != "marketing-os-library"
+                                    and _text_zone(ctx["request"]) != "none")
         except CompositionError as err:
             if err.retryable:
                 raise Retryable(err.code, err.message) from None
