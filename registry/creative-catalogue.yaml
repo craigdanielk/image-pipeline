@@ -1,0 +1,216 @@
+# Creative catalogue v1 — client-agnostic ad formats x shot archetypes x text layouts.
+# Validated by schemas/creative-catalogue-v1.schema.json; loaded by service/catalogue/creative.py.
+#
+# Template placeholders are either a declared slot, a craft key ({lens} {aperture} {light} {angle} {finish},
+# filled from the shot's craft defaults), or a client/compiler key ({scene_palette} from the client pack,
+# {text_space} from the shot's text_zone). Text is never rendered by the model; it is composited later into
+# the shot's text_zone, so every generated template ends "No text, no logos".
+# Industry restrictions (e.g. regulated claims) come from the client pack, never from this file.
+schema_version: creative-catalogue-v1
+
+formats:
+  - id: feed_single_image
+    label: Feed single image
+    channel_formats:
+      - meta_ads.single_image_ad
+      - instagram.feed_post
+      - facebook.feed_post
+      - linkedin.feed_post
+      - reddit_ads.promoted_post
+    canvases: ["1:1", "4:5"]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, founder_team]
+    layout: stack_top_left
+    text_layers: {headline_max: 40, body_max: 90, cta_max: 20, disclaimer: true}
+
+  - id: story_vertical
+    label: Story / reel cover (vertical)
+    channel_formats:
+      - instagram.reel
+      - meta_ads.single_image_ad
+    canvases: ["9:16"]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, founder_team]
+    layout: stack_top
+    text_layers: {headline_max: 36, body_max: 60, cta_max: 18, disclaimer: true}
+
+  - id: carousel_card
+    label: Carousel card
+    channel_formats:
+      - meta_ads.carousel_ad
+    canvases: ["4:5"]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, founder_team]
+    layout: stack_bottom
+    text_layers: {headline_max: 32, body_max: 60, cta_max: 18, disclaimer: true}
+
+  - id: landscape_banner
+    label: Landscape banner
+    channel_formats:
+      - google_ads.performance_max_asset
+    canvases: ["16:9"]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, product_hero, flat_lay, environment_scene]
+    layout: stack_left
+    text_layers: {headline_max: 30, body_max: 90, cta_max: 15, disclaimer: true}
+
+  - id: library_plate
+    label: Library plate (logo only)
+    channel_formats:
+      - instagram.feed_post
+      - facebook.feed_post
+      - linkedin.feed_post
+      - instagram.reel
+    canvases: ["1:1", "4:5", "9:16"]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, environment_scene]
+    layout: logo_only
+    text_layers: {headline_max: 0, body_max: 0, cta_max: 0, disclaimer: false}
+
+shots:
+  - id: lifestyle_moment
+    label: Lifestyle moment
+    people: buyer_models
+    requires_product_image: false
+    craft:
+      lens: 35mm lens
+      aperture: f/2.8
+      light: Soft natural window light from the side
+      angle: eye-level medium shot
+      finish: natural skin texture, true-to-life colour, fine film grain
+    text_zone: top_left
+    prompt_template: "Editorial lifestyle photograph. {subject} {action} in {setting}, {expression}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    slots:
+      - {key: subject, required: true, min_chars: 12, max_chars: 90}
+      - {key: action, required: true, min_chars: 6, max_chars: 80}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+      - {key: expression, required: true, min_chars: 4, max_chars: 60}
+    negative: [posed stock-photo smile, plastic skin, distorted hands, cluttered background, text or watermark]
+
+  - id: outcome_confidence
+    label: Outcome / confidence portrait
+    people: buyer_models
+    requires_product_image: false
+    craft:
+      lens: 85mm lens
+      aperture: f/2
+      light: Warm late-afternoon light with soft fill
+      angle: chest-up portrait from slightly below eye level
+      finish: sharp eyes, natural skin texture, fine film grain
+    text_zone: left
+    prompt_template: "Candid portrait photograph. {subject} {action}, {expression}, in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    slots:
+      - {key: subject, required: true, min_chars: 12, max_chars: 90}
+      - {key: action, required: true, min_chars: 6, max_chars: 80}
+      - {key: expression, required: true, min_chars: 4, max_chars: 60}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+    negative: [before-and-after split, exaggerated grin, plastic skin, looking at camera with fixed stare, text or watermark]
+
+  - id: delivery_moment
+    label: Delivery moment
+    people: buyer_models
+    requires_product_image: false
+    craft:
+      lens: 35mm lens
+      aperture: f/4
+      light: Bright even daylight
+      angle: over-the-shoulder medium-wide shot
+      finish: true-to-life colour, clean detail, documentary feel
+    text_zone: top
+    prompt_template: "Documentary photograph. {subject} {action} at {setting}, {expression}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    slots:
+      - {key: subject, required: true, min_chars: 12, max_chars: 90}
+      - {key: action, required: true, min_chars: 6, max_chars: 80}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+      - {key: expression, required: true, min_chars: 4, max_chars: 60}
+    negative: [staged handshake, uniforms with readable text, distorted hands, crowded frame, text or watermark]
+
+  - id: hands_detail
+    label: Hands detail
+    people: buyer_models
+    requires_product_image: false
+    craft:
+      lens: 100mm macro lens
+      aperture: f/4
+      light: Soft directional light with gentle shadows
+      angle: tight close-up from slightly above
+      finish: fine texture detail, shallow depth of field
+    text_zone: top
+    prompt_template: "Close-up detail photograph. Hands {action}, {detail}, in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    slots:
+      - {key: action, required: true, min_chars: 6, max_chars: 80}
+      - {key: detail, required: true, min_chars: 6, max_chars: 80}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+    negative: [extra fingers, fused fingers, faces in frame, jewellery clutter, text or watermark]
+
+  - id: product_hero
+    label: Product hero
+    people: none
+    requires_product_image: true
+    craft:
+      lens: 100mm lens
+      aperture: f/8
+      light: Large softbox key light with a subtle rim light
+      angle: three-quarter view at product height
+      finish: crisp edges, clean reflections, accurate colour
+    text_zone: top
+    prompt_template: "Commercial product photograph. The product from the reference image, {placement}, on {surface}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. Keep the product exactly as shown. No added text, no added logos."
+    slots:
+      - {key: placement, required: true, min_chars: 6, max_chars: 80}
+      - {key: surface, required: true, min_chars: 6, max_chars: 80}
+    negative: [altered product shape, changed label, duplicate products, floating props, text or watermark]
+
+  - id: flat_lay
+    label: Flat lay
+    people: none
+    requires_product_image: true
+    craft:
+      lens: 50mm lens
+      aperture: f/8
+      light: Even diffused daylight from above
+      angle: straight top-down
+      finish: soft clean shadows, accurate colour, crisp detail
+    text_zone: bottom
+    prompt_template: "Overhead flat lay photograph. The product from the reference image arranged with {props} on {surface}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. Keep the product exactly as shown. No added text, no added logos."
+    slots:
+      - {key: props, required: true, min_chars: 6, max_chars: 90}
+      - {key: surface, required: true, min_chars: 6, max_chars: 80}
+    negative: [altered product shape, changed label, tilted perspective, overcrowded props, text or watermark]
+
+  - id: environment_scene
+    label: Environment scene (text-free brand plate)
+    people: none
+    requires_product_image: false
+    craft:
+      lens: 24mm tilt-shift lens
+      aperture: f/8
+      light: Soft morning light through windows
+      angle: eye-level wide shot with straight verticals
+      finish: clean lines, natural colour, calm composition
+    text_zone: none
+    prompt_template: "Interior photograph. {setting}, {details}, empty of people. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. No text, no logos, no signage."
+    slots:
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+      - {key: details, required: true, min_chars: 6, max_chars: 90}
+    negative: [people, readable signage, converging verticals, harsh flash, text or watermark]
+
+  # Never generated: the owner supplies real photos of themselves/their team. The template is the brief the
+  # owner photo is checked against, and is never sent to an image model.
+  - id: founder_team
+    label: Founder / team (owner photo)
+    people: owner_photo_only
+    requires_product_image: false
+    craft:
+      lens: 50mm lens
+      aperture: f/2.8
+      light: Soft natural light, no flash
+      angle: eye-level waist-up shot
+      finish: natural skin texture, true-to-life colour
+    text_zone: left
+    prompt_template: "Owner-supplied photograph. {subject} in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}."
+    slots:
+      - {key: subject, required: true, min_chars: 12, max_chars: 90}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+    negative: [generated faces, altered likeness, heavy retouching]
+
+layouts:
+  - {id: stack_top_left, text_zone: top_left, stack: [headline, body, cta, disclaimer], scrim: behind_text}
+  - {id: stack_top, text_zone: top, stack: [headline, body, cta, disclaimer], scrim: behind_text}
+  - {id: stack_bottom, text_zone: bottom, stack: [headline, body, cta, disclaimer], scrim: behind_text}
+  - {id: stack_left, text_zone: left, stack: [headline, body, cta, disclaimer], scrim: behind_text}
+  - {id: logo_only, text_zone: none, stack: [], scrim: none}

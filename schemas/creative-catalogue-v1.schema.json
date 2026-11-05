@@ -1,0 +1,115 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://aragon.services/image-pipeline/creative-catalogue-v1.schema.json",
+  "title": "CreativeCatalogue v1",
+  "description": "Client-agnostic catalogue of ad formats, shot archetypes (typed slots + craft defaults) and text layouts.",
+  "type": "object",
+  "required": ["schema_version", "formats", "shots", "layouts"],
+  "additionalProperties": false,
+  "definitions": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "text_zone": { "type": "string", "enum": ["top_left", "top", "bottom", "left", "none"] },
+    "canvas": { "type": "string", "enum": ["1:1", "4:5", "9:16", "16:9"] },
+    "nonempty": { "type": "string", "minLength": 1 }
+  },
+  "properties": {
+    "schema_version": { "type": "string", "const": "creative-catalogue-v1" },
+    "formats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "channel_formats", "canvases", "shots_allowed", "layout", "text_layers"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "label": { "$ref": "#/definitions/nonempty" },
+          "channel_formats": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" }
+          },
+          "canvases": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/canvas" } },
+          "shots_allowed": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/id" } },
+          "layout": { "$ref": "#/definitions/id" },
+          "text_layers": {
+            "type": "object",
+            "required": ["headline_max", "body_max", "cta_max", "disclaimer"],
+            "additionalProperties": false,
+            "properties": {
+              "headline_max": { "type": "integer", "minimum": 0 },
+              "body_max": { "type": "integer", "minimum": 0 },
+              "cta_max": { "type": "integer", "minimum": 0 },
+              "disclaimer": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "people", "requires_product_image", "craft", "text_zone", "prompt_template", "slots", "negative"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "label": { "$ref": "#/definitions/nonempty" },
+          "people": { "type": "string", "enum": ["buyer_models", "none", "owner_photo_only"] },
+          "requires_product_image": { "type": "boolean" },
+          "craft": {
+            "type": "object",
+            "required": ["lens", "aperture", "light", "angle", "finish"],
+            "additionalProperties": false,
+            "properties": {
+              "lens": { "$ref": "#/definitions/nonempty" },
+              "aperture": { "$ref": "#/definitions/nonempty" },
+              "light": { "$ref": "#/definitions/nonempty" },
+              "angle": { "$ref": "#/definitions/nonempty" },
+              "finish": { "$ref": "#/definitions/nonempty" }
+            }
+          },
+          "text_zone": { "$ref": "#/definitions/text_zone" },
+          "prompt_template": { "type": "string", "minLength": 1, "maxLength": 400 },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["key", "required", "min_chars", "max_chars"],
+              "additionalProperties": false,
+              "properties": {
+                "key": { "$ref": "#/definitions/id" },
+                "required": { "type": "boolean" },
+                "min_chars": { "type": "integer", "minimum": 0 },
+                "max_chars": { "type": "integer", "minimum": 1 },
+                "enum": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/definitions/nonempty" } }
+              }
+            }
+          },
+          "negative": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/nonempty" } }
+        }
+      }
+    },
+    "layouts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "text_zone", "stack", "scrim"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "text_zone": { "$ref": "#/definitions/text_zone" },
+          "stack": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "type": "string", "enum": ["headline", "body", "cta", "disclaimer"] }
+          },
+          "scrim": { "type": "string", "enum": ["behind_text", "none"] }
+        }
+      }
+    }
+  }
+}
