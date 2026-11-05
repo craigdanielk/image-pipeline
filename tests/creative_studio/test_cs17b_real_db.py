@@ -728,10 +728,10 @@ class CsPostRun(unittest.TestCase):
                                 "'execute')"), [(True, False, False)])
 
     def test_12_refinish_a_delivered_library_image_recomposes_and_hands_back_anew_for_free(self):
-        # test_01 re-applies the CS-17b file, which restores its cs_post_finish; re-apply the retry migration (idempotent)
-        # so this test runs on the deployed chain order.
-        self.pg.apply_file(MIGRATIONS_DIR / "20261105294400_cs_retry_post_run.sql")
-        self.pg.apply_file(MIGRATIONS_DIR / "20261105294400_cs_retry_post_run.sql")
+        # test_01 re-applies the CS-17b file, which restores its cs_post_finish; re-apply the re-finish migration
+        # (idempotent, applied twice) so this test runs on the deployed chain order.
+        self.pg.apply_file(MIGRATIONS_DIR / "20261105294500_cs_refinish_delivered.sql")
+        self.pg.apply_file(MIGRATIONS_DIR / "20261105294500_cs_refinish_delivered.sql")
         plan, rid = self.produce()
         self.drain()
         self.assertEqual(self.post_state(rid), ("handoff_delivered", None))

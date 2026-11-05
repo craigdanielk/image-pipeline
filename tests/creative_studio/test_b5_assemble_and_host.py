@@ -152,7 +152,7 @@ class CsB5AssembleAndHost(unittest.TestCase):
     # -------------------------------------------------------------------------
     def test_01_all_cs_migrations_and_provisioning_applied(self):
         """All 4 CS migrations applied, roles exist with least privilege, RLS is forced."""
-        self.assertEqual(len(self.applied), 20)  # 2 legacy + 4 CS migrations + CS-12 + 2 CS-INT2 + CS-15 + CS-16 + CS-17b + CS-19 + CS-20 + CS-21 + MOS image library + funding budget read-back + bucket brand file types + credit balance + retry finishing
+        self.assertEqual(len(self.applied), 21)  # 2 legacy + 4 CS migrations + CS-12 + 2 CS-INT2 + CS-15 + CS-16 + CS-17b + CS-19 + CS-20 + CS-21 + MOS image library + funding budget read-back + bucket brand file types + credit balance + retry finishing + re-finish delivered
         with self.pg.connect() as conn:
             cur = conn.cursor()
             # Prove roles exist without superuser or bypassrls

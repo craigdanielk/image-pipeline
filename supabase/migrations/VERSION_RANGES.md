@@ -17,3 +17,4 @@ so two files with the same version collide at apply time.
 - Bucket brand file types: `20261105294200_cs_bucket_brand_file_types.sql` (CS slot `…29xxxx`).
 - Credit balance read-back: `20261105294300_cs_credit_balance.sql` (CS slot `…29xxxx`).
 - Retry finishing (blocked post-run stage re-queue): `20261105294400_cs_retry_post_run.sql` (CS slot `…29xxxx`).
+- Re-finish a delivered library image: `20261105294500_cs_refinish_delivered.sql` (CS slot `…29xxxx`).
