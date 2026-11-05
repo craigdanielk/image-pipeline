@@ -86,7 +86,8 @@ def build_request_fields(visual_request: dict, sources: dict, brand_package: dic
     placement = pack["placement"]["value"]
     _require(placement["placement_id"] == visual_request["placement_id"] == pack["pack_key"], "source_revision_changed",
              "ContentPack is for a different placement", "/content_pack/content/pack_key")
-    _require(placement["concept_id"] == visual_request["concept_id"] == sources["concept"]["id"],
+    # Plan-era ContentPacks leave placement.concept_id null; MOS resolved the concept from the placement row.
+    _require((placement.get("concept_id") or visual_request["concept_id"]) == visual_request["concept_id"] == sources["concept"]["id"],
              "source_revision_changed", "concept differs from the placement's concept", "/concept")
     pins = pack["pins"]["value"]
     _require(pins["brand_kit"]["id"] == brand_package["source_artifact_id"], "approval_stale",
@@ -106,6 +107,11 @@ def build_request_fields(visual_request: dict, sources: dict, brand_package: dic
         chosen = [v for v in variants if v["copy_version_id"] == selected["copy_version_id"]]
     else:
         chosen = [v for v in variants if v.get("check_state") == "passed" and v["copy_version_id"] in requested]
+        # A draft picture is the photo, not the post: MOS flags every variant "no picture fits this canvas" until a
+        # picture exists, so requiring a passed variant here would wait on itself. Drafts take the requested variants;
+        # the final render still needs the reviewer's selection or a passed variant.
+        if not chosen and visual_request.get("tier") == "draft":
+            chosen = [v for v in variants if v["copy_version_id"] in requested]
     _require(chosen, "copy_selection_required", "no selected or check-passed copy variant for this placement",
              "/content_pack/content/copy_variants")
     exact_copy = []
