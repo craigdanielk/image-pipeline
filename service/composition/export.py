@@ -112,7 +112,10 @@ def _rights_check(record: dict, use: str, channel: str, at: datetime, role: str)
                                ["/rights"], [rid])
     if use not in rights["allowed_uses"]:
         raise CompositionError("rights_denied", f"{role} rights do not allow '{use}'", ["/rights/allowed_uses"], [rid])
-    if channel is not None and channel not in rights["channels"] and "*" not in rights["channels"]:
+    # An empty channel list on permitted rights is "no channel restriction recorded" (the owner confirmed the brand
+    # files as theirs without listing channels), not "no channel": it blocked Regenic's own logo on its own pages.
+    if channel is not None and rights["channels"] and channel not in rights["channels"] \
+            and "*" not in rights["channels"]:
         raise CompositionError("rights_denied", f"{role} rights do not cover channel {channel!r}",
                                ["/rights/channels"], [rid])
     if _parse_ts(rights["valid_from"]) > at or (rights["expires_at"] and _parse_ts(rights["expires_at"]) <= at):
@@ -122,7 +125,7 @@ def _rights_check(record: dict, use: str, channel: str, at: datetime, role: str)
 
 def _derived_rights(source_rights: list[dict], *, receipt_id: str, recorded_by: str, at: str) -> dict:
     def meet(lists):
-        concrete = [set(l) for l in lists if "*" not in l]
+        concrete = [set(l) for l in lists if l and "*" not in l]
         if not concrete:
             return ["*"]
         out = set.intersection(*concrete)
