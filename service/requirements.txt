@@ -12,6 +12,8 @@ cryptography>=42,<47
 # formats everywhere; without it jsonschema silently skips them.
 jsonschema[format-nongpl]>=4.18,<5
 referencing>=0.28,<1
+# creative catalogue (registry/creative-catalogue.yaml, service/catalogue/creative.py)
+PyYAML>=6,<7
 
 # --- render stack (CS-B4 exact compositor) — EXACT, never ranged -------------
 # Goldens (tests/creative_studio/b4_goldens) were produced by this wheel. Pillow's
