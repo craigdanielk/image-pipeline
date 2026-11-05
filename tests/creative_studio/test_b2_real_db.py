@@ -534,6 +534,11 @@ class CsB2RealDatabase(unittest.TestCase):
             self.assertEqual(st, 201, acc)
             runs.append((body, acc))
         (b1, a1), (b2, a2) = runs
+        # re-preparing replays the intake, which hands back the same draft treatment: accepting it again is a replay
+        st, again = self._accept("producer_a", self.ws_a, b1["treatment"])
+        self.assertEqual((st, again["replayed"]), (200, True), again)
+        self.assertEqual(again["treatment"]["version_id"], a1["treatment"]["version_id"])
+        self.assertEqual(self._accept("viewer_a", self.ws_a, b1["treatment"])[0], 403, "replay still needs produce")
         self.assertNotEqual(b1["request"]["version_id"], b2["request"]["version_id"], "two separate saved requests")
         self.assertEqual(b1["request_semantic_sha256"], b2["request_semantic_sha256"])
         self.assertEqual(b1["treatment_semantic_sha256"], b2["treatment_semantic_sha256"])

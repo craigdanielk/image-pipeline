@@ -206,6 +206,19 @@ def register(api_cls, route):
             if head is None:
                 raise ServiceError(404, "resource_unavailable")
             draft = head["payload"]
+            if draft.get("status") == "accepted" and version.get("id") == draft["id"] and version.get("version_id"):
+                # Re-preparing a post replays its intake (same idempotency key), which returns the draft treatment it
+                # accepted last time. Accepting that same draft again is a replay of the earlier accept, not a conflict.
+                prior = store.get_version(cur, "cs_treatment_versions", workspace_id, object_id,
+                                          _uuid(str(version["version_id"])))
+                if prior is not None and prior["payload"]["sha256"] == version.get("sha256") \
+                        and prior["payload"]["revision"] + 1 == draft["revision"]:
+                    cur.execute("select cs_private.cs_can(%s,'produce') as ok", (workspace_id,))
+                    if not cur.fetchone()["ok"]:
+                        raise ServiceError(403, "capability_denied")
+                    return 200, {"treatment": {**documents.version_ref(draft, "treatment"),
+                                               "version_id": draft["version_id"], "sha256": draft["sha256"]},
+                                 "semantic_sha256": head["semantic_sha256"], "replayed": True}
             if (version.get("id"), version.get("version_id"), version.get("sha256")) != \
                     (draft["id"], draft["version_id"], draft["sha256"]) or _if_match(req) != draft["sha256"]:
                 cur.execute("select cs_private.cs_can(%s,'produce') as ok", (workspace_id,))
