@@ -5,6 +5,7 @@ returned dict as read-only.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -18,7 +19,7 @@ _SCHEMA_PATH = _ROOT / "schemas" / "creative-catalogue-v1.schema.json"
 _CACHE: dict[str, dict] = {}
 # Placeholders a template may use without a slot: craft defaults, then keys the client pack/compiler supplies.
 CRAFT_KEYS = frozenset({"lens", "aperture", "light", "angle", "finish"})
-CLIENT_KEYS = frozenset({"scene_palette", "text_space"})
+CLIENT_KEYS = frozenset({"scene_palette", "text_space", "realism"})
 _PLACEHOLDER = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
@@ -73,6 +74,29 @@ def _check_shot_slots(shot: dict) -> None:
             f"shot {shot['id']}: undeclared {sorted(used - set(keys))}, unused slots {sorted(set(keys) - used)}")
 
 
+def forbidden_in(text: str, words) -> list[str]:
+    """Forbidden words a text uses (whole words, any case)."""
+    return [w for w in words if re.search(rf"(?<![\w-]){re.escape(w)}(?![\w-])", text, re.IGNORECASE)]
+
+
+def _check_realism(cat: dict) -> None:
+    """Forbidden words never reach a positive prompt from the catalogue itself; {realism} appears iff the shot takes cues."""
+    words = cat["realism"]["forbidden_words"]
+    banks = cat["realism"]["banks"]
+    for name, cues in banks.items():
+        for cue in cues:
+            if forbidden_in(cue, words):
+                raise CatalogueError("forbidden_word", f"realism bank {name} cue {cue!r} uses {forbidden_in(cue, words)}")
+    for shot in cat["shots"]:
+        positive = " ".join([shot["prompt_template"], *shot["craft"].values()])
+        hits = forbidden_in(positive, words)
+        if hits:
+            raise CatalogueError("forbidden_word", f"shot {shot['id']} template/craft uses {hits}")
+        has = "{realism}" in shot["prompt_template"]
+        if has != bool(shot["realism"]):
+            raise CatalogueError("realism_mismatch", f"shot {shot['id']}: realism banks {shot['realism']} vs {{realism}} in template = {has}")
+
+
 def validate_catalogue(cat: dict, schema: dict | None = None) -> None:
     """Raise CatalogueError unless `cat` is a valid creative catalogue."""
     if schema is None:
@@ -88,6 +112,7 @@ def validate_catalogue(cat: dict, schema: dict | None = None) -> None:
     _check_refs(cat)
     for shot in cat["shots"]:
         _check_shot_slots(shot)
+    _check_realism(cat)
 
 
 def load_catalogue(path: str | None = None) -> dict:
@@ -187,18 +212,43 @@ def _negative(shot: dict, client: dict) -> str:
     return ", ".join(kept)
 
 
-def shot_prompt(shot: dict, slots: dict, client: dict, canvas: str, *, fmt: dict) -> dict:
+def _realism_line(shot: dict, slots: dict, cat: dict) -> str:
+    """One cue per bank the shot takes, picked deterministically from the shot and its filled slots."""
+    seed = json.dumps([shot["id"], sorted(slots.items())], ensure_ascii=False)
+    cues = []
+    for bank in shot.get("realism") or []:
+        options = cat["realism"]["banks"][bank]
+        digest = hashlib.sha256(f"{seed}|{bank}".encode()).digest()
+        cues.append(options[int.from_bytes(digest[:4], "big") % len(options)])
+    line = ", ".join(cues)
+    return line[:1].upper() + line[1:]
+
+
+def _clean_style(style: str, words) -> str:
+    """Drop the parts of a brand style line that use a forbidden word (brand guides say "professional" a lot)."""
+    parts = [p.strip() for p in re.split(r"[;.]", style) if p.strip()]
+    return "; ".join(p for p in parts if not forbidden_in(p, words))
+
+
+def shot_prompt(shot: dict, slots: dict, client: dict, canvas: str, *, fmt: dict, cat: dict | None = None) -> dict:
     """Compile a short photographic prompt: {"positive", "negative"}. Never truncates the positive prompt."""
+    cat = cat or load_catalogue()
+    words = cat["realism"]["forbidden_words"]
     if shot["people"] == "owner_photo_only":
         raise CatalogueError("shot_not_generatable", f"shot {shot['id']} is an owner photograph and is never generated")
     if canvas not in fmt["canvases"]:
         raise CatalogueError("canvas_invalid", f"canvas {canvas!r} is not allowed for format {fmt['id']}: {fmt['canvases']}")
     _check_slots(shot, slots)
+    for key, value in slots.items():
+        hits = forbidden_in(value, words)
+        if hits:
+            raise CatalogueError("slot_invalid", f"slot {key!r} uses words that make images look staged: {hits}")
     values = {**shot["craft"], **{k: v.strip() for k, v in slots.items()},
-              "scene_palette": _palette_line(client), "text_space": _text_space(shot, fmt)}
+              "scene_palette": _palette_line(client), "text_space": _text_space(shot, fmt),
+              "realism": _realism_line(shot, slots, cat)}
     body = _PLACEHOLDER.sub(lambda m: values.get(m.group(1), ""), shot["prompt_template"])
     body = re.sub(r"\s+", " ", re.sub(r"(\.\s*)+\.", ".", body)).strip()
-    style = (client.get("style_line") or "").strip()
+    style = _clean_style((client.get("style_line") or "").strip(), words)
     positive = f"{style.rstrip('.')}. {body}" if style else body
     if len(positive) > POSITIVE_MAX:
         raise CatalogueError("prompt_too_long", f"positive prompt is {len(positive)} chars; limit {POSITIVE_MAX}")

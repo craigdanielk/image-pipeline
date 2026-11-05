@@ -18,7 +18,7 @@ SCHEMA = json.loads((ROOT / "schemas" / "creative-catalogue-v1.schema.json").rea
 EXPORT_CANVASES = {"1:1", "4:5", "9:16", "16:9"}
 # Placeholders a template may use without declaring a slot: craft defaults, then client/compiler keys.
 CRAFT_KEYS = {"lens", "aperture", "light", "angle", "finish"}
-CLIENT_KEYS = {"scene_palette", "text_space"}
+CLIENT_KEYS = {"scene_palette", "text_space", "realism"}
 PLACEHOLDER = re.compile(r"\{([a-z_]+)\}")
 
 
@@ -33,7 +33,7 @@ def test_catalogue_validates_against_schema(cat):
 
 def test_schema_version_and_semver(cat):
     assert cat["schema_version"] == 1
-    assert cat["version"] == "1.0.0"
+    assert cat["version"] == "1.1.0"
     bad = copy.deepcopy(cat)
     bad["version"] = "1.0"
     with pytest.raises(jsonschema.ValidationError):
@@ -182,7 +182,7 @@ def test_library_plate_has_no_text_layers(cat):
 def test_lifestyle_moment_template_is_exact(cat):
     shot = get_shot(cat, "lifestyle_moment")
     assert shot["prompt_template"] == (
-        "Editorial lifestyle photograph. {subject} {action} in {setting}, {expression}. {light}. {scene_palette}. "
+        "Candid lifestyle photograph. {subject} {action} in {setting}, {expression}. {realism}. {light}. {scene_palette}. "
         "Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos.")
     bounds = {s["key"]: (s["min_chars"], s["max_chars"]) for s in shot["slots"]}
     assert bounds == {"subject": (12, 90), "action": (6, 80), "setting": (6, 90), "expression": (4, 60)}
@@ -224,3 +224,33 @@ def test_invalid_catalogue_is_refused(tmp_path):
 
 def test_load_is_cached_by_path():
     assert load_catalogue() is load_catalogue()
+
+
+def test_realism_banks_and_forbidden_words(cat):
+    from service.catalogue.creative import forbidden_in
+    words = cat["realism"]["forbidden_words"]
+    assert {"cinematic", "studio", "perfect", "professional", "editorial"} <= set(words)
+    for shot in cat["shots"]:
+        positive = " ".join([shot["prompt_template"], *shot["craft"].values()])
+        assert not forbidden_in(positive, words), shot["id"]
+        assert ("{realism}" in shot["prompt_template"]) == bool(shot["realism"]), shot["id"]
+    assert get_shot(cat, "lifestyle_moment")["realism"] == ["skin", "pose", "imperfection"]
+    assert get_shot(cat, "product_hero")["realism"] == [], "product shots stay exact"
+    # whole words only: "professionally" and "studios" are not the forbidden words
+    assert forbidden_in("professionally composed", words) == []
+    assert forbidden_in("a Studio light", words) == ["studio"]
+
+
+def test_loader_refuses_forbidden_word_in_catalogue(cat):
+    import copy
+    from service.catalogue.creative import validate_catalogue
+    bad = copy.deepcopy(cat)
+    get_shot(bad, "lifestyle_moment")["craft"]["finish"] = "cinematic colour grade"
+    with pytest.raises(CatalogueError) as e:
+        validate_catalogue(bad)
+    assert e.value.code == "forbidden_word"
+    bad = copy.deepcopy(cat)
+    get_shot(bad, "product_hero")["realism"] = ["imperfection"]
+    with pytest.raises(CatalogueError) as e:
+        validate_catalogue(bad)
+    assert e.value.code == "realism_mismatch"

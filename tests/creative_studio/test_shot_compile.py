@@ -279,3 +279,40 @@ class MosIntakeShotSpecTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RealismTests(unittest.TestCase):
+    def setUp(self):
+        self.cat = load_catalogue()
+        self.fmt = get_format(self.cat, "feed_single_image")
+        self.shot = get_shot(self.cat, "lifestyle_moment")
+
+    def test_people_shot_gets_one_cue_per_bank_deterministically(self):
+        a = shot_prompt(self.shot, REGENIC_SLOTS, REGENIC_CLIENT, "4:5", fmt=self.fmt)
+        b = shot_prompt(self.shot, REGENIC_SLOTS, REGENIC_CLIENT, "4:5", fmt=self.fmt)
+        self.assertEqual(a, b)
+        banks = self.cat["realism"]["banks"]
+        for bank in ("skin", "pose", "imperfection"):
+            self.assertEqual(sum(cue.lower() in a["positive"].lower() for cue in banks[bank]), 1, bank)
+        self.assertTrue(a["positive"].startswith("Natural, warm"))
+        self.assertIn("Candid lifestyle photograph", a["positive"])
+        self.assertLessEqual(len(a["positive"]), 1200)
+
+    def test_product_shot_takes_no_realism_cues(self):
+        shot = get_shot(self.cat, "product_hero")
+        p = shot_prompt(shot, {"placement": "centred on a shelf", "surface": "a pale stone counter"}, REGENIC_CLIENT, "4:5", fmt=self.fmt)
+        for cues in self.cat["realism"]["banks"].values():
+            self.assertFalse(any(c.lower() in p["positive"].lower() for c in cues))
+
+    def test_forbidden_word_in_slot_is_refused_by_name(self):
+        slots = {**REGENIC_SLOTS, "setting": "a perfect sunlit studio apartment"}
+        with self.assertRaises(CatalogueError) as e:
+            shot_prompt(self.shot, slots, REGENIC_CLIENT, "4:5", fmt=self.fmt)
+        self.assertEqual(e.exception.code, "slot_invalid")
+        self.assertIn("perfect", e.exception.message)
+
+    def test_style_line_parts_with_forbidden_words_are_dropped(self):
+        client = {**REGENIC_CLIENT, "style_line": "Warm natural light; professional studio look; real people"}
+        p = shot_prompt(self.shot, REGENIC_SLOTS, client, "4:5", fmt=self.fmt)
+        self.assertTrue(p["positive"].startswith("Warm natural light; real people."))
+        self.assertNotIn("studio look", p["positive"])

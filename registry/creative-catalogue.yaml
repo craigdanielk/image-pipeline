@@ -8,7 +8,35 @@
 # the shot's text_zone, so every generated template ends "No text, no logos".
 # Industry restrictions (e.g. regulated claims) come from the client pack, never from this file.
 schema_version: 1
-version: '1.0.0'
+version: '1.1.0'
+
+# Realism (what makes a generated photo read as a real post, not stock). Ported from the FounderOS creative engine's
+# UGC prompt banks (MIT), adapted to stills. Forbidden words may never appear in a positive prompt (templates, craft,
+# banks or slot values); each shot names which cue banks it takes (`realism`), one cue per bank, picked
+# deterministically from the filled slots.
+realism:
+  forbidden_words: [cinematic, professional, stunning, 8k, studio, perfect, flawless, editorial, glamour, hdr, hyperrealistic, award-winning, masterpiece]
+  banks:
+    skin:
+      - natural skin texture with visible pores
+      - a few faint freckles
+      - slight redness around the nose
+      - uneven skin tone under the eyes
+      - faint lines at the corners of the eyes
+    pose:
+      - eyes drifting just off camera
+      - a small head tilt mid-sentence
+      - weight shifted onto one leg
+      - a hand caught mid-gesture
+      - a half laugh, caught between expressions
+      - one shoulder slightly raised, relaxed
+    imperfection:
+      - framing slightly off centre
+      - a little phone-camera grain in the shadows
+      - a soft highlight from the window, slightly blown out
+      - mixed colour temperature between daylight and a lamp
+      - one edge of the frame softly out of focus
+      - an everyday object half in frame at the edge
 
 formats:
   - id: feed_single_image
@@ -74,9 +102,10 @@ shots:
       aperture: f/2.8
       light: Soft natural directional light from one side
       angle: eye-level medium shot
-      finish: natural skin texture, true-to-life colour, fine film grain
+      finish: true-to-life colour, fine film grain
+    realism: [skin, pose, imperfection]
     text_zone: top_left
-    prompt_template: "Editorial lifestyle photograph. {subject} {action} in {setting}, {expression}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    prompt_template: "Candid lifestyle photograph. {subject} {action} in {setting}, {expression}. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
     slots:
       - {key: subject, required: true, min_chars: 12, max_chars: 90}
       - {key: action, required: true, min_chars: 6, max_chars: 80}
@@ -93,9 +122,10 @@ shots:
       aperture: f/2
       light: Warm soft directional light with gentle fill
       angle: chest-up portrait from slightly below eye level
-      finish: sharp eyes, natural skin texture, fine film grain
+      finish: sharp eyes, true-to-life colour, fine film grain
+    realism: [skin, pose, imperfection]
     text_zone: left
-    prompt_template: "Natural portrait photograph. {subject} {action}, {expression}, in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    prompt_template: "Natural portrait photograph. {subject} {action}, {expression}, in {setting}. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
     slots:
       - {key: subject, required: true, min_chars: 12, max_chars: 90}
       - {key: action, required: true, min_chars: 6, max_chars: 80}
@@ -113,8 +143,9 @@ shots:
       light: Bright even natural light
       angle: over-the-shoulder medium-wide shot
       finish: true-to-life colour, clean detail, documentary feel
+    realism: [pose, imperfection]
     text_zone: top
-    prompt_template: "Documentary photograph. {subject} {action} at {setting}, {expression}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    prompt_template: "Documentary photograph. {subject} {action} at {setting}, {expression}. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
     slots:
       - {key: subject, required: true, min_chars: 12, max_chars: 90}
       - {key: action, required: true, min_chars: 6, max_chars: 80}
@@ -132,8 +163,9 @@ shots:
       light: Soft directional light with gentle shadows
       angle: tight close-up from slightly above
       finish: fine texture detail, shallow depth of field
+    realism: [imperfection]
     text_zone: top
-    prompt_template: "Close-up detail photograph. Hands {action}, {detail}, in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    prompt_template: "Close-up detail photograph. Hands {action}, {detail}, in {setting}. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
     slots:
       - {key: action, required: true, min_chars: 6, max_chars: 80}
       - {key: detail, required: true, min_chars: 6, max_chars: 80}
@@ -150,6 +182,7 @@ shots:
       light: Large softbox key light with a subtle rim light
       angle: three-quarter view at product height
       finish: crisp edges, clean reflections, accurate colour
+    realism: []
     text_zone: top
     prompt_template: "Commercial product photograph. The product from the reference image, {placement}, on {surface}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. Keep the product exactly as shown. No added text, no added logos."
     slots:
@@ -167,6 +200,7 @@ shots:
       light: Even diffused light from above
       angle: straight top-down
       finish: soft clean shadows, accurate colour, crisp detail
+    realism: []
     text_zone: bottom
     prompt_template: "Overhead flat lay photograph. The product from the reference image arranged with {props} on {surface}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. Keep the product exactly as shown. No added text, no added logos."
     slots:
@@ -184,8 +218,9 @@ shots:
       light: Soft natural daylight
       angle: eye-level wide shot with straight verticals
       finish: clean lines, natural colour, calm composition
+    realism: [imperfection]
     text_zone: none
-    prompt_template: "Architectural photograph. {setting}, {details}, empty of people. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. No text, no logos, no signage."
+    prompt_template: "Architectural photograph. {setting}, {details}, empty of people. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. No text, no logos, no signage."
     slots:
       - {key: setting, required: true, min_chars: 6, max_chars: 90}
       - {key: details, required: true, min_chars: 6, max_chars: 90}
@@ -203,6 +238,7 @@ shots:
       light: Soft natural light, no flash
       angle: eye-level waist-up shot
       finish: natural skin texture, true-to-life colour
+    realism: []
     text_zone: left
     prompt_template: "Owner-supplied photograph. {subject} in {setting}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}."
     slots:
