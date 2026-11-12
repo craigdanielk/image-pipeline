@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -203,6 +204,64 @@ class CompileShotSpecTests(unittest.TestCase):
         self.assertEqual(shot_spec_errors, [])
         bad = {**fx["request"], "shot_spec": {**req["shot_spec"], "extra": 1}}
         self.assertTrue([e for e in contracts.errors_for(bad, "cs-creative-request-v1") if "shot_spec" in e[0]])
+
+
+ASSISTANT_POSITIVE = ("Candid photograph of a South African man in his early 30s with short natural hair, smiling at a message "
+                      "on his phone as he leans back on a light linen sofa in a sunlit apartment, morning light across the room. "
+                      "Warm off-white walls, one deep navy cushion. Upper-left third is plain and empty for a headline. "
+                      "No text, no logos.")
+
+
+class AssistantPromptTests(unittest.TestCase):
+    """The user's assistant writes the final prompt; the compiler checks it and uses it verbatim (client limits kept)."""
+
+    def chain(self, prompt):
+        return CompileShotSpecTests.chain(CompileShotSpecTests(), _spec(prompt=prompt))
+
+    def test_positive_used_verbatim_and_client_restrictions_lead_the_negative(self):
+        req, tr, pkg = self.chain({"positive": ASSISTANT_POSITIVE, "negative": "stiff pose, plastic skin"})
+        pp = compile_mapping.compile_inputs(req, tr, pkg)["provider_prompt"]
+        self.assertEqual(pp["positive"], ASSISTANT_POSITIVE)
+        self.assertTrue(pp["negative"].startswith("before-and-after comparisons or side-by-side body or skin images"), pp["negative"])
+        for r in ("medicine names, pill packaging", "guaranteed or typical outcome", "stiff pose", "plastic skin"):
+            self.assertIn(r, pp["negative"])
+        self.assertEqual(pp["metadata"]["prompt_written_by"], "assistant")
+
+    def test_an_empty_assistant_negative_still_carries_every_client_restriction(self):
+        req, tr, pkg = self.chain({"positive": ASSISTANT_POSITIVE, "negative": ""})
+        neg = compile_mapping.compile_inputs(req, tr, pkg)["provider_prompt"]["negative"]
+        for r in REGENIC_CLIENT["restrictions"]:
+            self.assertIn(re.sub(r"^(no|avoid)\s+", "", r.rstrip("."), flags=re.IGNORECASE), neg)
+
+    def test_refusals_name_the_rule(self):
+        cases = {
+            "too short": {"positive": "A man on a sofa. No text, no logos.", "negative": ""},
+            "look staged": {"positive": ASSISTANT_POSITIVE.replace("Candid photograph", "Cinematic professional photograph"), "negative": ""},
+            "must keep these sentences": {"positive": ASSISTANT_POSITIVE.replace(" No text, no logos.", ""), "negative": ""},
+            "positive prompt is": {"positive": ASSISTANT_POSITIVE + " x" * 700, "negative": ""},
+            "your own phrases may use about": {"positive": ASSISTANT_POSITIVE, "negative": ", ".join(f"thing number {i}" for i in range(60))},
+        }
+        for words, prompt in cases.items():
+            req, tr, pkg = self.chain(prompt)
+            with self.assertRaises(InputRefusal, msg=words) as ctx:
+                compile_mapping.compile_inputs(req, tr, pkg)
+            self.assertIn(words, ctx.exception.message, words)
+
+    def test_the_shot_checks_still_apply(self):
+        req, tr, pkg = CompileShotSpecTests.chain(CompileShotSpecTests(), _spec(slots={}, prompt={"positive": ASSISTANT_POSITIVE, "negative": ""}))
+        with self.assertRaises(InputRefusal):
+            compile_mapping.compile_inputs(req, tr, pkg)
+
+    def test_catalogue_prompts_are_unchanged_and_the_contract_accepts_only_positive_and_negative(self):
+        req, tr, pkg = CompileShotSpecTests.chain(CompileShotSpecTests(), _spec())
+        self.assertNotIn("prompt_written_by", compile_mapping.compile_inputs(req, tr, pkg)["provider_prompt"]["metadata"])
+        fx = json.loads(LEGACY.read_text())
+        ok_spec = _spec(prompt={"positive": ASSISTANT_POSITIVE, "negative": ""})
+        self.assertEqual([e for e in contracts.errors_for({**fx["request"], "shot_spec": ok_spec}, "cs-creative-request-v1") if "shot_spec" in e[0]], [])
+        bad = _spec(prompt={"positive": ASSISTANT_POSITIVE, "negative": "", "model": "x"})
+        self.assertTrue([e for e in contracts.errors_for({**fx["request"], "shot_spec": bad}, "cs-creative-request-v1") if "shot_spec" in e[0]])
+        from service.requests.canonical import request_semantic_sha256
+        self.assertNotEqual(request_semantic_sha256({**fx["request"], "shot_spec": ok_spec}), request_semantic_sha256({**fx["request"], "shot_spec": _spec()}))
 
 
 class MosIntakeShotSpecTests(unittest.TestCase):

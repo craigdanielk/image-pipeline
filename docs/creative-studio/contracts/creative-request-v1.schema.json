@@ -456,7 +456,15 @@
             "restrictions": {"type": "array", "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 300}}
           }
         },
-        "references": {"type": "array", "maxItems": 20, "items": {"$ref": "common.schema.json#/$defs/sha256"}}
+        "references": {"type": "array", "maxItems": 20, "items": {"$ref": "common.schema.json#/$defs/sha256"}},
+        "prompt": {
+          "$comment": "Optional: the final prompt written by the user's assistant. Used verbatim after the compiler's checks; the client restrictions still lead the negative prompt.",
+          "type": "object", "additionalProperties": false, "required": ["positive", "negative"],
+          "properties": {
+            "positive": {"type": "string", "minLength": 1, "maxLength": 1200},
+            "negative": {"type": "string", "maxLength": 400}
+          }
+        }
       }
     },
     "constraints": {

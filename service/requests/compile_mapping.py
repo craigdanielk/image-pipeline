@@ -23,7 +23,7 @@ from pathlib import Path
 
 from ..brand.errors import InputRefusal
 from ..catalogue import CatalogueError, get_format, get_shot, load_catalogue
-from ..catalogue.creative import shot_prompt
+from ..catalogue.creative import assistant_prompt, shot_prompt
 from .canonical import jcs_sha256, request_semantic_sha256, treatment_semantic_sha256
 
 _CORE = Path(__file__).resolve().parents[2] / "core"
@@ -109,11 +109,17 @@ def _shot_texts(request: dict) -> tuple[str, str | None, dict]:
         shot = get_shot(cat, spec["shot_id"])
         if shot["id"] not in fmt["shots_allowed"]:
             raise CatalogueError("shot_not_allowed", f"format {fmt['id']} does not allow shot {shot['id']}")
-        out = shot_prompt(shot, spec["slots"], spec["client"], spec["canvas"], fmt=fmt)
+        if spec.get("prompt") is not None:
+            # The user's assistant wrote the final prompt: used verbatim once it passes the same rules (client restrictions kept).
+            out = assistant_prompt(shot, spec["slots"], spec["client"], spec["canvas"], spec["prompt"], fmt=fmt)
+        else:
+            out = shot_prompt(shot, spec["slots"], spec["client"], spec["canvas"], fmt=fmt)
     except CatalogueError as exc:
         raise InputRefusal("invalid_contract", f"shot_spec refused ({exc.code}): {exc.message}", ["/shot_spec"]) from None
     return out["positive"], out["negative"] or None, {
-        "shot_id": shot["id"], "format_id": fmt["id"], "catalogue_version": cat["version"]}
+        "shot_id": shot["id"], "format_id": fmt["id"], "catalogue_version": cat["version"],
+        # only on assistant prompts, so every existing catalogue plan compiles byte-identically
+        **({"prompt_written_by": "assistant"} if spec.get("prompt") is not None else {})}
 
 
 def compile_inputs(request: dict, treatment: dict, package: dict, product_spec: dict | None = None) -> dict:
