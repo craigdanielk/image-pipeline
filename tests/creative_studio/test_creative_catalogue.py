@@ -33,7 +33,8 @@ def test_catalogue_validates_against_schema(cat):
 
 def test_schema_version_and_semver(cat):
     assert cat["schema_version"] == 1
-    assert cat["version"] == "1.1.0"
+    assert cat["version"] == "1.2.0"
+    assert cat["compatible_with"] == ["1.1.0"]   # 1.2.0 only added shots
     bad = copy.deepcopy(cat)
     bad["version"] = "1.0"
     with pytest.raises(jsonschema.ValidationError):
@@ -137,7 +138,7 @@ def test_v1_ids_are_fixed(cat):
         "feed_single_image", "story_vertical", "carousel_card", "landscape_banner", "library_plate"}
     assert {s["id"] for s in cat["shots"]} == {
         "lifestyle_moment", "outcome_confidence", "delivery_moment", "hands_detail", "product_hero", "flat_lay",
-        "environment_scene", "founder_team"}
+        "environment_scene", "founder_team", "pattern_interrupt", "visual_metaphor"}
 
 
 def test_canvases_are_export_presets(cat):

@@ -264,6 +264,27 @@ class AssistantPromptTests(unittest.TestCase):
         self.assertNotEqual(request_semantic_sha256({**fx["request"], "shot_spec": ok_spec}), request_semantic_sha256({**fx["request"], "shot_spec": _spec()}))
 
 
+class CatalogueCompatibilityTests(unittest.TestCase):
+    """1.2.0 added shots only: specs written for 1.1.0 still compile; unknown versions are still refused."""
+
+    def test_older_compatible_version_compiles_and_unknown_is_refused(self):
+        req, tr, pkg = CompileShotSpecTests.chain(CompileShotSpecTests(), _spec(catalogue_version="1.1.0"))
+        self.assertIn("35mm", compile_mapping.compile_inputs(req, tr, pkg)["provider_prompt"]["positive"])
+        req, tr, pkg = CompileShotSpecTests.chain(CompileShotSpecTests(), _spec(catalogue_version="0.9.0"))
+        with self.assertRaises(InputRefusal):
+            compile_mapping.compile_inputs(req, tr, pkg)
+
+    def test_new_shots_compile_without_people(self):
+        for shot_id, slots in (("pattern_interrupt", {"object": "a tall bathroom mirror", "setting": "the middle of a quiet beach at dawn",
+                                                      "detail": "small waves reflected in the glass"}),
+                               ("visual_metaphor", {"idea": "a full monthly cost laid out up front", "setting": "a calm kitchen table",
+                                                    "metaphor_scene": "an open lunchbox with every compartment neatly filled and labelled by colour"})):
+            req, tr, pkg = CompileShotSpecTests.chain(CompileShotSpecTests(), _spec(shot_id=shot_id, slots=slots))
+            pp = compile_mapping.compile_inputs(req, tr, pkg)["provider_prompt"]
+            self.assertTrue(pp["positive"].endswith("No text, no logos."), pp["positive"])
+            self.assertIn("people", pp["negative"])
+
+
 class MosIntakeShotSpecTests(unittest.TestCase):
     def setUp(self):
         from service.brand.mos_brandkit import build_package, package_version_ref
