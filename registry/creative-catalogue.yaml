@@ -8,7 +8,9 @@
 # the shot's text_zone, so every generated template ends "No text, no logos".
 # Industry restrictions (e.g. regulated claims) come from the client pack, never from this file.
 schema_version: 1
-version: '1.1.0'
+version: '1.2.0'
+# Specs written for these versions still compile: 1.2.0 only added shots (pattern_interrupt, visual_metaphor).
+compatible_with: ['1.1.0']
 
 # Realism (what makes a generated photo read as a real post, not stock). Ported from the FounderOS creative engine's
 # UGC prompt banks (MIT), adapted to stills. Forbidden words may never appear in a positive prompt (templates, craft,
@@ -48,7 +50,7 @@ formats:
       - linkedin.feed_post
       - reddit_ads.promoted_post
     canvases: ["1:1", "4:5"]
-    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, founder_team]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, founder_team, pattern_interrupt, visual_metaphor]
     layout: stack_top_left
     text_layers: {headline_max: 40, body_max: 90, cta_max: 20, disclaimer: true}
 
@@ -58,7 +60,7 @@ formats:
       - instagram.reel
       - meta_ads.single_image_ad
     canvases: ["9:16"]
-    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, founder_team]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, founder_team, pattern_interrupt, visual_metaphor]
     layout: stack_top
     text_layers: {headline_max: 36, body_max: 60, cta_max: 18, disclaimer: true}
 
@@ -67,7 +69,7 @@ formats:
     channel_formats:
       - meta_ads.carousel_ad
     canvases: ["4:5"]
-    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, founder_team]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, hands_detail, product_hero, flat_lay, founder_team, pattern_interrupt, visual_metaphor]
     layout: stack_bottom
     text_layers: {headline_max: 32, body_max: 60, cta_max: 18, disclaimer: true}
 
@@ -76,7 +78,7 @@ formats:
     channel_formats:
       - google_ads.performance_max_asset
     canvases: ["16:9"]
-    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, product_hero, flat_lay]
+    shots_allowed: [lifestyle_moment, outcome_confidence, delivery_moment, product_hero, flat_lay, pattern_interrupt, visual_metaphor]
     layout: stack_left
     text_layers: {headline_max: 30, body_max: 90, cta_max: 15, disclaimer: true}
 
@@ -225,6 +227,45 @@ shots:
       - {key: setting, required: true, min_chars: 6, max_chars: 90}
       - {key: details, required: true, min_chars: 6, max_chars: 90}
     negative: [people, readable signage, converging verticals, harsh flash, text or watermark]
+
+  # Attention patterns (registry/attention-patterns.yaml in Marketing OS): pictures that stop the scroll without people.
+  - id: pattern_interrupt
+    label: Pattern interrupt (familiar object out of place)
+    people: none
+    requires_product_image: false
+    craft:
+      lens: 35mm lens
+      aperture: f/4
+      light: Soft natural light from one side
+      angle: eye-level medium shot
+      finish: true-to-life colour, fine film grain
+    realism: [imperfection]
+    text_zone: top_left
+    prompt_template: "Photograph. {object} where it does not belong: {setting}, {detail}. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    slots:
+      - {key: object, required: true, min_chars: 6, max_chars: 80}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+      - {key: detail, required: true, min_chars: 6, max_chars: 90}
+    negative: [people, cartoon style, distorted proportions, cluttered background, text or watermark]
+
+  - id: visual_metaphor
+    label: Visual metaphor (show the idea, do not explain it)
+    people: none
+    requires_product_image: false
+    craft:
+      lens: 50mm lens
+      aperture: f/5.6
+      light: Soft diffused daylight
+      angle: straight-on medium shot
+      finish: clean natural colour, calm composition
+    realism: [imperfection]
+    text_zone: top
+    prompt_template: "Photograph. A visual metaphor for {idea}: {metaphor_scene}, in {setting}. {realism}. {light}. {scene_palette}. Shot on {lens}, {aperture}, {angle}, {finish}. {text_space}. No text, no logos."
+    slots:
+      - {key: idea, required: true, min_chars: 6, max_chars: 80}
+      - {key: metaphor_scene, required: true, min_chars: 12, max_chars: 120}
+      - {key: setting, required: true, min_chars: 6, max_chars: 90}
+    negative: [people, cartoon style, surreal distortion, cluttered background, text or watermark]
 
   # Never generated: the owner supplies real photos of themselves/their team. The template is the brief the
   # owner photo is checked against, and is never sent to an image model.

@@ -101,7 +101,7 @@ def _shot_texts(request: dict) -> tuple[str, str | None, dict]:
                            ["/shot_spec/canvas"])
     try:
         cat = load_catalogue()
-        if spec["catalogue_version"] != cat["version"]:
+        if spec["catalogue_version"] != cat["version"] and spec["catalogue_version"] not in cat.get("compatible_with", []):
             raise InputRefusal("source_revision_changed",
                                f"shot_spec was written for catalogue {spec['catalogue_version']}, this is {cat['version']}",
                                ["/shot_spec/catalogue_version"])
