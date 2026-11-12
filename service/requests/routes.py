@@ -86,13 +86,17 @@ def register(api_cls, route):
             if sources.get("workspace_id") != mos_ws or visual.get("workspace_id") != mos_ws:
                 raise ServiceError(403, "scope_mismatch")
             library = mos_intake.is_library_request(visual)
-            pins = sources["brand_kit"] if library else sources["content_pack"]["content"]["pins"]["value"]["brand_kit"]
+            plates = mos_intake.is_plates_request(visual)
+            pins = sources["brand_kit"] if (library or plates) else sources["content_pack"]["content"]["pins"]["value"]["brand_kit"]
             pkg_row = store.package_for_source(cur, workspace_id, binding_id, pins["id"])
             if pkg_row is None:
                 raise ServiceError(409, "source_unavailable", "the BrandKit these sources pin is not imported")
             package = {"document": pkg_row["payload"], "ref": package_version_ref(pkg_row["payload"]),
                        "source_artifact_id": str(pkg_row["source_version_id"])}
-            if library:   # image-library brief: no concept/copy; MOS checks the approved LibraryPack instead
+            if plates:    # assistant-written B-roll plate: no concept/copy/layers; MOS checks the user's credit agreement
+                fields = mos_intake.build_plates_request_fields(visual, sources, package, binding_id)
+                source_versions = [sources["plate_set"]]
+            elif library:   # image-library brief: no concept/copy; MOS checks the approved LibraryPack instead
                 fields = mos_intake.build_library_request_fields(visual, sources, package, binding_id)
                 source_versions = [sources["library"]]
             else:
@@ -108,7 +112,8 @@ def register(api_cls, route):
             saved = store.save_request(cur, workspace_id, request, if_match=None, key=_derived(key, "request"),
                                        digest=digest)
             request_ref = documents.version_ref(request, "creative-request")
-            build_treatment = mos_intake.build_library_treatment_fields if library else mos_intake.build_treatment_fields
+            build_treatment = (mos_intake.build_plates_treatment_fields if plates else
+                               mos_intake.build_library_treatment_fields if library else mos_intake.build_treatment_fields)
             treatment = documents.new_treatment(build_treatment(sources, request_ref, package["ref"]),
                                                 workspace_id=workspace_id, actor_id=actor.user_id)
             store.save_treatment(cur, workspace_id, treatment, if_match=None, key=_derived(key, "treatment"),
@@ -120,7 +125,7 @@ def register(api_cls, route):
             draft = documents.revised_draft({**draft, "revision": 0}, {
                 "step": "direction",
                 "selections": {"brand_package": package["ref"], "offering": sources["offering"]["source"],
-                               "audiences": sources["audiences"], "concept": None if library else sources["concept"],
+                               "audiences": sources["audiences"], "concept": None if (library or plates) else sources["concept"],
                                "request": request_ref, "treatment": treatment_ref}})
             store.save_draft(cur, workspace_id, draft, 0)
         return 201, {"request": request_ref, "request_semantic_sha256": documents.request_semantic(request),

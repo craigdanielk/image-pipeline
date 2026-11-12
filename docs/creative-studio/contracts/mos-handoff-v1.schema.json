@@ -118,6 +118,36 @@
             "library_item_key",
             "policy"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "$comment": "Video plates handoff: MOS stores the plate (no copy, logo or text layers) against its plate set, filed under the angle.",
+          "properties": {
+            "authority": {
+              "const": "marketing-os"
+            },
+            "workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "plate_set": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "plate_key": {
+              "type": "string",
+              "pattern": "^plate-[A-Za-z0-9_:.-]{1,200}$"
+            }
+          },
+          "required": [
+            "authority",
+            "workspace_id",
+            "plate_set",
+            "plate_key",
+            "policy"
+          ]
         }
       ]
     },

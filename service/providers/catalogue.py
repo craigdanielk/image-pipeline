@@ -103,7 +103,7 @@ def build_entries(source: dict, *, credential, allow_fixture: bool = False) -> t
     entries, refusals = [], []
 
     def add(entry_id, model_id, endpoint_key, surface, operation, tier, parameters, surface_cfg, adapter_config,
-            max_units, max_units_source):
+            max_units, max_units_source, selection="auto"):
         try:
             credits = higgsfield.quote_credits(surface, model_id, parameters, probe, adapter_config, credential)
         except Exception as exc:   # recorded per entry; the entry is not published
@@ -119,7 +119,9 @@ def build_entries(source: dict, *, credential, allow_fixture: bool = False) -> t
         validate_subschema("provider-catalogue-v1.schema.json", "/properties/entries/items", doc)
         snapshot = dict(snapshot_base, quote_source=f"{hf.PROVIDER_ID} adapter cost quote ({surface})",
                         quoted_credits=str(credits), quote_parameters=parameters, quoted_at=observed_at,
-                        max_units_source=max_units_source)
+                        max_units_source=max_units_source,
+                        # "explicit": only a request that names this model gets it (plates); auto selection skips it
+                        **({"selection": selection} if selection != "auto" else {}))
         sha = digest({"entry": doc, "adapter_config": adapter_config, "price_snapshot": snapshot,
                       "tier": tier, "surface": surface})
         entries.append(CatalogueEntry(entry_id, model_id, endpoint_key, surface, operation, tier,
@@ -148,7 +150,7 @@ def build_entries(source: dict, *, credential, allow_fixture: bool = False) -> t
                           "result_origins": source["transport"]["result_origins"]}
         add(model["entry_id"], model["model_id"], model.get("endpoint_key", "generate"), "generate",
             model["operation"], model["tier"], dict(model["probe_parameters"]), model, adapter_config,
-            int(model["max_units"]), model["max_units_source"])
+            int(model["max_units"]), model["max_units_source"], model.get("selection", "auto"))
     return entries, refusals
 
 

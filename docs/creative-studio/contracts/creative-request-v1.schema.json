@@ -195,6 +195,66 @@
             "brand_rule_approval",
             "generation_eligibility"
           ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "$comment": "Marketing OS video plates: assistant-written B-roll prompts (stills and image-to-video clips) for a post or a campaign-plan angle, with the user's agreed credits as the approval. No campaign copy, logo or text layers; exact_copy is empty and the output is the scene itself.",
+          "properties": {
+            "kind": {
+              "const": "marketing-os-plates"
+            },
+            "mos_workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "brand_rule_revision": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/version_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "brand_rule_approval": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/approval"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "generation_eligibility": {
+              "$ref": "common.schema.json#/$defs/eligibility_receipt"
+            },
+            "plate_set": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "plate_key": {
+              "type": "string",
+              "pattern": "^plate-[A-Za-z0-9_:.-]{1,200}$"
+            },
+            "plate_set_approval": {
+              "$ref": "common.schema.json#/$defs/approval"
+            }
+          },
+          "required": [
+            "kind",
+            "mos_workspace_id",
+            "plate_set",
+            "plate_key",
+            "plate_set_approval",
+            "policy",
+            "brand_rule_revision",
+            "brand_rule_approval",
+            "generation_eligibility"
+          ]
         }
       ]
     },
@@ -406,7 +466,7 @@
       },
       "minItems": 0,
       "maxItems": 50,
-      "$comment": "At least one entry for every origin except marketing-os-library (image-library briefs carry no campaign copy); see allOf."
+      "$comment": "At least one entry for every origin except marketing-os-library and marketing-os-plates (image-library briefs carry no campaign copy); see allOf."
     },
     "formats": {
       "type": "array",
@@ -435,34 +495,124 @@
       "$comment": "Optional structured shot from the creative catalogue (mos-shot-spec-v1). When present the compiler builds a short photographic prompt from it instead of prose direction.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema_version", "catalogue_version", "format_id", "shot_id", "canvas", "slots", "client"],
+      "required": [
+        "schema_version",
+        "catalogue_version",
+        "format_id",
+        "shot_id",
+        "canvas",
+        "slots",
+        "client"
+      ],
       "properties": {
-        "schema_version": {"const": "mos-shot-spec-v1"},
-        "catalogue_version": {"type": "string", "minLength": 1, "maxLength": 40},
-        "format_id": {"type": "string", "minLength": 1, "maxLength": 64},
-        "shot_id": {"type": "string", "minLength": 1, "maxLength": 64},
-        "canvas": {"type": "string", "minLength": 1, "maxLength": 16},
-        "slots": {"type": "object", "additionalProperties": {"type": "string", "maxLength": 400}, "maxProperties": 20},
+        "schema_version": {
+          "const": "mos-shot-spec-v1"
+        },
+        "catalogue_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "format_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "shot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "canvas": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "slots": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 400
+          },
+          "maxProperties": 20
+        },
         "client": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["scene_palette", "style_line", "people_policy", "restrictions"],
+          "required": [
+            "scene_palette",
+            "style_line",
+            "people_policy",
+            "restrictions"
+          ],
           "properties": {
-            "scene_palette": {"type": "array", "maxItems": 6, "items": {"type": "object", "additionalProperties": false,
-              "required": ["hex", "object"], "properties": {"hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
-              "object": {"type": "string", "minLength": 1, "maxLength": 80}}}},
-            "style_line": {"type": "string", "maxLength": 300},
-            "people_policy": {"type": "string", "maxLength": 40},
-            "restrictions": {"type": "array", "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 300}}
+            "scene_palette": {
+              "type": "array",
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "hex",
+                  "object"
+                ],
+                "properties": {
+                  "hex": {
+                    "type": "string",
+                    "pattern": "^#[0-9A-Fa-f]{6}$"
+                  },
+                  "object": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 80
+                  }
+                }
+              }
+            },
+            "style_line": {
+              "type": "string",
+              "maxLength": 300
+            },
+            "people_policy": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "restrictions": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300
+              }
+            }
           }
         },
-        "references": {"type": "array", "maxItems": 20, "items": {"$ref": "common.schema.json#/$defs/sha256"}},
+        "references": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "common.schema.json#/$defs/sha256"
+          }
+        },
         "prompt": {
           "$comment": "Optional: the final prompt written by the user's assistant. Used verbatim after the compiler's checks; the client restrictions still lead the negative prompt.",
-          "type": "object", "additionalProperties": false, "required": ["positive", "negative"],
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "positive",
+            "negative"
+          ],
           "properties": {
-            "positive": {"type": "string", "minLength": 1, "maxLength": 1200},
-            "negative": {"type": "string", "maxLength": 400}
+            "positive": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1200
+            },
+            "negative": {
+              "type": "string",
+              "maxLength": 400
+            }
           }
         }
       }
@@ -536,7 +686,10 @@
           "origin": {
             "properties": {
               "kind": {
-                "const": "marketing-os-library"
+                "enum": [
+                  "marketing-os-library",
+                  "marketing-os-plates"
+                ]
               }
             },
             "required": [
