@@ -195,6 +195,8 @@ class PostRunRuntime:
         keys, infos = self._assets(ctx)
         source = StoreAssetSource(self.store, keys)
         scene = ctx["outputs"][0]["ref"]
+        if request["origin"].get("kind") == "marketing-os-plates":
+            return self._compose_plate(lease, ctx, fmt, package, source, scene)
         logo_spec = next((l for l in package["logos"] if l["role"] == "primary"), package["logos"][0] if package["logos"] else None)
         if logo_spec is None:
             raise Blocked("logo_asset_missing", "brand package has no logo")
@@ -272,6 +274,37 @@ class PostRunRuntime:
                             {"composition_version_id": str(saved["version_id"]), "render_sha256": render.sha256},
                             "publish_export")
 
+    def _compose_plate(self, lease, ctx, fmt, package, source, scene) -> dict:
+        """A video plate is the generated scene itself: one locked full-bleed image layer, no logo and no text, so the
+        assistant composes it into the video with the brand's own layers later."""
+        layers = [{"id": "scene", "name": "Generated scene", "type": "image", "order": 0, "locked": True,
+                   "transform": layout._t(0, 0, fmt["width_px"], fmt["height_px"]),
+                   "content": {"asset": scene, "fit": "cover", "crop": None}}]
+        doc = layout.composition_doc(
+            workspace_id=ctx["plan"]["workspace_id"], run_id=ctx["run"]["id"], canvas=ctx["work"]["canvas_node_id"],
+            created_at=ctx["plan"]["created_at"], created_by=ctx["run"]["requested_by"],
+            recipe=ctx["plan"]["sources"]["recipe"], artboard_id=fmt["id"], width=fmt["width_px"],
+            height=fmt["height_px"], layers=layers, refinish=_refinish(ctx))
+        doc["sha256"] = artifact_sha256(doc)
+        zone = layout.safe_zone_for(fmt["preset"], fmt["width_px"], fmt["height_px"])
+        try:
+            validate_composition(doc)
+            render = render_artboard(doc, fmt["id"], brand_package=package, assets=source, safe_zone=zone,
+                                     mime_type=fmt["mime_type"])
+        except CompositionError as err:
+            raise Blocked(err.code, err.message, list(getattr(err, "related_ids", []) or []))
+        with self._tx() as cur:
+            cur.execute("select * from public.cs_post_save_composition(%s,%s,%s,%s::jsonb,%s,%s::jsonb,%s)",
+                        (*lease, json.dumps(doc), semantic_sha256(doc), json.dumps(_input_refs(doc)),
+                         self.settings.runtime_principal))
+            saved = dict(cur.fetchone())
+        detail = {"layout_version": layout.LAYOUT_VERSION, "type_scale_step": None, "copy_not_rendered": [],
+                  "render_sha256": render.sha256, "renderer_version": render.renderer_version,
+                  "model_drawn_text": False, "text_skipped": None, "plate": True}
+        return self._finish(lease, "composed", None, detail,
+                            {"composition_version_id": str(saved["version_id"]), "render_sha256": render.sha256},
+                            "publish_export")
+
     @staticmethod
     def _mirror_for(ctx, source_ref: dict):
         return next((m for m in ctx["mirrors"] if m["source_sha256"] == source_ref["sha256"]
@@ -342,7 +375,7 @@ class PostRunRuntime:
                                     source_records=records, generated_sources=generated, lineage=lineage,
                                     copy_sources=copy_sources, cost=ctx["cost"], created_by=ctx["run"]["requested_by"],
                                     created_at=_iso(state["composed_at"]),
-                                    copy_required=ctx["request"]["origin"].get("kind") != "marketing-os-library"
+                                    copy_required=ctx["request"]["origin"].get("kind") not in ("marketing-os-library", "marketing-os-plates")
                                     and _text_zone(ctx["request"]) != "none" and _has_text_layer(comp))
         except CompositionError as err:
             if err.retryable:
@@ -414,11 +447,12 @@ class PostRunRuntime:
             raise Blocked("export_unavailable", "no published export for this canvas")
         request = ctx["request"]
         origin = request["origin"]
-        if origin.get("kind") not in ("marketing-os", "marketing-os-library"):
+        if origin.get("kind") not in ("marketing-os", "marketing-os-library", "marketing-os-plates"):
             return self._finish(lease, "handoff_not_applicable", "standalone_request", {}, {}, None)
         if not ctx.get("binding"):
             raise Blocked("mos_connection_required", "no active verified Marketing OS connection for this workspace")
         keys = (("library", "library_item_key", "policy") if origin["kind"] == "marketing-os-library"
+                else ("plate_set", "plate_key", "policy") if origin["kind"] == "marketing-os-plates"
                 else ("concept", "placement", "copy_versions", "destination", "claim_set", "policy"))
         target = {k: origin[k] for k in keys}
         target = {"authority": "marketing-os", "workspace_id": origin["mos_workspace_id"], **target}

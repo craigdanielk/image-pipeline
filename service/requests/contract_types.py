@@ -318,6 +318,18 @@ class CreativeRequestV1Origin2(TypedDict):
     generation_eligibility: EligibilityReceipt
 
 
+class CreativeRequestV1Origin3(TypedDict):
+    kind: Literal['marketing-os-plates']
+    mos_workspace_id: Uuid
+    policy: VersionRef
+    brand_rule_revision: Union[VersionRef, None]
+    brand_rule_approval: Union[Approval, None]
+    generation_eligibility: EligibilityReceipt
+    plate_set: VersionRef
+    plate_key: str
+    plate_set_approval: Approval
+
+
 class CreativeRequestV1OfferingServiceFactsItem(TypedDict):
     id: Slug
     label: str
@@ -390,7 +402,7 @@ class CreativeRequestV1(TypedDict):
     created_at: Timestamp
     created_by: Uuid
     sha256: Sha256
-    origin: Union[CreativeRequestV1Origin0, CreativeRequestV1Origin1, CreativeRequestV1Origin2]
+    origin: Union[CreativeRequestV1Origin0, CreativeRequestV1Origin1, CreativeRequestV1Origin2, CreativeRequestV1Origin3]
     brand_package: VersionRef
     offering: CreativeRequestV1Offering
     audiences: List[VersionRef]

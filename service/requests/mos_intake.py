@@ -286,3 +286,100 @@ def build_library_treatment_fields(sources: dict, request_ref: dict, brand_packa
         "shots": [],
         "sources": [sources["library"], brand_package_ref],
     }
+
+
+# -- Marketing OS video plates (assistant-written B-roll stills and image-to-video clips) ------------------------
+PLATE_SOURCES_SCHEMA = "mos-plate-sources-v1"
+_PLATE_KINDS = {"image", "video"}
+
+
+def is_plates_request(visual_request: dict) -> bool:
+    return isinstance(visual_request, dict) and visual_request.get("source") == "plates"
+
+
+def build_plates_request_fields(visual_request: dict, sources: dict, brand_package: dict, credential_binding_id: str) -> dict:
+    """creative-request-v1 fields for one plate: the assistant's prompt (shot_spec.prompt, used verbatim after the catalogue
+    checks), the model the user agreed the credits for, no campaign copy and no logo or text layers (origin kind
+    ``marketing-os-plates``). MOS supplies the plate set, the user's credit agreement as the approval, the offer facts and
+    the workspace media ceiling; the funding binding is this connection."""
+    _require(visual_request.get("schema_version") == VISUAL_REQUEST_SCHEMA, "unsupported_schema_version",
+             f"expected {VISUAL_REQUEST_SCHEMA}", "/visual_request/schema_version")
+    _require(sources.get("schema_version") == PLATE_SOURCES_SCHEMA, "unsupported_schema_version",
+             f"expected {PLATE_SOURCES_SCHEMA}", "/sources/schema_version")
+    mos_ws = sources["workspace_id"]
+    _require(visual_request.get("workspace_id") == mos_ws, "scope_mismatch", "visual request is from another workspace",
+             "/visual_request/workspace_id")
+    plate = sources.get("plate") or {}
+    asked = (visual_request.get("plates") or {}).get("plate_key")
+    _require(plate.get("key") == asked, "source_revision_changed", "plate differs from the request", "/sources/plate/key")
+    _require(sources["brand_kit"]["id"] == brand_package["source_artifact_id"], "approval_stale",
+             "the plate set pins a different BrandKit version than the imported package", "/sources/brand_kit")
+    kind = visual_request.get("media_kind")
+    _require(kind in _PLATE_KINDS and kind == plate.get("kind") and visual_request.get("tier") == "draft",
+             "unsupported_canvas", "plates are draft stills or clips of the kind the plate set names", "/visual_request/media_kind")
+    _require(isinstance(visual_request.get("shot_spec"), dict) and (visual_request["shot_spec"].get("prompt") or {}).get("positive"),
+             "prompt_required", "a plate is generated from the assistant's own prompt (shot_spec.prompt)", "/visual_request/shot_spec")
+    canvas = visual_request.get("canvas")
+    _require(canvas == plate.get("aspect"), "unsupported_canvas", "canvas differs from the plate's aspect", "/visual_request/canvas")
+    if kind == "image":
+        _require(canvas in _IMAGE_PRESETS, "unsupported_canvas", f"canvas {canvas} has no v1 image preset", "/visual_request/canvas")
+        preset, w, h = _IMAGE_PRESETS[canvas]
+        fmt = {"id": slug(f"{preset}-{plate['key']}"), "kind": "image", "preset": preset, "width_px": w, "height_px": h,
+               "mime_type": "image/png", "duration_frames": None, "frame_rate": None, "count": 1, "channel": "plates"}
+    else:
+        # Image-to-video plates need the runtime to store and hand back mp4 output (provider ingest sniffs images
+        # only today); refuse before anything is priced or reserved rather than pay for a clip MOS cannot receive.
+        _require(False, "video_plates_unavailable", "video plates are not produced through Creative Studio yet; "
+                 "make the still plate here and animate it in the assistant's own Higgsfield connector",
+                 "/visual_request/media_kind")
+    references = []
+    start = plate.get("start_asset")
+    if start is not None:   # image-to-video: the still this clip starts from (a plate MOS already stored)
+        references.append({"id": "start-frame", "role": "composition", "asset": start, "required": True, "strength": None})
+    _require(kind == "image" or references, "source_unavailable", "an image-to-video plate needs its start still",
+             "/sources/plate/start_asset")
+    budget = sources.get("budget")
+    _require(isinstance(budget, dict), "budget_missing", "MOS exported no budget for this plate set", "/budget")
+    budget = {**budget, "credential_binding_id": credential_binding_id}
+    selection = sources.get("provider_selection")
+    _require(isinstance(selection, dict) and selection.get("mode") == "selected" and selection.get("model_id"), "invalid_contract",
+             "a plate names the model the user agreed the credits for", "/sources/provider_selection")
+    forbidden = list(dict.fromkeys(brand_package["document"]["imagery"]["prohibited"]
+                                   + brand_package["document"]["voice"]["prohibited_terms"]
+                                   + list(sources.get("forbidden") or [])))[:100]
+    required = [r["instruction"] for r in brand_package["document"]["usage_rules"] if r["severity"] == "required"][:100]
+    fields = {
+        "origin": {"kind": "marketing-os-plates", "mos_workspace_id": mos_ws, "plate_set": sources["plate_set"],
+                   "plate_key": plate["key"], "plate_set_approval": sources["plate_set_approval"],
+                   "policy": sources["policy"], "brand_rule_revision": None, "brand_rule_approval": None,
+                   "generation_eligibility": None},   # filled by the caller from MOS's eligibility API
+        "brand_package": brand_package["ref"],
+        "offering": sources["offering"],
+        "audiences": sources["audiences"],
+        "objective": sources["objective"],
+        "hook": sources["hook"],
+        "locale": sources["locale"],
+        "exact_copy": [],
+        "formats": [fmt],
+        "references": references,
+        "provider_selection": selection,
+        "budget": budget,
+        "constraints": {"forbidden": forbidden, "required": required, "exact_logo_layers": True, "exact_copy_layers": True},
+    }
+    return _with_shot_spec(fields, visual_request)
+
+
+def build_plates_treatment_fields(sources: dict, request_ref: dict, brand_package_ref: dict) -> dict:
+    """Draft treatment from the plate's own direction (no model call)."""
+    direction = sources.get("concept_direction")
+    _require(isinstance(direction, dict), "source_unavailable", "plate has no visual direction", "/concept_direction")
+    return {
+        "source_request": request_ref,
+        "authorship": {"kind": "human", "model_id": None, "prompt_template": None, "raw_response_sha256": None,
+                       "operation_id": None, "attempt_id": None},
+        "direction": {"summary": direction["summary"], "scene": direction["scene"], "style": direction["style"],
+                      "lighting": direction["lighting"], "camera": direction["camera"],
+                      "composition": direction["composition"], "negative": list(direction.get("negative") or [])},
+        "shots": [],
+        "sources": [sources["plate_set"], brand_package_ref],
+    }

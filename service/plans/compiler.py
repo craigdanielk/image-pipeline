@@ -41,6 +41,8 @@ def select_entry(catalogue: list[dict], request: dict, tier: str) -> dict:
         cands = [e for e in cands if e["provider"] == sel["provider"]]
     if sel.get("model_id"):
         cands = [e for e in cands if e["model_id"] == sel["model_id"]]
+    else:   # explicit-only entries (plate models) are never picked for a request that did not name them
+        cands = [e for e in cands if (e.get("price_snapshot") or {}).get("selection") != "explicit"]
     cap = sel.get("max_unit_cost_micros")
     if cap is not None:
         cands = [e for e in cands if e["unit_cost_micros"] <= cap]

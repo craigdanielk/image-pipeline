@@ -548,6 +548,12 @@ export type MosHandoff = {
     library: VersionRef;
     library_item_key: string;
     policy: VersionRef;
+  } | {
+    authority: "marketing-os";
+    workspace_id: Uuid;
+    policy: VersionRef;
+    plate_set: VersionRef;
+    plate_key: string;
   };
   exports: Array<VersionRef>;
   brand_package: VersionRef;

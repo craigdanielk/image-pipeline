@@ -3,7 +3,7 @@
   "provenance": {
     "kind": "operator_snapshot",
     "observed_at": "2026-11-03T16:45:00Z",
-    "note": "Models and params from `higgsfield model get` (CLI 1.1.26); prices are the CLI's own free cost quote at publish time x the credit price below. Credit price is the most conservative public figure (smallest top-up pack, 80 credits for USD 5) so caps never understate spend; plan credits are cheaper. Result origins observed on real job URLs."
+    "note": "Models and params from `higgsfield model get` (CLI 1.1.26); prices are the CLI's own free cost quote at publish time x the credit price below. Credit price is the most conservative public figure (smallest top-up pack, 80 credits for USD 5) so caps never understate spend; plan credits are cheaper. Result origins observed on real job URLs. 2026-11-13: gpt_image_2_6 added for MOS video plates (explicit selection only); `higgsfield generate cost gpt_image_2_6 --aspect_ratio 9:16` quoted 0.25 credits at 1k and 0.5 at 2k; plates use 2k (1k plates came back 752x1344 and soft)."
   },
   "provider": "higgsfield",
   "credit_price": {
@@ -158,6 +158,60 @@
         "start_frame": false,
         "end_frame": false
       }
+    },
+    {
+      "entry_id": "hf-gpt-image-2-6-plate",
+      "model_id": "gpt_image_2_6",
+      "tier": "draft",
+      "operation": "image_generate",
+      "max_units": 4,
+      "max_units_source": "operator: one plate per request; up to 4 variants",
+      "probe_parameters": {
+        "aspect_ratio": "9:16",
+        "resolution": "2k"
+      },
+      "request_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object"
+      },
+      "reference_roles": [
+        {
+          "role": "image",
+          "field": "image_references",
+          "mime_types": [
+            "image/png",
+            "image/jpeg",
+            "image/webp"
+          ],
+          "min_count": 0,
+          "max_count": 14
+        }
+      ],
+      "outputs": {
+        "mime_types": [
+          "image/png",
+          "image/webp",
+          "image/jpeg"
+        ],
+        "aspect_ratios": [
+          "1:1",
+          "4:5",
+          "9:16",
+          "16:9"
+        ],
+        "max_width_px": 4096,
+        "max_height_px": 4096,
+        "min_duration_ms": null,
+        "max_duration_ms": null
+      },
+      "controls": {
+        "negative_prompt": false,
+        "seed": false,
+        "mask": false,
+        "start_frame": false,
+        "end_frame": false
+      },
+      "selection": "explicit"
     }
   ]
 }

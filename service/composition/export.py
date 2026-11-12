@@ -103,6 +103,7 @@ def check_format(fmt: dict, render: RenderResult) -> None:
 
 
 LIBRARY_CHANNEL = "library"   # internal image-library destination (Marketing OS LibraryPack), not a publication
+PLATES_CHANNEL = "plates"     # internal video-plate destination (Marketing OS plate set), not a publication
 
 def _rights_check(record: dict, use: str, channel: str, at: datetime, role: str) -> dict:
     rights = record["rights"]
@@ -186,7 +187,7 @@ def build_export(render: RenderResult, *, composition: dict, brand_package: dict
         seen.add(ref["asset_version_id"])
         # An image-library export is stored for later use, not published: status, 'embed' use and validity still apply
         # here; the channel is checked when a library image is placed on a channel (MOS placement gate / export).
-        scope = None if fmt["channel"] == LIBRARY_CHANNEL else fmt["channel"]
+        scope = None if fmt["channel"] in (LIBRARY_CHANNEL, PLATES_CHANNEL) else fmt["channel"]
         rights.append(_rights_check(record, "embed", scope, at, role))
         if role == "image" and ref["asset_version_id"] not in generated and record["origin"] == "provider":
             raise CompositionError("source_lineage_missing", "provider image has no source_output attempt lineage",
