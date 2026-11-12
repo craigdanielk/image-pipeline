@@ -253,3 +253,43 @@ def shot_prompt(shot: dict, slots: dict, client: dict, canvas: str, *, fmt: dict
     if len(positive) > POSITIVE_MAX:
         raise CatalogueError("prompt_too_long", f"positive prompt is {len(positive)} chars; limit {POSITIVE_MAX}")
     return {"positive": positive, "negative": _negative(shot, client)}
+
+
+def closing_sentences(shot: dict) -> list[str]:
+    """The fixed sentences after the template's last placeholder (e.g. "No text, no logos."): safety lines every prompt keeps."""
+    tail = re.sub(r"^[.\s]+", "", shot["prompt_template"].rsplit("}", 1)[-1]).strip()
+    return [s.strip() for s in re.split(r"(?<=\.)\s+", tail) if s.strip()]
+
+
+def assistant_prompt(shot: dict, slots: dict, client: dict, canvas: str, prompt: dict, *, fmt: dict, cat: dict | None = None) -> dict:
+    """The connected assistant's own final prompt for a catalogue shot. The shot, canvas and slots pass the same checks as the
+    compiled prompt; the positive prompt is used verbatim once it is within the length cap, free of words that make images
+    look staged, and keeps the shot's closing safety lines. The client's restrictions are legal/brand limits: they lead the
+    negative prompt whatever the assistant wrote, and the assistant's phrases follow them."""
+    cat = cat or load_catalogue()
+    shot_prompt(shot, slots, client, canvas, fmt=fmt, cat=cat)
+    positive = re.sub(r"\s+", " ", str(prompt.get("positive") or "")).strip()
+    if len(positive) < 40:
+        raise CatalogueError("prompt_invalid", "the picture prompt is too short: describe the photograph in at least 40 characters")
+    if len(positive) > POSITIVE_MAX:
+        raise CatalogueError("prompt_too_long", f"positive prompt is {len(positive)} chars; limit {POSITIVE_MAX}")
+    hits = forbidden_in(positive, cat["realism"]["forbidden_words"])
+    if hits:
+        raise CatalogueError("prompt_invalid", f"the prompt uses words that make images look staged: {hits}")
+    missing = [c for c in closing_sentences(shot) if c.rstrip(".").lower() not in positive.lower()]
+    if missing:
+        raise CatalogueError("prompt_invalid", f"the prompt must keep these sentences word for word: {' '.join(missing)}")
+    restrictions = [_compact_restriction(r) for r in client.get("restrictions") or []]
+    own = [p.strip().rstrip(".") for p in re.split(r"[,;\n]", str(prompt.get("negative") or "")) if p.strip()]
+    phrases: list[str] = []
+    seen: set[str] = set()
+    for phrase in restrictions + own:
+        if phrase and phrase.lower() not in seen:
+            seen.add(phrase.lower())
+            phrases.append(phrase)
+    negative = ", ".join(phrases)
+    if len(negative) > NEGATIVE_MAX:
+        room = NEGATIVE_MAX - len(", ".join(restrictions)) - 2
+        raise CatalogueError("prompt_too_long", f"the negative prompt is {len(negative)} chars with the client's restrictions; "
+                             f"limit {NEGATIVE_MAX}, so your own phrases may use about {max(room, 0)} chars")
+    return {"positive": positive, "negative": negative or None}

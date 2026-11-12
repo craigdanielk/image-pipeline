@@ -357,6 +357,11 @@ class CreativeRequestV1ShotSpecClient(TypedDict):
     restrictions: List[str]
 
 
+class CreativeRequestV1ShotSpecPrompt(TypedDict):
+    positive: str
+    negative: str
+
+
 class CreativeRequestV1ShotSpec(TypedDict):
     schema_version: Literal['mos-shot-spec-v1']
     catalogue_version: str
@@ -366,6 +371,7 @@ class CreativeRequestV1ShotSpec(TypedDict):
     slots: Dict[str, str]
     client: CreativeRequestV1ShotSpecClient
     references: NotRequired[List[Sha256]]
+    prompt: NotRequired[CreativeRequestV1ShotSpecPrompt]
 
 
 class CreativeRequestV1Constraints(TypedDict):

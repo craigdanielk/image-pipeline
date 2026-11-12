@@ -452,7 +452,573 @@ Only a successful complete structural and semantic compile returns a runnable im
 ## Packaged file: contracts/creative-request-v1.schema.json
 
 ```json
-{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://schemas.creative-studio.invalid/v1/creative-request-v1.schema.json","title":"Creative Studio source request v1","$comment":"Versioned source input for the existing compiler. Service/service_group must have physical_product_spec null; CAD/geometry is not mandatory for any offering. New physical constraints are only emitted when a real ProductSpec is present. MOS refs are validated by MOS API, not direct database reads. Request acceptance is not a publication approval.","type":"object","additionalProperties":false,"properties":{"schema_version":{"const":"cs-creative-request-v1"},"id":{"$ref":"common.schema.json#/$defs/uuid"},"version_id":{"$ref":"common.schema.json#/$defs/uuid"},"revision":{"type":"integer","minimum":1,"maximum":9007199254740991},"workspace_id":{"$ref":"common.schema.json#/$defs/uuid"},"created_at":{"$ref":"common.schema.json#/$defs/timestamp"},"created_by":{"$ref":"common.schema.json#/$defs/uuid"},"sha256":{"$ref":"common.schema.json#/$defs/sha256"},"origin":{"oneOf":[{"type":"object","additionalProperties":false,"properties":{"kind":{"const":"standalone"},"direction_approval":{"$ref":"common.schema.json#/$defs/approval"}},"required":["kind","direction_approval"]},{"type":"object","additionalProperties":false,"properties":{"kind":{"const":"marketing-os"},"mos_workspace_id":{"$ref":"common.schema.json#/$defs/uuid"},"campaign_brief":{"$ref":"common.schema.json#/$defs/version_ref"},"concept":{"$ref":"common.schema.json#/$defs/version_ref"},"concept_approval":{"$ref":"common.schema.json#/$defs/approval"},"placement":{"anyOf":[{"$ref":"common.schema.json#/$defs/version_ref"},{"type":"null"}]},"copy_versions":{"type":"array","items":{"$ref":"common.schema.json#/$defs/version_ref"},"minItems":1,"maxItems":30},"destination":{"$ref":"common.schema.json#/$defs/version_ref"},"claim_set":{"$ref":"common.schema.json#/$defs/version_ref"},"policy":{"$ref":"common.schema.json#/$defs/version_ref"},"brand_rule_revision":{"anyOf":[{"$ref":"common.schema.json#/$defs/version_ref"},{"type":"null"}]},"brand_rule_approval":{"anyOf":[{"$ref":"common.schema.json#/$defs/approval"},{"type":"null"}]},"generation_eligibility":{"$ref":"common.schema.json#/$defs/eligibility_receipt"}},"required":["kind","mos_workspace_id","campaign_brief","concept","concept_approval","placement","copy_versions","destination","claim_set","policy","brand_rule_revision","brand_rule_approval","generation_eligibility"]},{"type":"object","additionalProperties":false,"$comment":"Marketing OS image library (LibraryPack visual_library item): an approved, offer-level image brief with no campaign concept, copy, claims or destination. exact_copy is empty; the treatment direction is the brief's own.","properties":{"kind":{"const":"marketing-os-library"},"mos_workspace_id":{"$ref":"common.schema.json#/$defs/uuid"},"library":{"$ref":"common.schema.json#/$defs/version_ref"},"library_item_key":{"type":"string","pattern":"^lib-[A-Za-z0-9_:.-]{1,200}$"},"library_approval":{"$ref":"common.schema.json#/$defs/approval"},"policy":{"$ref":"common.schema.json#/$defs/version_ref"},"brand_rule_revision":{"anyOf":[{"$ref":"common.schema.json#/$defs/version_ref"},{"type":"null"}]},"brand_rule_approval":{"anyOf":[{"$ref":"common.schema.json#/$defs/approval"},{"type":"null"}]},"generation_eligibility":{"$ref":"common.schema.json#/$defs/eligibility_receipt"}},"required":["kind","mos_workspace_id","library","library_item_key","library_approval","policy","brand_rule_revision","brand_rule_approval","generation_eligibility"]}]},"brand_package":{"$ref":"common.schema.json#/$defs/version_ref"},"offering":{"type":"object","additionalProperties":false,"properties":{"kind":{"type":"string","enum":["physical_product","service","service_group","digital_product","hybrid"]},"source":{"$ref":"common.schema.json#/$defs/version_ref"},"name":{"type":"string","minLength":1,"maxLength":200},"summary":{"type":"string","minLength":1,"maxLength":4000},"value_propositions":{"type":"array","items":{"type":"string","minLength":1,"maxLength":2000},"minItems":1,"maxItems":20},"approved_claims":{"type":"array","items":{"$ref":"common.schema.json#/$defs/version_ref"},"minItems":0,"maxItems":100},"physical_product_spec":{"anyOf":[{"$ref":"common.schema.json#/$defs/version_ref"},{"type":"null"}]},"service_facts":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"common.schema.json#/$defs/slug"},"label":{"type":"string","minLength":1,"maxLength":100},"value":{"type":"string","minLength":1,"maxLength":2000},"source":{"$ref":"common.schema.json#/$defs/version_ref"}},"required":["id","label","value","source"]},"minItems":0,"maxItems":50}},"required":["kind","source","name","summary","value_propositions","approved_claims","physical_product_spec","service_facts"],"allOf":[{"if":{"properties":{"kind":{"enum":["service","service_group"]}}},"then":{"properties":{"physical_product_spec":{"type":"null"}}}}]},"audiences":{"type":"array","items":{"$ref":"common.schema.json#/$defs/version_ref"},"minItems":1,"maxItems":20},"objective":{"type":"string","minLength":1,"maxLength":2000},"hook":{"type":"string","minLength":1,"maxLength":2000},"locale":{"type":"string","minLength":2,"maxLength":35},"exact_copy":{"type":"array","items":{"type":"object","additionalProperties":false,"properties":{"id":{"$ref":"common.schema.json#/$defs/slug"},"role":{"type":"string","enum":["headline","body","cta","caption","disclaimer","spoken","other"]},"text":{"type":"string","minLength":1,"maxLength":7000},"language":{"type":"string","minLength":2,"maxLength":35},"source_copy":{"anyOf":[{"$ref":"common.schema.json#/$defs/version_ref"},{"type":"null"}]},"claim_refs":{"type":"array","items":{"$ref":"common.schema.json#/$defs/version_ref"},"minItems":0,"maxItems":30}},"required":["id","role","text","language","source_copy","claim_refs"]},"minItems":0,"maxItems":50,"$comment":"At least one entry for every origin except marketing-os-library (image-library briefs carry no campaign copy); see allOf."},"formats":{"type":"array","items":{"$comment":"export_format_v2 is the request format plus the 16:9 landscape preset; both share one shape.","$ref":"common.schema.json#/$defs/export_format_v2"},"minItems":1,"maxItems":20},"references":{"type":"array","items":{"$ref":"common.schema.json#/$defs/reference_input"},"minItems":0,"maxItems":100},"provider_selection":{"$ref":"common.schema.json#/$defs/provider_selection"},"budget":{"$ref":"common.schema.json#/$defs/budget"},"shot_spec":{"$comment":"Optional structured shot from the creative catalogue (mos-shot-spec-v1). When present the compiler builds a short photographic prompt from it instead of prose direction.","type":"object","additionalProperties":false,"required":["schema_version","catalogue_version","format_id","shot_id","canvas","slots","client"],"properties":{"schema_version":{"const":"mos-shot-spec-v1"},"catalogue_version":{"type":"string","minLength":1,"maxLength":40},"format_id":{"type":"string","minLength":1,"maxLength":64},"shot_id":{"type":"string","minLength":1,"maxLength":64},"canvas":{"type":"string","minLength":1,"maxLength":16},"slots":{"type":"object","additionalProperties":{"type":"string","maxLength":400},"maxProperties":20},"client":{"type":"object","additionalProperties":false,"required":["scene_palette","style_line","people_policy","restrictions"],"properties":{"scene_palette":{"type":"array","maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["hex","object"],"properties":{"hex":{"type":"string","pattern":"^#[0-9A-Fa-f]{6}$"},"object":{"type":"string","minLength":1,"maxLength":80}}}},"style_line":{"type":"string","maxLength":300},"people_policy":{"type":"string","maxLength":40},"restrictions":{"type":"array","maxItems":20,"items":{"type":"string","minLength":1,"maxLength":300}}}},"references":{"type":"array","maxItems":20,"items":{"$ref":"common.schema.json#/$defs/sha256"}}}},"constraints":{"type":"object","additionalProperties":false,"properties":{"forbidden":{"type":"array","items":{"type":"string","minLength":1,"maxLength":2000},"minItems":0,"maxItems":100},"required":{"type":"array","items":{"type":"string","minLength":1,"maxLength":2000},"minItems":0,"maxItems":100},"exact_logo_layers":{"const":true},"exact_copy_layers":{"const":true}},"required":["forbidden","required","exact_logo_layers","exact_copy_layers"]}},"required":["schema_version","id","version_id","revision","workspace_id","created_at","created_by","sha256","origin","brand_package","offering","audiences","objective","hook","locale","exact_copy","formats","references","provider_selection","budget","constraints"],"allOf":[{"if":{"properties":{"origin":{"properties":{"kind":{"const":"marketing-os-library"}},"required":["kind"]}},"required":["origin"]},"then":{"properties":{"exact_copy":{"maxItems":0}}},"else":{"properties":{"exact_copy":{"minItems":1}}}}]}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.creative-studio.invalid/v1/creative-request-v1.schema.json",
+  "title": "Creative Studio source request v1",
+  "$comment": "Versioned source input for the existing compiler. Service/service_group must have physical_product_spec null; CAD/geometry is not mandatory for any offering. New physical constraints are only emitted when a real ProductSpec is present. MOS refs are validated by MOS API, not direct database reads. Request acceptance is not a publication approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "cs-creative-request-v1"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "version_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "workspace_id": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "created_by": {
+      "$ref": "common.schema.json#/$defs/uuid"
+    },
+    "sha256": {
+      "$ref": "common.schema.json#/$defs/sha256"
+    },
+    "origin": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "standalone"
+            },
+            "direction_approval": {
+              "$ref": "common.schema.json#/$defs/approval"
+            }
+          },
+          "required": [
+            "kind",
+            "direction_approval"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "marketing-os"
+            },
+            "mos_workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "campaign_brief": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "concept": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "concept_approval": {
+              "$ref": "common.schema.json#/$defs/approval"
+            },
+            "placement": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/version_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "copy_versions": {
+              "type": "array",
+              "items": {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              },
+              "minItems": 1,
+              "maxItems": 30
+            },
+            "destination": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "claim_set": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "brand_rule_revision": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/version_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "brand_rule_approval": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/approval"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "generation_eligibility": {
+              "$ref": "common.schema.json#/$defs/eligibility_receipt"
+            }
+          },
+          "required": [
+            "kind",
+            "mos_workspace_id",
+            "campaign_brief",
+            "concept",
+            "concept_approval",
+            "placement",
+            "copy_versions",
+            "destination",
+            "claim_set",
+            "policy",
+            "brand_rule_revision",
+            "brand_rule_approval",
+            "generation_eligibility"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "$comment": "Marketing OS image library (LibraryPack visual_library item): an approved, offer-level image brief with no campaign concept, copy, claims or destination. exact_copy is empty; the treatment direction is the brief's own.",
+          "properties": {
+            "kind": {
+              "const": "marketing-os-library"
+            },
+            "mos_workspace_id": {
+              "$ref": "common.schema.json#/$defs/uuid"
+            },
+            "library": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "library_item_key": {
+              "type": "string",
+              "pattern": "^lib-[A-Za-z0-9_:.-]{1,200}$"
+            },
+            "library_approval": {
+              "$ref": "common.schema.json#/$defs/approval"
+            },
+            "policy": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "brand_rule_revision": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/version_ref"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "brand_rule_approval": {
+              "anyOf": [
+                {
+                  "$ref": "common.schema.json#/$defs/approval"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "generation_eligibility": {
+              "$ref": "common.schema.json#/$defs/eligibility_receipt"
+            }
+          },
+          "required": [
+            "kind",
+            "mos_workspace_id",
+            "library",
+            "library_item_key",
+            "library_approval",
+            "policy",
+            "brand_rule_revision",
+            "brand_rule_approval",
+            "generation_eligibility"
+          ]
+        }
+      ]
+    },
+    "brand_package": {
+      "$ref": "common.schema.json#/$defs/version_ref"
+    },
+    "offering": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "physical_product",
+            "service",
+            "service_group",
+            "digital_product",
+            "hybrid"
+          ]
+        },
+        "source": {
+          "$ref": "common.schema.json#/$defs/version_ref"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "value_propositions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 1,
+          "maxItems": 20
+        },
+        "approved_claims": {
+          "type": "array",
+          "items": {
+            "$ref": "common.schema.json#/$defs/version_ref"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "physical_product_spec": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "service_facts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "$ref": "common.schema.json#/$defs/slug"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000
+              },
+              "source": {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "value",
+              "source"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 50
+        }
+      },
+      "required": [
+        "kind",
+        "source",
+        "name",
+        "summary",
+        "value_propositions",
+        "approved_claims",
+        "physical_product_spec",
+        "service_facts"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "service",
+                  "service_group"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "physical_product_spec": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "audiences": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/version_ref"
+      },
+      "minItems": 1,
+      "maxItems": 20
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "hook": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "locale": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 35
+    },
+    "exact_copy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/slug"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "headline",
+              "body",
+              "cta",
+              "caption",
+              "disclaimer",
+              "spoken",
+              "other"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 7000
+          },
+          "language": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 35
+          },
+          "source_copy": {
+            "anyOf": [
+              {
+                "$ref": "common.schema.json#/$defs/version_ref"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "claim_refs": {
+            "type": "array",
+            "items": {
+              "$ref": "common.schema.json#/$defs/version_ref"
+            },
+            "minItems": 0,
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "text",
+          "language",
+          "source_copy",
+          "claim_refs"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 50,
+      "$comment": "At least one entry for every origin except marketing-os-library (image-library briefs carry no campaign copy); see allOf."
+    },
+    "formats": {
+      "type": "array",
+      "items": {
+        "$comment": "export_format_v2 is the request format plus the 16:9 landscape preset; both share one shape.",
+        "$ref": "common.schema.json#/$defs/export_format_v2"
+      },
+      "minItems": 1,
+      "maxItems": 20
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/reference_input"
+      },
+      "minItems": 0,
+      "maxItems": 100
+    },
+    "provider_selection": {
+      "$ref": "common.schema.json#/$defs/provider_selection"
+    },
+    "budget": {
+      "$ref": "common.schema.json#/$defs/budget"
+    },
+    "shot_spec": {
+      "$comment": "Optional structured shot from the creative catalogue (mos-shot-spec-v1). When present the compiler builds a short photographic prompt from it instead of prose direction.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "catalogue_version", "format_id", "shot_id", "canvas", "slots", "client"],
+      "properties": {
+        "schema_version": {"const": "mos-shot-spec-v1"},
+        "catalogue_version": {"type": "string", "minLength": 1, "maxLength": 40},
+        "format_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "shot_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "canvas": {"type": "string", "minLength": 1, "maxLength": 16},
+        "slots": {"type": "object", "additionalProperties": {"type": "string", "maxLength": 400}, "maxProperties": 20},
+        "client": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scene_palette", "style_line", "people_policy", "restrictions"],
+          "properties": {
+            "scene_palette": {"type": "array", "maxItems": 6, "items": {"type": "object", "additionalProperties": false,
+              "required": ["hex", "object"], "properties": {"hex": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+              "object": {"type": "string", "minLength": 1, "maxLength": 80}}}},
+            "style_line": {"type": "string", "maxLength": 300},
+            "people_policy": {"type": "string", "maxLength": 40},
+            "restrictions": {"type": "array", "maxItems": 20, "items": {"type": "string", "minLength": 1, "maxLength": 300}}
+          }
+        },
+        "references": {"type": "array", "maxItems": 20, "items": {"$ref": "common.schema.json#/$defs/sha256"}},
+        "prompt": {
+          "$comment": "Optional: the final prompt written by the user's assistant. Used verbatim after the compiler's checks; the client restrictions still lead the negative prompt.",
+          "type": "object", "additionalProperties": false, "required": ["positive", "negative"],
+          "properties": {
+            "positive": {"type": "string", "minLength": 1, "maxLength": 1200},
+            "negative": {"type": "string", "maxLength": 400}
+          }
+        }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "forbidden": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "exact_logo_layers": {
+          "const": true
+        },
+        "exact_copy_layers": {
+          "const": true
+        }
+      },
+      "required": [
+        "forbidden",
+        "required",
+        "exact_logo_layers",
+        "exact_copy_layers"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "version_id",
+    "revision",
+    "workspace_id",
+    "created_at",
+    "created_by",
+    "sha256",
+    "origin",
+    "brand_package",
+    "offering",
+    "audiences",
+    "objective",
+    "hook",
+    "locale",
+    "exact_copy",
+    "formats",
+    "references",
+    "provider_selection",
+    "budget",
+    "constraints"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "origin": {
+            "properties": {
+              "kind": {
+                "const": "marketing-os-library"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        },
+        "required": [
+          "origin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "exact_copy": {
+            "maxItems": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "exact_copy": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}
 ```
 
 ## Packaged file: contracts/dispatch-envelope-v1.schema.json
@@ -1740,4 +2306,10 @@ Vercel plan/remaining quota was not exposed by the connected account metadata. A
 
 ```json
 {"schema_version":"creative-studio-package-amendment-v1","amends":"creative-studio-m1-package-v1","recorded_date":"2026-11-05","by":"MOS creative catalogue","reason":"additive: optional shot_spec (mos-shot-spec-v1) on creative-request-v1 selects the catalogue shot compile path; requests without it compile as before; request formats use export_format_v2 so the 16:9 landscape preset is accepted","files":[{"path":"contracts/creative-request-v1.schema.json","bytes":15392,"sha256":"ed7125af55e3e678a15294dcccbeb5198fd63fd4c163c171ddacaf196f74145a","supersedes_sha256":"ec4948905326431f4bd1e5a4a686263eb282ba3aec6e435442e11828704d4345"}]}
+```
+
+## Package amendment manifest — 2026-11-12 (MOS assistant picture prompt)
+
+```json
+{"schema_version":"creative-studio-package-amendment-v1","amends":"creative-studio-m1-package-v1","recorded_date":"2026-11-12","by":"MOS assistant picture prompt","reason":"additive: optional shot_spec.prompt {positive, negative} carries the final prompt written by the user's assistant; the compiler checks it (length, staged-look words, the shot's closing safety lines) and uses the positive verbatim, with the client restrictions leading the negative; requests without it compile as before","files":[{"path":"contracts/creative-request-v1.schema.json","bytes":15882,"sha256":"e6e1f692994d42ad55c619846d98d0d64cf5197f2751a9b12166d5e0cc51a02a","supersedes_sha256":"ed7125af55e3e678a15294dcccbeb5198fd63fd4c163c171ddacaf196f74145a"}]}
 ```
